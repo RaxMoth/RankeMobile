@@ -4,6 +4,10 @@ abstract class AppConstants {
   static const String apiBaseUrl = 'https://api.example.com';
   static const Duration apiTimeout = Duration(seconds: 30);
 
+  // Secure Storage Keys
+  static const String accessTokenKey = 'access_token';
+  static const String refreshTokenKey = 'refresh_token';
+
   // Local Storage Keys
   static const String userTokenKey = 'user_token';
   static const String userDataKey = 'user_data';
@@ -11,7 +15,7 @@ abstract class AppConstants {
   static const String languageKey = 'language_preference';
 
   // App Configuration
-  static const String appName = 'FlutterBase';
+  static const String appName = 'Ranke';
   static const String appVersion = '1.0.0';
 
   // UI Padding Constants

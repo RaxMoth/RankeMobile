@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:connectivity_plus/connectivity_plus.dart';
 
 /// Network Connectivity Service
@@ -47,5 +48,3 @@ class ConnectivityService {
     _subscription?.cancel();
   }
 }
-
-import 'dart:async';
