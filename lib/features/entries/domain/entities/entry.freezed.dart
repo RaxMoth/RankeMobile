@@ -12,6 +12,7 @@ part of 'entry.dart';
 T _$identity<T>(T value) => value;
 
 final _privateConstructorUsedError = UnsupportedError(
+<<<<<<< HEAD
   'It seems like you constructed your class using `MyClass._()`. This constructor is only meant to be used by freezed and you are not supposed to need it nor use it.\nPlease check the documentation here for more information: https://github.com/rrousselGit/freezed#adding-getters-and-methods-to-our-models',
 );
 
@@ -356,6 +357,9 @@ abstract class _RankedEntry implements RankedEntry {
   _$$RankedEntryImplCopyWith<_$RankedEntryImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }
+=======
+    'It seems like you constructed your class using `MyClass._()`. This constructor is only meant to be used by freezed and you are not supposed to need it nor use it.\nPlease check the documentation here for more information: https://github.com/rrousselGit/freezed#adding-getters-and-methods-to-our-models');
+>>>>>>> 88d3438 (good progress)
 
 /// @nodoc
 mixin _$EntryInput {
@@ -364,9 +368,13 @@ mixin _$EntryInput {
   String? get valueText => throw _privateConstructorUsedError;
   String? get note => throw _privateConstructorUsedError;
 
+<<<<<<< HEAD
   /// Create a copy of EntryInput
   /// with the given fields replaced by the non-null parameter values.
   @JsonKey(includeFromJson: false, includeToJson: false)
+=======
+  @JsonKey(ignore: true)
+>>>>>>> 88d3438 (good progress)
   $EntryInputCopyWith<EntryInput> get copyWith =>
       throw _privateConstructorUsedError;
 }
@@ -374,6 +382,7 @@ mixin _$EntryInput {
 /// @nodoc
 abstract class $EntryInputCopyWith<$Res> {
   factory $EntryInputCopyWith(
+<<<<<<< HEAD
     EntryInput value,
     $Res Function(EntryInput) then,
   ) = _$EntryInputCopyWithImpl<$Res, EntryInput>;
@@ -384,6 +393,16 @@ abstract class $EntryInputCopyWith<$Res> {
     String? valueText,
     String? note,
   });
+=======
+          EntryInput value, $Res Function(EntryInput) then) =
+      _$EntryInputCopyWithImpl<$Res, EntryInput>;
+  @useResult
+  $Res call(
+      {double? valueNumber,
+      int? valueDurationMs,
+      String? valueText,
+      String? note});
+>>>>>>> 88d3438 (good progress)
 }
 
 /// @nodoc
@@ -396,8 +415,11 @@ class _$EntryInputCopyWithImpl<$Res, $Val extends EntryInput>
   // ignore: unused_field
   final $Res Function($Val) _then;
 
+<<<<<<< HEAD
   /// Create a copy of EntryInput
   /// with the given fields replaced by the non-null parameter values.
+=======
+>>>>>>> 88d3438 (good progress)
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -406,6 +428,7 @@ class _$EntryInputCopyWithImpl<$Res, $Val extends EntryInput>
     Object? valueText = freezed,
     Object? note = freezed,
   }) {
+<<<<<<< HEAD
     return _then(
       _value.copyWith(
             valueNumber: freezed == valueNumber
@@ -427,6 +450,26 @@ class _$EntryInputCopyWithImpl<$Res, $Val extends EntryInput>
           )
           as $Val,
     );
+=======
+    return _then(_value.copyWith(
+      valueNumber: freezed == valueNumber
+          ? _value.valueNumber
+          : valueNumber // ignore: cast_nullable_to_non_nullable
+              as double?,
+      valueDurationMs: freezed == valueDurationMs
+          ? _value.valueDurationMs
+          : valueDurationMs // ignore: cast_nullable_to_non_nullable
+              as int?,
+      valueText: freezed == valueText
+          ? _value.valueText
+          : valueText // ignore: cast_nullable_to_non_nullable
+              as String?,
+      note: freezed == note
+          ? _value.note
+          : note // ignore: cast_nullable_to_non_nullable
+              as String?,
+    ) as $Val);
+>>>>>>> 88d3438 (good progress)
   }
 }
 
@@ -434,6 +477,7 @@ class _$EntryInputCopyWithImpl<$Res, $Val extends EntryInput>
 abstract class _$$EntryInputImplCopyWith<$Res>
     implements $EntryInputCopyWith<$Res> {
   factory _$$EntryInputImplCopyWith(
+<<<<<<< HEAD
     _$EntryInputImpl value,
     $Res Function(_$EntryInputImpl) then,
   ) = __$$EntryInputImplCopyWithImpl<$Res>;
@@ -445,6 +489,17 @@ abstract class _$$EntryInputImplCopyWith<$Res>
     String? valueText,
     String? note,
   });
+=======
+          _$EntryInputImpl value, $Res Function(_$EntryInputImpl) then) =
+      __$$EntryInputImplCopyWithImpl<$Res>;
+  @override
+  @useResult
+  $Res call(
+      {double? valueNumber,
+      int? valueDurationMs,
+      String? valueText,
+      String? note});
+>>>>>>> 88d3438 (good progress)
 }
 
 /// @nodoc
@@ -452,12 +507,18 @@ class __$$EntryInputImplCopyWithImpl<$Res>
     extends _$EntryInputCopyWithImpl<$Res, _$EntryInputImpl>
     implements _$$EntryInputImplCopyWith<$Res> {
   __$$EntryInputImplCopyWithImpl(
+<<<<<<< HEAD
     _$EntryInputImpl _value,
     $Res Function(_$EntryInputImpl) _then,
   ) : super(_value, _then);
 
   /// Create a copy of EntryInput
   /// with the given fields replaced by the non-null parameter values.
+=======
+      _$EntryInputImpl _value, $Res Function(_$EntryInputImpl) _then)
+      : super(_value, _then);
+
+>>>>>>> 88d3438 (good progress)
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -466,6 +527,7 @@ class __$$EntryInputImplCopyWithImpl<$Res>
     Object? valueText = freezed,
     Object? note = freezed,
   }) {
+<<<<<<< HEAD
     return _then(
       _$EntryInputImpl(
         valueNumber: freezed == valueNumber
@@ -486,18 +548,43 @@ class __$$EntryInputImplCopyWithImpl<$Res>
                   as String?,
       ),
     );
+=======
+    return _then(_$EntryInputImpl(
+      valueNumber: freezed == valueNumber
+          ? _value.valueNumber
+          : valueNumber // ignore: cast_nullable_to_non_nullable
+              as double?,
+      valueDurationMs: freezed == valueDurationMs
+          ? _value.valueDurationMs
+          : valueDurationMs // ignore: cast_nullable_to_non_nullable
+              as int?,
+      valueText: freezed == valueText
+          ? _value.valueText
+          : valueText // ignore: cast_nullable_to_non_nullable
+              as String?,
+      note: freezed == note
+          ? _value.note
+          : note // ignore: cast_nullable_to_non_nullable
+              as String?,
+    ));
+>>>>>>> 88d3438 (good progress)
   }
 }
 
 /// @nodoc
 
 class _$EntryInputImpl implements _EntryInput {
+<<<<<<< HEAD
   const _$EntryInputImpl({
     this.valueNumber,
     this.valueDurationMs,
     this.valueText,
     this.note,
   });
+=======
+  const _$EntryInputImpl(
+      {this.valueNumber, this.valueDurationMs, this.valueText, this.note});
+>>>>>>> 88d3438 (good progress)
 
   @override
   final double? valueNumber;
@@ -531,9 +618,13 @@ class _$EntryInputImpl implements _EntryInput {
   int get hashCode =>
       Object.hash(runtimeType, valueNumber, valueDurationMs, valueText, note);
 
+<<<<<<< HEAD
   /// Create a copy of EntryInput
   /// with the given fields replaced by the non-null parameter values.
   @JsonKey(includeFromJson: false, includeToJson: false)
+=======
+  @JsonKey(ignore: true)
+>>>>>>> 88d3438 (good progress)
   @override
   @pragma('vm:prefer-inline')
   _$$EntryInputImplCopyWith<_$EntryInputImpl> get copyWith =>
@@ -541,12 +632,20 @@ class _$EntryInputImpl implements _EntryInput {
 }
 
 abstract class _EntryInput implements EntryInput {
+<<<<<<< HEAD
   const factory _EntryInput({
     final double? valueNumber,
     final int? valueDurationMs,
     final String? valueText,
     final String? note,
   }) = _$EntryInputImpl;
+=======
+  const factory _EntryInput(
+      {final double? valueNumber,
+      final int? valueDurationMs,
+      final String? valueText,
+      final String? note}) = _$EntryInputImpl;
+>>>>>>> 88d3438 (good progress)
 
   @override
   double? get valueNumber;
@@ -556,11 +655,16 @@ abstract class _EntryInput implements EntryInput {
   String? get valueText;
   @override
   String? get note;
+<<<<<<< HEAD
 
   /// Create a copy of EntryInput
   /// with the given fields replaced by the non-null parameter values.
   @override
   @JsonKey(includeFromJson: false, includeToJson: false)
+=======
+  @override
+  @JsonKey(ignore: true)
+>>>>>>> 88d3438 (good progress)
   _$$EntryInputImplCopyWith<_$EntryInputImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }

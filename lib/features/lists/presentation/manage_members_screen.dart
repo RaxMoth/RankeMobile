@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+<<<<<<< HEAD
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../shared/widgets/error_view.dart';
 import '../../../core/network/api_error.dart';
@@ -6,11 +7,20 @@ import '../domain/entities/ranked_list.dart';
 import 'providers/lists_provider.dart';
 
 class ManageMembersScreen extends ConsumerWidget {
+=======
+
+import '../../../core/theme/colors.dart';
+import '../../../core/theme/text_styles.dart';
+
+/// Manage members screen — owner/admin controls
+class ManageMembersScreen extends StatelessWidget {
+>>>>>>> 88d3438 (good progress)
   final String listId;
 
   const ManageMembersScreen({super.key, required this.listId});
 
   @override
+<<<<<<< HEAD
   Widget build(BuildContext context, WidgetRef ref) {
     final membersAsync = ref.watch(membersProvider(listId));
 
@@ -111,6 +121,17 @@ class _RoleBadge extends StatelessWidget {
           fontSize: 12,
           fontWeight: FontWeight.w500,
           color: color,
+=======
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: SafeArea(
+        child: Center(
+          child: Text(
+            'MANAGE MEMBERS\n(NOT YET IMPLEMENTED)',
+            style: AppTextStyles.sectionHeader.copyWith(color: AppColors.textTertiary),
+            textAlign: TextAlign.center,
+          ),
+>>>>>>> 88d3438 (good progress)
         ),
       ),
     );

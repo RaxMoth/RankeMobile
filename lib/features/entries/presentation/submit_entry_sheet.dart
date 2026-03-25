@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+<<<<<<< HEAD
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../shared/widgets/app_button.dart';
 import '../../../shared/widgets/app_text_field.dart';
@@ -139,4 +140,20 @@ class _SubmitEntrySheetState extends ConsumerState<SubmitEntrySheet> {
         ),
     };
   }
+=======
+
+/// Bottom sheet for submitting an entry to a ranked list
+class SubmitEntrySheet extends StatelessWidget {
+  final String listId;
+
+  const SubmitEntrySheet({super.key, required this.listId});
+
+  @override
+  Widget build(BuildContext context) {
+    return const Padding(
+      padding: EdgeInsets.all(24),
+      child: Text('Submit Entry Sheet\n(Not yet implemented)', textAlign: TextAlign.center),
+    );
+  }
+>>>>>>> 88d3438 (good progress)
 }

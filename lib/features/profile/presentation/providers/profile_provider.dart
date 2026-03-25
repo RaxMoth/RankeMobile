@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:get_it/get_it.dart';
 import '../../../auth/domain/auth_repository.dart';
@@ -20,3 +21,6 @@ class ProfileNotifier extends AsyncNotifier<User?> {
     ref.invalidateSelf();
   }
 }
+=======
+// TODO: Riverpod profile state provider
+>>>>>>> 88d3438 (good progress)

@@ -2,6 +2,7 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 
 part 'entry.freezed.dart';
 
+<<<<<<< HEAD
 @freezed
 class RankedEntry with _$RankedEntry {
   const factory RankedEntry({
@@ -18,6 +19,9 @@ class RankedEntry with _$RankedEntry {
   }) = _RankedEntry;
 }
 
+=======
+/// Input model for submitting an entry
+>>>>>>> 88d3438 (good progress)
 @freezed
 class EntryInput with _$EntryInput {
   const factory EntryInput({

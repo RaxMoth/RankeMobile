@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+<<<<<<< HEAD
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../auth/presentation/providers/auth_provider.dart';
@@ -65,6 +66,27 @@ class ProfileScreen extends ConsumerWidget {
             ],
           );
         },
+=======
+
+import '../../../core/theme/colors.dart';
+import '../../../core/theme/text_styles.dart';
+
+/// Profile screen — display name, stats, sign out
+class ProfileScreen extends StatelessWidget {
+  const ProfileScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: SafeArea(
+        child: Center(
+          child: Text(
+            'PROFILE\n(NOT YET IMPLEMENTED)',
+            style: AppTextStyles.sectionHeader.copyWith(color: AppColors.textTertiary),
+            textAlign: TextAlign.center,
+          ),
+        ),
+>>>>>>> 88d3438 (good progress)
       ),
     );
   }

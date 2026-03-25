@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+<<<<<<< HEAD
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../shared/widgets/app_button.dart';
@@ -133,6 +134,25 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 ),
               ],
             ),
+=======
+
+import '../../../core/theme/colors.dart';
+import '../../../core/theme/text_styles.dart';
+
+/// Register screen — email, password, display name
+class RegisterScreen extends StatelessWidget {
+  const RegisterScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: SafeArea(
+        child: Center(
+          child: Text(
+            'REGISTER\n(NOT YET IMPLEMENTED)',
+            style: AppTextStyles.sectionHeader.copyWith(color: AppColors.textTertiary),
+            textAlign: TextAlign.center,
+>>>>>>> 88d3438 (good progress)
           ),
         ),
       ),

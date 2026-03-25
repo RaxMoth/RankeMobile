@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+<<<<<<< HEAD
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../shared/widgets/app_button.dart';
@@ -9,11 +10,20 @@ import '../../entries/presentation/widgets/entry_row.dart';
 import 'providers/lists_provider.dart';
 
 class InvitePreviewScreen extends ConsumerStatefulWidget {
+=======
+
+import '../../../core/theme/colors.dart';
+import '../../../core/theme/text_styles.dart';
+
+/// Invite preview screen — shown via deep link
+class InvitePreviewScreen extends StatelessWidget {
+>>>>>>> 88d3438 (good progress)
   final String token;
 
   const InvitePreviewScreen({super.key, required this.token});
 
   @override
+<<<<<<< HEAD
   ConsumerState<InvitePreviewScreen> createState() =>
       _InvitePreviewScreenState();
 }
@@ -84,6 +94,16 @@ class _InvitePreviewScreenState extends ConsumerState<InvitePreviewScreen> {
                 width: double.infinity,
               ),
             ],
+=======
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: SafeArea(
+        child: Center(
+          child: Text(
+            'INVITE PREVIEW\n(NOT YET IMPLEMENTED)',
+            style: AppTextStyles.sectionHeader.copyWith(color: AppColors.textTertiary),
+            textAlign: TextAlign.center,
+>>>>>>> 88d3438 (good progress)
           ),
         ),
       ),

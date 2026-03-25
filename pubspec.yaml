@@ -1,5 +1,9 @@
 name: ranke_mobile
+<<<<<<< HEAD
 description: "Ranked Lists - iOS App"
+=======
+description: "Ranke - Collaborative Ranking App"
+>>>>>>> 88d3438 (good progress)
 publish_to: "none"
 
 version: 1.0.0+1
@@ -21,13 +25,22 @@ dependencies:
     # State Management (Riverpod)
     flutter_riverpod: ^2.5.0
     riverpod_annotation: ^2.3.0
+<<<<<<< HEAD
 
     # DI / Service Locator
     get_it: ^7.6.0
+=======
+>>>>>>> 88d3438 (good progress)
 
     # Routing & Navigation
     go_router: ^14.0.0
 
+<<<<<<< HEAD
+=======
+    # DI
+    get_it: ^7.6.0
+
+>>>>>>> 88d3438 (good progress)
     # Local Storage
     shared_preferences: ^2.3.0
     flutter_secure_storage: ^9.0.0
@@ -36,25 +49,40 @@ dependencies:
     dio: ^5.4.0
     pretty_dio_logger: ^1.3.1
 
+<<<<<<< HEAD
     # Auth
     sign_in_with_apple: ^6.1.0
+=======
+    # Device & Connectivity
+    device_info_plus: ^11.0.0
+    connectivity_plus: ^6.0.0
+>>>>>>> 88d3438 (good progress)
 
-    # Data Classes
+    # Data Classes & Serialization
     freezed_annotation: ^2.4.1
     json_annotation: ^4.8.1
 
     # Functional Programming
     fpdart: ^1.1.0
 
+<<<<<<< HEAD
+=======
+    # Auth
+    sign_in_with_apple: ^7.0.0
+
+>>>>>>> 88d3438 (good progress)
     # Sharing
     share_plus: ^10.0.0
 
     # Concurrency
     mutex: ^3.1.0
+<<<<<<< HEAD
 
     # Device & Permissions
     device_info_plus: ^11.0.0
     connectivity_plus: ^6.0.0
+=======
+>>>>>>> 88d3438 (good progress)
 
     # Utilities
     intl: ^0.19.0
@@ -73,43 +101,5 @@ dev_dependencies:
     json_serializable: ^6.7.1
     riverpod_generator: ^2.3.0
 
-# For information on the generic Dart part of this file, see the
-# following page: https://dart.dev/tools/pub/pubspec
-
-# The following section is specific to Flutter packages.
 flutter:
-    # The following line ensures that the Material Icons font is
-    # included with your application, so that you can use the icons in
-    # the material Icons class.
     uses-material-design: true
-
-    # To add assets to your application, add an assets section, like this:
-    # assets:
-    #   - images/a_dot_burr.jpeg
-    #   - images/a_dot_ham.jpeg
-
-    # An image asset can refer to one or more resolution-specific "variants", see
-    # https://flutter.dev/to/resolution-aware-images
-
-    # For details regarding adding assets from package dependencies, see
-    # https://flutter.dev/to/asset-from-package
-
-    # To add custom fonts to your application, add a fonts section here,
-    # in this "flutter" section. Each entry in this list should have a
-    # "family" key with the font family name, and a "fonts" key with a
-    # list giving the asset and other descriptors for the font. For
-    # example:
-    # fonts:
-    #   - family: Schyler
-    #     fonts:
-    #       - asset: fonts/Schyler-Regular.ttf
-    #       - asset: fonts/Schyler-Italic.ttf
-    #         style: italic
-    #   - family: Trajan Pro
-    #     fonts:
-    #       - asset: fonts/TrajanPro.ttf
-    #       - asset: fonts/TrajanPro_Bold.ttf
-    #         weight: 700
-    #
-    # For details regarding fonts from package dependencies,
-    # see https://flutter.dev/to/font-from-package

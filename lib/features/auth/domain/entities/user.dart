@@ -8,6 +8,10 @@ class User with _$User {
     required String id,
     required String email,
     required String displayName,
+<<<<<<< HEAD
     required DateTime createdAt,
+=======
+    DateTime? createdAt,
+>>>>>>> 88d3438 (good progress)
   }) = _User;
 }

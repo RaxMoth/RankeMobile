@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+<<<<<<< HEAD
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../shared/widgets/app_button.dart';
@@ -143,6 +144,25 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 ),
               ],
             ),
+=======
+
+import '../../../core/theme/colors.dart';
+import '../../../core/theme/text_styles.dart';
+
+/// Login screen — email/password + Sign in with Apple
+class LoginScreen extends StatelessWidget {
+  const LoginScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: SafeArea(
+        child: Center(
+          child: Text(
+            'LOGIN\n(NOT YET IMPLEMENTED)',
+            style: AppTextStyles.sectionHeader.copyWith(color: AppColors.textTertiary),
+            textAlign: TextAlign.center,
+>>>>>>> 88d3438 (good progress)
           ),
         ),
       ),

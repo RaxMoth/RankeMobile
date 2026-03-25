@@ -1,5 +1,8 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
+<<<<<<< HEAD
 import '../../../entries/domain/entities/entry.dart';
+=======
+>>>>>>> 88d3438 (good progress)
 
 part 'ranked_list.freezed.dart';
 
@@ -23,13 +26,35 @@ class RankedList with _$RankedList {
 }
 
 @freezed
+<<<<<<< HEAD
+=======
+class RankedEntry with _$RankedEntry {
+  const factory RankedEntry({
+    required String id,
+    required String userId,
+    required String displayName,
+    required int rank,
+    double? valueNumber,
+    int? valueDurationMs,
+    String? valueText,
+    int? manualRank,
+    String? note,
+    required DateTime submittedAt,
+  }) = _RankedEntry;
+}
+
+@freezed
+>>>>>>> 88d3438 (good progress)
 class ListSummary with _$ListSummary {
   const factory ListSummary({
     required String id,
     required String title,
     required ValueType valueType,
+<<<<<<< HEAD
     required RankOrder rankOrder,
     required bool isPublic,
+=======
+>>>>>>> 88d3438 (good progress)
     required int memberCount,
     int? ownRank,
   }) = _ListSummary;

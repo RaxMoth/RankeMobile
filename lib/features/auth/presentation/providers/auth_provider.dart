@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:get_it/get_it.dart';
@@ -101,3 +102,6 @@ class AuthNotifier extends AsyncNotifier<User?> {
     state = const AsyncData(null);
   }
 }
+=======
+// TODO: Riverpod auth state provider using AsyncNotifier pattern
+>>>>>>> 88d3438 (good progress)

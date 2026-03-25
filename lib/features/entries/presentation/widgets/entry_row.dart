@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+<<<<<<< HEAD
 import '../../domain/entities/entry.dart';
 import '../../../lists/domain/entities/ranked_list.dart';
 import 'duration_picker.dart';
@@ -80,5 +81,16 @@ class EntryRow extends StatelessWidget {
             : '-',
       ValueType.text => entry.valueText ?? '-',
     };
+=======
+
+/// Widget for displaying a single entry in the ranked list
+class EntryRow extends StatelessWidget {
+  const EntryRow({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    // TODO: implement entry row with rank, name, value display
+    return const SizedBox.shrink();
+>>>>>>> 88d3438 (good progress)
   }
 }

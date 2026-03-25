@@ -1,6 +1,15 @@
 import 'package:flutter/material.dart';
+<<<<<<< HEAD
 import '../../features/lists/domain/entities/ranked_list.dart';
 
+=======
+
+import '../../core/theme/colors.dart';
+import '../../core/theme/text_styles.dart';
+import '../../features/lists/domain/entities/ranked_list.dart';
+
+/// Colored pill badge showing the value type of a list
+>>>>>>> 88d3438 (good progress)
 class ValueTypeBadge extends StatelessWidget {
   final ValueType valueType;
 
@@ -8,6 +17,7 @@ class ValueTypeBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+<<<<<<< HEAD
     final (label, icon, color) = switch (valueType) {
       ValueType.number => ('Number', Icons.tag, Colors.blue),
       ValueType.duration => ('Duration', Icons.timer, Colors.orange),
@@ -35,6 +45,23 @@ class ValueTypeBadge extends StatelessWidget {
             ),
           ),
         ],
+=======
+    final (label, color) = switch (valueType) {
+      ValueType.number => ('NUMBER', AppColors.accent),
+      ValueType.duration => ('DURATION', Colors.orange),
+      ValueType.text => ('TEXT', AppColors.categoryCoding),
+    };
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: color.withAlpha(30),
+        borderRadius: BorderRadius.circular(3),
+      ),
+      child: Text(
+        label,
+        style: AppTextStyles.badge.copyWith(color: color),
+>>>>>>> 88d3438 (good progress)
       ),
     );
   }

@@ -1,4 +1,7 @@
+<<<<<<< HEAD
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+=======
+>>>>>>> 88d3438 (good progress)
 import 'package:get_it/get_it.dart';
 import '../network/api_client.dart';
 import '../../features/auth/data/auth_remote_data_source.dart';
@@ -21,6 +24,7 @@ import '../../features/entries/data/entries_repository_impl.dart';
 import '../../features/entries/domain/entries_repository.dart';
 import '../../features/entries/domain/use_cases/submit_entry_use_case.dart';
 
+<<<<<<< HEAD
 final sl = GetIt.instance;
 
 void setupDI() {
@@ -65,4 +69,29 @@ void setupDI() {
     () => EntriesRepositoryImpl(sl<EntriesRemoteDataSource>()),
   );
   sl.registerFactory(() => SubmitEntryUseCase(sl<EntriesRepository>()));
+=======
+import '../network/api_client.dart';
+
+final getIt = GetIt.instance;
+
+/// Setup dependency injection — runs before runApp
+Future<void> setupDI() async {
+  // API client (Dio instance with auth interceptor)
+  getIt.registerSingleton<ApiClient>(ApiClient());
+
+  // TODO: Register remote data sources
+  // getIt.registerLazySingleton<AuthRemoteDataSource>(
+  //   () => AuthRemoteDataSourceImpl(getIt<ApiClient>()),
+  // );
+
+  // TODO: Register repositories
+  // getIt.registerLazySingleton<AuthRepository>(
+  //   () => AuthRepositoryImpl(getIt<AuthRemoteDataSource>()),
+  // );
+
+  // TODO: Register use cases
+  // getIt.registerFactory<LoginUseCase>(
+  //   () => LoginUseCase(getIt<AuthRepository>()),
+  // );
+>>>>>>> 88d3438 (good progress)
 }
