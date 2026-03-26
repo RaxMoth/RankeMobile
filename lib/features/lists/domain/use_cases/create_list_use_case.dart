@@ -14,6 +14,9 @@ class CreateListUseCase {
     required ValueType valueType,
     required RankOrder rankOrder,
     required bool isPublic,
+    String? telegramLink,
+    String? whatsappLink,
+    String? discordLink,
   }) {
     return _repository.createList(
       title: title,
@@ -21,6 +24,9 @@ class CreateListUseCase {
       valueType: valueType,
       rankOrder: rankOrder,
       isPublic: isPublic,
+      telegramLink: telegramLink,
+      whatsappLink: whatsappLink,
+      discordLink: discordLink,
     );
   }
 }

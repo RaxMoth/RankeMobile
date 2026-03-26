@@ -1,172 +1,88 @@
 import 'package:flutter/material.dart';
-<<<<<<< HEAD
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../shared/widgets/app_button.dart';
-import '../../../shared/widgets/app_text_field.dart';
-import '../domain/entities/ranked_list.dart';
-import 'providers/lists_provider.dart';
-
-class CreateListSheet extends ConsumerStatefulWidget {
-  const CreateListSheet({super.key});
-
-  @override
-  ConsumerState<CreateListSheet> createState() => _CreateListSheetState();
-}
-
-class _CreateListSheetState extends ConsumerState<CreateListSheet> {
-  final _formKey = GlobalKey<FormState>();
-  final _titleController = TextEditingController();
-  final _descController = TextEditingController();
-  ValueType _valueType = ValueType.number;
-  RankOrder _rankOrder = RankOrder.desc;
-  bool _isPublic = false;
-  bool _isSubmitting = false;
-=======
 import 'package:go_router/go_router.dart';
 
 import '../../../core/theme/colors.dart';
 import '../../../core/theme/text_styles.dart';
+import '../domain/entities/ranked_list.dart';
+import 'providers/lists_provider.dart';
 
 /// Create list screen — "INITIALIZE" new leaderboard registry
-class CreateListScreen extends StatefulWidget {
+class CreateListScreen extends ConsumerStatefulWidget {
   const CreateListScreen({super.key});
 
   @override
-  State<CreateListScreen> createState() => _CreateListScreenState();
+  ConsumerState<CreateListScreen> createState() => _CreateListScreenState();
 }
 
-class _CreateListScreenState extends State<CreateListScreen> {
+class _CreateListScreenState extends ConsumerState<CreateListScreen> {
   final _titleController = TextEditingController();
   final _scopeController = TextEditingController();
-  final _metricController = TextEditingController();
   final _rulesController = TextEditingController();
+  final _telegramController = TextEditingController();
+  final _whatsappController = TextEditingController();
+  final _discordController = TextEditingController();
   bool _isPublic = true;
->>>>>>> 88d3438 (good progress)
+  bool _showCommsFields = false;
+  ValueType _valueType = ValueType.number;
+  RankOrder _rankOrder = RankOrder.desc;
+  bool _isSubmitting = false;
+  String? _titleError;
 
   @override
   void dispose() {
     _titleController.dispose();
-<<<<<<< HEAD
-    _descController.dispose();
+    _scopeController.dispose();
+    _rulesController.dispose();
+    _telegramController.dispose();
+    _whatsappController.dispose();
+    _discordController.dispose();
     super.dispose();
   }
 
   Future<void> _submit() async {
-    if (!_formKey.currentState!.validate()) return;
-    setState(() => _isSubmitting = true);
+    final title = _titleController.text.trim();
+    if (title.isEmpty) {
+      setState(() => _titleError = 'BOARD IDENTIFIER REQUIRED');
+      return;
+    }
+    setState(() {
+      _titleError = null;
+      _isSubmitting = true;
+    });
+
     try {
       await ref.read(listsProvider.notifier).createList(
-            title: _titleController.text.trim(),
-            description: _descController.text.trim().isEmpty
+            title: title,
+            description: _scopeController.text.trim().isEmpty
                 ? null
-                : _descController.text.trim(),
+                : _scopeController.text.trim(),
             valueType: _valueType,
             rankOrder: _rankOrder,
             isPublic: _isPublic,
+            telegramLink: _telegramController.text.trim().isEmpty
+                ? null
+                : _telegramController.text.trim(),
+            whatsappLink: _whatsappController.text.trim().isEmpty
+                ? null
+                : _whatsappController.text.trim(),
+            discordLink: _discordController.text.trim().isEmpty
+                ? null
+                : _discordController.text.trim(),
           );
-      if (mounted) Navigator.of(context).pop();
+      if (mounted) context.pop();
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.toString())),
+          SnackBar(
+            content: Text('FAILED TO CREATE BOARD: $e'),
+            backgroundColor: AppColors.error,
+          ),
         );
       }
     } finally {
       if (mounted) setState(() => _isSubmitting = false);
     }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.only(
-        left: 24,
-        right: 24,
-        top: 24,
-        bottom: MediaQuery.of(context).viewInsets.bottom + 24,
-      ),
-      child: Form(
-        key: _formKey,
-        child: ListView(
-          shrinkWrap: true,
-          children: [
-            Text(
-              'Create List',
-              style: Theme.of(context).textTheme.titleLarge,
-            ),
-            const SizedBox(height: 16),
-            AppTextField(
-              controller: _titleController,
-              label: 'Title',
-              validator: (v) =>
-                  v == null || v.trim().isEmpty ? 'Title is required' : null,
-            ),
-            const SizedBox(height: 12),
-            AppTextField(
-              controller: _descController,
-              label: 'Description (optional)',
-              maxLines: 2,
-            ),
-            const SizedBox(height: 16),
-            Text('Value Type',
-                style: Theme.of(context).textTheme.titleSmall),
-            const SizedBox(height: 8),
-            SegmentedButton<ValueType>(
-              segments: const [
-                ButtonSegment(
-                    value: ValueType.number,
-                    label: Text('Number'),
-                    icon: Icon(Icons.tag)),
-                ButtonSegment(
-                    value: ValueType.duration,
-                    label: Text('Duration'),
-                    icon: Icon(Icons.timer)),
-                ButtonSegment(
-                    value: ValueType.text,
-                    label: Text('Text'),
-                    icon: Icon(Icons.text_fields)),
-              ],
-              selected: {_valueType},
-              onSelectionChanged: (v) => setState(() {
-                _valueType = v.first;
-              }),
-            ),
-            const SizedBox(height: 16),
-            if (_valueType != ValueType.text) ...[
-              Text('Rank Order',
-                  style: Theme.of(context).textTheme.titleSmall),
-              const SizedBox(height: 8),
-              SegmentedButton<RankOrder>(
-                segments: const [
-                  ButtonSegment(
-                      value: RankOrder.desc, label: Text('High to Low')),
-                  ButtonSegment(
-                      value: RankOrder.asc, label: Text('Low to High')),
-                ],
-                selected: {_rankOrder},
-                onSelectionChanged: (v) =>
-                    setState(() => _rankOrder = v.first),
-              ),
-              const SizedBox(height: 16),
-            ],
-            SwitchListTile(
-              title: const Text('Public'),
-              subtitle: const Text('Anyone with the link can view'),
-              value: _isPublic,
-              onChanged: (v) => setState(() => _isPublic = v),
-              contentPadding: EdgeInsets.zero,
-            ),
-            const SizedBox(height: 16),
-            AppButton(
-              label: 'Create',
-              onPressed: _submit,
-              isLoading: _isSubmitting,
-              width: double.infinity,
-=======
-    _scopeController.dispose();
-    _metricController.dispose();
-    _rulesController.dispose();
-    super.dispose();
   }
 
   @override
@@ -185,6 +101,7 @@ class _CreateListScreenState extends State<CreateListScreen> {
                     label: 'BOARD IDENTIFIER',
                     controller: _titleController,
                     hint: 'E.G. Q4 REVENUE GAINS',
+                    errorText: _titleError,
                   ),
                   const SizedBox(height: 24),
                   _buildField(
@@ -194,11 +111,15 @@ class _CreateListScreenState extends State<CreateListScreen> {
                     maxLines: 3,
                   ),
                   const SizedBox(height: 24),
+                  _buildValueTypePicker(),
+                  const SizedBox(height: 24),
+                  _buildRankOrderToggle(),
+                  const SizedBox(height: 24),
                   _buildPublicToggle(),
                   const SizedBox(height: 24),
-                  _buildMetricField(),
-                  const SizedBox(height: 24),
                   _buildRulesField(),
+                  const SizedBox(height: 24),
+                  _buildCommsSection(),
                   const SizedBox(height: 16),
                   Text(
                     'AGREEMENT OF TERMINAL SERVICE TERMS REQUIRED',
@@ -213,15 +134,12 @@ class _CreateListScreenState extends State<CreateListScreen> {
                   const SizedBox(height: 32),
                 ],
               ),
->>>>>>> 88d3438 (good progress)
             ),
           ],
         ),
       ),
     );
   }
-<<<<<<< HEAD
-=======
 
   Widget _buildHeader() {
     return Padding(
@@ -258,6 +176,7 @@ class _CreateListScreenState extends State<CreateListScreen> {
     required TextEditingController controller,
     required String hint,
     int maxLines = 1,
+    String? errorText,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -268,15 +187,167 @@ class _CreateListScreenState extends State<CreateListScreen> {
           controller: controller,
           maxLines: maxLines,
           style: AppTextStyles.body,
+          onChanged: (_) {
+            if (_titleError != null && controller == _titleController) {
+              setState(() => _titleError = null);
+            }
+          },
           decoration: InputDecoration(
             hintText: hint,
             hintStyle: AppTextStyles.bodySecondary.copyWith(
               color: AppColors.textTertiary,
               letterSpacing: 0.5,
             ),
+            errorText: errorText,
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildValueTypePicker() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('VALUE TYPE',
+            style: AppTextStyles.sectionHeader.copyWith(fontSize: 11)),
+        const SizedBox(height: 10),
+        Row(
+          children: ValueType.values.map((type) {
+            final isSelected = type == _valueType;
+            return Expanded(
+              child: GestureDetector(
+                onTap: () {
+                  setState(() {
+                    _valueType = type;
+                    // Text type is always manual ranking
+                    if (type == ValueType.text) {
+                      _rankOrder = RankOrder.asc;
+                    }
+                  });
+                },
+                child: Container(
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  margin: EdgeInsets.only(
+                    right: type != ValueType.text ? 8 : 0,
+                  ),
+                  decoration: BoxDecoration(
+                    color: isSelected
+                        ? AppColors.accent.withAlpha(25)
+                        : AppColors.surface,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color:
+                          isSelected ? AppColors.accent : AppColors.border,
+                      width: isSelected ? 1.5 : 1,
+                    ),
+                  ),
+                  child: Column(
+                    children: [
+                      Icon(
+                        _iconForType(type),
+                        color: isSelected
+                            ? AppColors.accent
+                            : AppColors.textTertiary,
+                        size: 20,
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        type.name.toUpperCase(),
+                        style: AppTextStyles.badge.copyWith(
+                          color: isSelected
+                              ? AppColors.accent
+                              : AppColors.textSecondary,
+                          fontWeight: isSelected
+                              ? FontWeight.w800
+                              : FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          }).toList(),
+        ),
+        const SizedBox(height: 6),
+        Text(
+          _descriptionForType(_valueType),
+          style: AppTextStyles.badge.copyWith(color: AppColors.textTertiary),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildRankOrderToggle() {
+    final isText = _valueType == ValueType.text;
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: isText ? AppColors.surface.withAlpha(100) : AppColors.surface,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'RANK ORDER',
+                style: AppTextStyles.body.copyWith(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 13,
+                  color: isText ? AppColors.textTertiary : null,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                isText
+                    ? 'MANUAL RANKING FOR TEXT'
+                    : _rankOrder == RankOrder.desc
+                        ? 'HIGHEST VALUE WINS'
+                        : 'LOWEST VALUE WINS',
+                style:
+                    AppTextStyles.badge.copyWith(color: AppColors.textTertiary),
+              ),
+            ],
+          ),
+          if (!isText)
+            Row(
+              children: [
+                _orderChip('HIGH\u2192LOW', RankOrder.desc),
+                const SizedBox(width: 8),
+                _orderChip('LOW\u2192HIGH', RankOrder.asc),
+              ],
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _orderChip(String label, RankOrder order) {
+    final isSelected = _rankOrder == order;
+    return GestureDetector(
+      onTap: () => setState(() => _rankOrder = order),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          color: isSelected ? AppColors.accent : AppColors.card,
+          borderRadius: BorderRadius.circular(4),
+          border: Border.all(
+            color: isSelected ? AppColors.accent : AppColors.border,
+          ),
+        ),
+        child: Text(
+          label,
+          style: AppTextStyles.badge.copyWith(
+            color: isSelected ? AppColors.background : AppColors.textSecondary,
+            fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
+          ),
+        ),
+      ),
     );
   }
 
@@ -296,12 +367,14 @@ class _CreateListScreenState extends State<CreateListScreen> {
             children: [
               Text(
                 'PUBLIC REGISTRY',
-                style: AppTextStyles.body.copyWith(fontWeight: FontWeight.w700, fontSize: 13),
+                style: AppTextStyles.body
+                    .copyWith(fontWeight: FontWeight.w700, fontSize: 13),
               ),
               const SizedBox(height: 2),
               Text(
                 'VISIBLE TO ALL APEX USERS',
-                style: AppTextStyles.badge.copyWith(color: AppColors.textTertiary),
+                style:
+                    AppTextStyles.badge.copyWith(color: AppColors.textTertiary),
               ),
             ],
           ),
@@ -311,28 +384,6 @@ class _CreateListScreenState extends State<CreateListScreen> {
           ),
         ],
       ),
-    );
-  }
-
-  Widget _buildMetricField() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text('RANKING METRIC', style: AppTextStyles.sectionHeader.copyWith(fontSize: 11)),
-        const SizedBox(height: 10),
-        TextField(
-          controller: _metricController,
-          style: AppTextStyles.body,
-          decoration: InputDecoration(
-            hintText: 'E.G. USD, SECONDS, SCORE',
-            hintStyle: AppTextStyles.bodySecondary.copyWith(
-              color: AppColors.textTertiary,
-              letterSpacing: 0.5,
-            ),
-            suffixIcon: const Icon(Icons.tune, color: AppColors.textTertiary, size: 20),
-          ),
-        ),
-      ],
     );
   }
 
@@ -390,20 +441,118 @@ class _CreateListScreenState extends State<CreateListScreen> {
     );
   }
 
+  Widget _buildCommsSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        GestureDetector(
+          onTap: () => setState(() => _showCommsFields = !_showCommsFields),
+          child: Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: AppColors.surface,
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: AppColors.border),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'COMMUNICATION CHANNELS',
+                  style: AppTextStyles.sectionHeader.copyWith(fontSize: 11),
+                ),
+                Row(
+                  children: [
+                    Text(
+                      'OPTIONAL',
+                      style: AppTextStyles.badge
+                          .copyWith(color: AppColors.textTertiary),
+                    ),
+                    const SizedBox(width: 8),
+                    Icon(
+                      _showCommsFields
+                          ? Icons.keyboard_arrow_up
+                          : Icons.keyboard_arrow_down,
+                      color: AppColors.textTertiary,
+                      size: 18,
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+        if (_showCommsFields) ...[
+          const SizedBox(height: 10),
+          _commsField(
+              _telegramController, 'https://t.me/...', Icons.send),
+          const SizedBox(height: 10),
+          _commsField(
+              _whatsappController, 'https://wa.me/...', Icons.chat),
+          const SizedBox(height: 10),
+          _commsField(
+              _discordController, 'https://discord.gg/...', Icons.headphones),
+        ],
+      ],
+    );
+  }
+
+  Widget _commsField(
+      TextEditingController controller, String hint, IconData icon) {
+    return TextField(
+      controller: controller,
+      style: AppTextStyles.body.copyWith(fontSize: 13),
+      decoration: InputDecoration(
+        hintText: hint,
+        hintStyle:
+            AppTextStyles.bodySecondary.copyWith(color: AppColors.textTertiary),
+        prefixIcon: Icon(icon, color: AppColors.textTertiary, size: 18),
+        prefixIconConstraints:
+            const BoxConstraints(minWidth: 40, minHeight: 0),
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+      ),
+    );
+  }
+
   Widget _buildCreateButton() {
     return SizedBox(
       width: double.infinity,
       child: ElevatedButton(
-        onPressed: () {
-          // TODO: create list via use case
-          context.pop();
-        },
+        onPressed: _isSubmitting ? null : _submit,
         style: ElevatedButton.styleFrom(
           padding: const EdgeInsets.symmetric(vertical: 18),
         ),
-        child: const Text('CREATE LEADERBOARD'),
+        child: _isSubmitting
+            ? const SizedBox(
+                height: 20,
+                width: 20,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: AppColors.background,
+                ),
+              )
+            : const Text('CREATE LEADERBOARD'),
       ),
     );
   }
->>>>>>> 88d3438 (good progress)
+
+  IconData _iconForType(ValueType type) {
+    return switch (type) {
+      ValueType.number => Icons.tag,
+      ValueType.duration => Icons.timer_outlined,
+      ValueType.text => Icons.text_fields,
+    };
+  }
+
+  String _descriptionForType(ValueType type) {
+    return switch (type) {
+      ValueType.number =>
+        'NUMERIC VALUES \u2022 e.g. 48.2, 156, 31240',
+      ValueType.duration =>
+        'TIME-BASED VALUES \u2022 e.g. 15:23, 1:02:45',
+      ValueType.text =>
+        'TEXT ENTRIES WITH MANUAL RANKING \u2022 e.g. "Completed Q4"',
+    };
+  }
 }

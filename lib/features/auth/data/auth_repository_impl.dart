@@ -1,41 +1,21 @@
-<<<<<<< HEAD
-import 'package:fpdart/fpdart.dart';
-import '../../../core/network/api_error.dart';
-import '../../../core/network/api_helpers.dart';
-=======
 import 'package:dio/dio.dart';
 import 'package:fpdart/fpdart.dart';
 
 import '../../../core/network/api_error.dart';
->>>>>>> 88d3438 (good progress)
 import '../domain/auth_repository.dart';
 import '../domain/entities/user.dart';
 import 'auth_remote_data_source.dart';
 
-<<<<<<< HEAD
-class AuthRepositoryImpl implements AuthRepository {
-  final AuthRemoteDataSource _dataSource;
-
-  AuthRepositoryImpl(this._dataSource);
-=======
 /// Implementation of AuthRepository
 class AuthRepositoryImpl implements AuthRepository {
   final AuthRemoteDataSource _remoteDataSource;
 
   AuthRepositoryImpl(this._remoteDataSource);
->>>>>>> 88d3438 (good progress)
 
   @override
   Future<Either<ApiError, User>> login({
     required String email,
     required String password,
-<<<<<<< HEAD
-  }) {
-    return safeApiCall(() async {
-      final data = await _dataSource.login(email: email, password: password);
-      return _mapUser(data);
-    });
-=======
   }) async {
     try {
       final data = await _remoteDataSource.login(
@@ -48,7 +28,6 @@ class AuthRepositoryImpl implements AuthRepository {
     } catch (e) {
       return Left(ApiUnknownError(error: e));
     }
->>>>>>> 88d3438 (good progress)
   }
 
   @override
@@ -56,60 +35,13 @@ class AuthRepositoryImpl implements AuthRepository {
     required String email,
     required String password,
     required String displayName,
-<<<<<<< HEAD
-  }) {
-    return safeApiCall(() async {
-      final data = await _dataSource.register(
-=======
   }) async {
     try {
       final data = await _remoteDataSource.register(
->>>>>>> 88d3438 (good progress)
         email: email,
         password: password,
         displayName: displayName,
       );
-<<<<<<< HEAD
-      return _mapUser(data);
-    });
-  }
-
-  @override
-  Future<Either<ApiError, User>> appleSignIn({
-    required String identityToken,
-    String? fullName,
-  }) {
-    return safeApiCall(() async {
-      final data = await _dataSource.appleSignIn(
-        identityToken: identityToken,
-        fullName: fullName,
-      );
-      return _mapUser(data);
-    });
-  }
-
-  @override
-  Future<Either<ApiError, void>> logout() {
-    return safeApiCall(() => _dataSource.logout());
-  }
-
-  @override
-  Future<Either<ApiError, User>> getCurrentUser() {
-    return safeApiCall(() async {
-      final data = await _dataSource.getCurrentUser();
-      return _mapUser(data);
-    });
-  }
-
-  User _mapUser(Map<String, dynamic> json) {
-    return User(
-      id: json['id'] as String,
-      email: json['email'] as String,
-      displayName: json['displayName'] as String,
-      createdAt: DateTime.parse(json['createdAt'] as String),
-    );
-  }
-=======
       return Right(_mapToUser(data));
     } on DioException catch (e) {
       return Left(_mapDioError(e));
@@ -163,5 +95,4 @@ class AuthRepositoryImpl implements AuthRepository {
     }
     return ApiUnknownError(error: e);
   }
->>>>>>> 88d3438 (good progress)
 }

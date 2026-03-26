@@ -32,6 +32,6 @@ Future<Either<ApiError, T>> safeApiCall<T>(
       statusCode: e.response?.statusCode ?? 500,
     ));
   } catch (e) {
-    return Left(ApiUnknownError(originalError: e));
+    return Left(ApiUnknownError(error: e));
   }
 }

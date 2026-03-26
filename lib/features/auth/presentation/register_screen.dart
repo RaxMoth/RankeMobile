@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-<<<<<<< HEAD
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../core/theme/colors.dart';
+import '../../../core/theme/text_styles.dart';
 import '../../../shared/widgets/app_button.dart';
 import '../../../shared/widgets/app_text_field.dart';
 import 'providers/auth_provider.dart';
@@ -53,7 +54,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     });
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Create Account')),
+      appBar: AppBar(
+        title: Text('CREATE ACCOUNT', style: AppTextStyles.screenTitle),
+      ),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(24),
@@ -115,13 +118,13 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 ),
                 const SizedBox(height: 24),
                 AppButton(
-                  label: 'Create Account',
+                  label: 'CREATE ACCOUNT',
                   onPressed: _register,
                   isLoading: authState.isLoading,
                 ),
                 const SizedBox(height: 16),
                 AppButton(
-                  label: 'Sign up with Apple',
+                  label: 'SIGN UP WITH APPLE',
                   icon: Icons.apple,
                   onPressed: () =>
                       ref.read(authProvider.notifier).signInWithApple(),
@@ -130,29 +133,13 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 const SizedBox(height: 24),
                 TextButton(
                   onPressed: () => context.go('/login'),
-                  child: const Text('Already have an account? Sign in'),
+                  child: Text(
+                    'Already have an account? Sign in',
+                    style: AppTextStyles.label.copyWith(color: AppColors.accent),
+                  ),
                 ),
               ],
             ),
-=======
-
-import '../../../core/theme/colors.dart';
-import '../../../core/theme/text_styles.dart';
-
-/// Register screen — email, password, display name
-class RegisterScreen extends StatelessWidget {
-  const RegisterScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: SafeArea(
-        child: Center(
-          child: Text(
-            'REGISTER\n(NOT YET IMPLEMENTED)',
-            style: AppTextStyles.sectionHeader.copyWith(color: AppColors.textTertiary),
-            textAlign: TextAlign.center,
->>>>>>> 88d3438 (good progress)
           ),
         ),
       ),

@@ -1,9 +1,9 @@
-<<<<<<< HEAD
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:get_it/get_it.dart';
 import '../../domain/entities/ranked_list.dart';
 import '../../domain/lists_repository.dart';
 import '../../domain/use_cases/create_list_use_case.dart';
+
 import '../../domain/use_cases/get_list_detail_use_case.dart';
 import '../../domain/use_cases/get_lists_use_case.dart';
 import '../../domain/use_cases/get_invite_preview_use_case.dart';
@@ -36,6 +36,9 @@ class ListsNotifier extends AsyncNotifier<List<ListSummary>> {
     required ValueType valueType,
     required RankOrder rankOrder,
     required bool isPublic,
+    String? telegramLink,
+    String? whatsappLink,
+    String? discordLink,
   }) async {
     final result = await GetIt.instance<CreateListUseCase>().call(
       title: title,
@@ -43,6 +46,9 @@ class ListsNotifier extends AsyncNotifier<List<ListSummary>> {
       valueType: valueType,
       rankOrder: rankOrder,
       isPublic: isPublic,
+      telegramLink: telegramLink,
+      whatsappLink: whatsappLink,
+      discordLink: discordLink,
     );
     result.fold(
       (error) => throw error,
@@ -76,6 +82,50 @@ class ListDetailNotifier extends FamilyAsyncNotifier<RankedList, String> {
       (_) => ref.invalidateSelf(),
     );
   }
+
+  Future<void> updateList({
+    String? title,
+    String? description,
+    bool? isPublic,
+    bool? locked,
+    String? telegramLink,
+    String? whatsappLink,
+    String? discordLink,
+  }) async {
+    final repo = GetIt.instance<ListsRepository>();
+    final result = await repo.updateList(
+      listId: arg,
+      title: title,
+      description: description,
+      isPublic: isPublic,
+      locked: locked,
+      telegramLink: telegramLink,
+      whatsappLink: whatsappLink,
+      discordLink: discordLink,
+    );
+    result.fold(
+      (error) => throw error,
+      (_) => ref.invalidateSelf(),
+    );
+  }
+
+  Future<void> deleteEntry(String entryId) async {
+    final repo = GetIt.instance<ListsRepository>();
+    final result = await repo.deleteEntry(listId: arg, entryId: entryId);
+    result.fold(
+      (error) => throw error,
+      (_) => ref.invalidateSelf(),
+    );
+  }
+
+  Future<String> getInviteLink() async {
+    final repo = GetIt.instance<ListsRepository>();
+    final result = await repo.getInviteLink(arg);
+    return result.fold(
+      (error) => throw error,
+      (link) => link,
+    );
+  }
 }
 
 // --- Invite preview ---
@@ -94,11 +144,11 @@ class InvitePreviewNotifier extends FamilyAsyncNotifier<RankedList, String> {
     );
   }
 
-  Future<RankedList> join() async {
+  Future<void> join() async {
     final result = await GetIt.instance<JoinByInviteUseCase>().call(arg);
-    return result.fold(
+    result.fold(
       (error) => throw error,
-      (list) => list,
+      (_) {},
     );
   }
 }
@@ -144,6 +194,3 @@ class MembersNotifier extends FamilyAsyncNotifier<List<ListMember>, String> {
     );
   }
 }
-=======
-// TODO: Riverpod lists state providers using AsyncNotifier pattern
->>>>>>> 88d3438 (good progress)

@@ -1,10 +1,7 @@
-<<<<<<< HEAD
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:get_it/get_it.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
-import '../../../../core/constants/app_constants.dart';
-import '../../domain/auth_repository.dart';
+import '../../../../core/dev/dev_config.dart';
 import '../../domain/entities/user.dart';
 import '../../domain/use_cases/apple_sign_in_use_case.dart';
 import '../../domain/use_cases/login_use_case.dart';
@@ -18,16 +15,16 @@ final authProvider = AsyncNotifierProvider<AuthNotifier, User?>(
 class AuthNotifier extends AsyncNotifier<User?> {
   @override
   Future<User?> build() async {
-    // Check if we have a stored token — if so, try to load the current user
-    final storage = GetIt.instance<FlutterSecureStorage>();
-    final token = await storage.read(key: AppConstants.accessTokenKey);
-    if (token == null) return null;
-
-    final result = await GetIt.instance<AuthRepository>().getCurrentUser();
-    return result.fold(
-      (_) => null,
-      (user) => user,
-    );
+    // In dev mode, auto-login with mock user
+    if (DevConfig.useDevMode) {
+      return const User(
+        id: 'dev-user-001',
+        email: 'max@apex.dev',
+        displayName: 'Max Roth',
+      );
+    }
+    // TODO: Check stored token and load current user
+    return null;
   }
 
   Future<void> login({
@@ -102,6 +99,3 @@ class AuthNotifier extends AsyncNotifier<User?> {
     state = const AsyncData(null);
   }
 }
-=======
-// TODO: Riverpod auth state provider using AsyncNotifier pattern
->>>>>>> 88d3438 (good progress)

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-<<<<<<< HEAD
 import 'package:flutter/services.dart';
 
 class DurationPickerWidget extends StatefulWidget {
@@ -125,27 +124,3 @@ String formatDuration(int ms) {
   }
   return '${m.toString().padLeft(2, '0')}:${s.toString().padLeft(2, '0')}';
 }
-=======
-
-/// Custom widget with three TextFormFields for hours, minutes, seconds
-class DurationPicker extends StatelessWidget {
-  final ValueChanged<int>? onChanged;
-
-  const DurationPicker({super.key, this.onChanged});
-
-  @override
-  Widget build(BuildContext context) {
-    // TODO: implement hh:mm:ss picker
-    return const SizedBox.shrink();
-  }
-
-  /// Format milliseconds to display string (e.g. "1:23:04")
-  static String formatDuration(int ms) {
-    final duration = Duration(milliseconds: ms);
-    final hours = duration.inHours;
-    final minutes = duration.inMinutes.remainder(60);
-    final seconds = duration.inSeconds.remainder(60);
-    return '$hours:${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
-  }
-}
->>>>>>> 88d3438 (good progress)

@@ -1,8 +1,4 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
-<<<<<<< HEAD
-import '../../../entries/domain/entities/entry.dart';
-=======
->>>>>>> 88d3438 (good progress)
 
 part 'ranked_list.freezed.dart';
 
@@ -19,15 +15,18 @@ class RankedList with _$RankedList {
     required ValueType valueType,
     required RankOrder rankOrder,
     required bool isPublic,
+    @Default(false) bool locked,
     String? inviteToken,
     required List<RankedEntry> entries,
     required int memberCount,
+    MemberRole? currentUserRole,
+    String? telegramLink,
+    String? whatsappLink,
+    String? discordLink,
   }) = _RankedList;
 }
 
 @freezed
-<<<<<<< HEAD
-=======
 class RankedEntry with _$RankedEntry {
   const factory RankedEntry({
     required String id,
@@ -44,19 +43,17 @@ class RankedEntry with _$RankedEntry {
 }
 
 @freezed
->>>>>>> 88d3438 (good progress)
 class ListSummary with _$ListSummary {
   const factory ListSummary({
     required String id,
     required String title,
     required ValueType valueType,
-<<<<<<< HEAD
     required RankOrder rankOrder,
     required bool isPublic,
-=======
->>>>>>> 88d3438 (good progress)
     required int memberCount,
     int? ownRank,
+    MemberRole? currentUserRole,
+    String? category,
   }) = _ListSummary;
 }
 

@@ -1,5 +1,6 @@
 import 'package:fpdart/fpdart.dart';
 import '../../../../core/network/api_error.dart';
+import '../../../lists/domain/entities/ranked_list.dart';
 import '../entities/entry.dart';
 import '../entries_repository.dart';
 

@@ -1,8 +1,8 @@
-<<<<<<< HEAD
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-=======
->>>>>>> 88d3438 (good progress)
 import 'package:get_it/get_it.dart';
+import '../dev/dev_config.dart';
+import '../dev/mock_auth_repository.dart';
+import '../dev/mock_entries_repository.dart';
+import '../dev/mock_lists_repository.dart';
 import '../network/api_client.dart';
 import '../../features/auth/data/auth_remote_data_source.dart';
 import '../../features/auth/data/auth_repository_impl.dart';
@@ -19,79 +19,82 @@ import '../../features/lists/domain/use_cases/get_list_detail_use_case.dart';
 import '../../features/lists/domain/use_cases/get_lists_use_case.dart';
 import '../../features/lists/domain/use_cases/get_invite_preview_use_case.dart';
 import '../../features/lists/domain/use_cases/join_by_invite_use_case.dart';
+import '../../features/lists/domain/use_cases/search_public_lists_use_case.dart';
 import '../../features/entries/data/entries_remote_data_source.dart';
 import '../../features/entries/data/entries_repository_impl.dart';
 import '../../features/entries/domain/entries_repository.dart';
 import '../../features/entries/domain/use_cases/submit_entry_use_case.dart';
 
-<<<<<<< HEAD
-final sl = GetIt.instance;
-
-void setupDI() {
-  // Core
-  sl.registerLazySingleton<FlutterSecureStorage>(
-    () => const FlutterSecureStorage(),
-  );
-  sl.registerLazySingleton<ApiClient>(
-    () => ApiClient(secureStorage: sl<FlutterSecureStorage>()),
-  );
-
-  // Auth
-  sl.registerLazySingleton<AuthRemoteDataSource>(
-    () => AuthRemoteDataSource(sl<ApiClient>(), sl<FlutterSecureStorage>()),
-  );
-  sl.registerLazySingleton<AuthRepository>(
-    () => AuthRepositoryImpl(sl<AuthRemoteDataSource>()),
-  );
-  sl.registerFactory(() => LoginUseCase(sl<AuthRepository>()));
-  sl.registerFactory(() => RegisterUseCase(sl<AuthRepository>()));
-  sl.registerFactory(() => AppleSignInUseCase(sl<AuthRepository>()));
-  sl.registerFactory(() => LogoutUseCase(sl<AuthRepository>()));
-
-  // Lists
-  sl.registerLazySingleton<ListsRemoteDataSource>(
-    () => ListsRemoteDataSource(sl<ApiClient>()),
-  );
-  sl.registerLazySingleton<ListsRepository>(
-    () => ListsRepositoryImpl(sl<ListsRemoteDataSource>()),
-  );
-  sl.registerFactory(() => GetListsUseCase(sl<ListsRepository>()));
-  sl.registerFactory(() => GetListDetailUseCase(sl<ListsRepository>()));
-  sl.registerFactory(() => CreateListUseCase(sl<ListsRepository>()));
-  sl.registerFactory(() => GetInvitePreviewUseCase(sl<ListsRepository>()));
-  sl.registerFactory(() => JoinByInviteUseCase(sl<ListsRepository>()));
-
-  // Entries
-  sl.registerLazySingleton<EntriesRemoteDataSource>(
-    () => EntriesRemoteDataSource(sl<ApiClient>()),
-  );
-  sl.registerLazySingleton<EntriesRepository>(
-    () => EntriesRepositoryImpl(sl<EntriesRemoteDataSource>()),
-  );
-  sl.registerFactory(() => SubmitEntryUseCase(sl<EntriesRepository>()));
-=======
-import '../network/api_client.dart';
-
 final getIt = GetIt.instance;
 
 /// Setup dependency injection — runs before runApp
 Future<void> setupDI() async {
-  // API client (Dio instance with auth interceptor)
+  if (DevConfig.useDevMode) {
+    _registerDevMode();
+  } else {
+    _registerProductionMode();
+  }
+
+  // Use cases (same for both modes — they depend on repository interfaces)
+  _registerUseCases();
+}
+
+void _registerDevMode() {
+  // Mock repositories with in-memory seed data
+  final mockListsRepo = MockListsRepository();
+  getIt.registerSingleton<AuthRepository>(MockAuthRepository());
+  getIt.registerSingleton<ListsRepository>(mockListsRepo);
+  getIt.registerSingleton<EntriesRepository>(
+      MockEntriesRepository(mockListsRepo));
+}
+
+void _registerProductionMode() {
+  // Core
   getIt.registerSingleton<ApiClient>(ApiClient());
 
-  // TODO: Register remote data sources
-  // getIt.registerLazySingleton<AuthRemoteDataSource>(
-  //   () => AuthRemoteDataSourceImpl(getIt<ApiClient>()),
-  // );
+  // Auth
+  getIt.registerLazySingleton<AuthRemoteDataSource>(
+    () => AuthRemoteDataSourceImpl(getIt<ApiClient>()),
+  );
+  getIt.registerLazySingleton<AuthRepository>(
+    () => AuthRepositoryImpl(getIt<AuthRemoteDataSource>()),
+  );
 
-  // TODO: Register repositories
-  // getIt.registerLazySingleton<AuthRepository>(
-  //   () => AuthRepositoryImpl(getIt<AuthRemoteDataSource>()),
-  // );
+  // Lists
+  getIt.registerLazySingleton<ListsRemoteDataSource>(
+    () => ListsRemoteDataSourceImpl(getIt<ApiClient>()),
+  );
+  getIt.registerLazySingleton<ListsRepository>(
+    () => ListsRepositoryImpl(getIt<ListsRemoteDataSource>()),
+  );
 
-  // TODO: Register use cases
-  // getIt.registerFactory<LoginUseCase>(
-  //   () => LoginUseCase(getIt<AuthRepository>()),
-  // );
->>>>>>> 88d3438 (good progress)
+  // Entries
+  getIt.registerLazySingleton<EntriesRemoteDataSource>(
+    () => EntriesRemoteDataSourceImpl(getIt<ApiClient>()),
+  );
+  getIt.registerLazySingleton<EntriesRepository>(
+    () => EntriesRepositoryImpl(getIt<EntriesRemoteDataSource>()),
+  );
+}
+
+void _registerUseCases() {
+  // Auth use cases
+  getIt.registerFactory(() => LoginUseCase(getIt<AuthRepository>()));
+  getIt.registerFactory(() => RegisterUseCase(getIt<AuthRepository>()));
+  getIt.registerFactory(() => AppleSignInUseCase(getIt<AuthRepository>()));
+  getIt.registerFactory(() => LogoutUseCase(getIt<AuthRepository>()));
+
+  // Lists use cases
+  getIt.registerFactory(() => GetListsUseCase(getIt<ListsRepository>()));
+  getIt.registerFactory(() => GetListDetailUseCase(getIt<ListsRepository>()));
+  getIt.registerFactory(() => CreateListUseCase(getIt<ListsRepository>()));
+  getIt.registerFactory(
+      () => GetInvitePreviewUseCase(getIt<ListsRepository>()));
+  getIt.registerFactory(() => JoinByInviteUseCase(getIt<ListsRepository>()));
+  getIt.registerFactory(
+      () => SearchPublicListsUseCase(getIt<ListsRepository>()));
+
+  // Entries use cases
+  getIt
+      .registerFactory(() => SubmitEntryUseCase(getIt<EntriesRepository>()));
 }

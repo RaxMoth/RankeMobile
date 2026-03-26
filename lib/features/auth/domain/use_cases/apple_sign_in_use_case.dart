@@ -12,9 +12,6 @@ class AppleSignInUseCase {
     required String identityToken,
     String? fullName,
   }) {
-    return _repository.appleSignIn(
-      identityToken: identityToken,
-      fullName: fullName,
-    );
+    return _repository.signInWithApple();
   }
 }

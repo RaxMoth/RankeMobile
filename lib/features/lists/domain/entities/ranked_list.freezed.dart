@@ -12,12 +12,8 @@ part of 'ranked_list.dart';
 T _$identity<T>(T value) => value;
 
 final _privateConstructorUsedError = UnsupportedError(
-<<<<<<< HEAD
   'It seems like you constructed your class using `MyClass._()`. This constructor is only meant to be used by freezed and you are not supposed to need it nor use it.\nPlease check the documentation here for more information: https://github.com/rrousselGit/freezed#adding-getters-and-methods-to-our-models',
 );
-=======
-    'It seems like you constructed your class using `MyClass._()`. This constructor is only meant to be used by freezed and you are not supposed to need it nor use it.\nPlease check the documentation here for more information: https://github.com/rrousselGit/freezed#adding-getters-and-methods-to-our-models');
->>>>>>> 88d3438 (good progress)
 
 /// @nodoc
 mixin _$RankedList {
@@ -27,17 +23,18 @@ mixin _$RankedList {
   ValueType get valueType => throw _privateConstructorUsedError;
   RankOrder get rankOrder => throw _privateConstructorUsedError;
   bool get isPublic => throw _privateConstructorUsedError;
+  bool get locked => throw _privateConstructorUsedError;
   String? get inviteToken => throw _privateConstructorUsedError;
   List<RankedEntry> get entries => throw _privateConstructorUsedError;
   int get memberCount => throw _privateConstructorUsedError;
+  MemberRole? get currentUserRole => throw _privateConstructorUsedError;
+  String? get telegramLink => throw _privateConstructorUsedError;
+  String? get whatsappLink => throw _privateConstructorUsedError;
+  String? get discordLink => throw _privateConstructorUsedError;
 
-<<<<<<< HEAD
   /// Create a copy of RankedList
   /// with the given fields replaced by the non-null parameter values.
   @JsonKey(includeFromJson: false, includeToJson: false)
-=======
-  @JsonKey(ignore: true)
->>>>>>> 88d3438 (good progress)
   $RankedListCopyWith<RankedList> get copyWith =>
       throw _privateConstructorUsedError;
 }
@@ -45,7 +42,6 @@ mixin _$RankedList {
 /// @nodoc
 abstract class $RankedListCopyWith<$Res> {
   factory $RankedListCopyWith(
-<<<<<<< HEAD
     RankedList value,
     $Res Function(RankedList) then,
   ) = _$RankedListCopyWithImpl<$Res, RankedList>;
@@ -57,25 +53,15 @@ abstract class $RankedListCopyWith<$Res> {
     ValueType valueType,
     RankOrder rankOrder,
     bool isPublic,
+    bool locked,
     String? inviteToken,
     List<RankedEntry> entries,
     int memberCount,
+    MemberRole? currentUserRole,
+    String? telegramLink,
+    String? whatsappLink,
+    String? discordLink,
   });
-=======
-          RankedList value, $Res Function(RankedList) then) =
-      _$RankedListCopyWithImpl<$Res, RankedList>;
-  @useResult
-  $Res call(
-      {String id,
-      String title,
-      String? description,
-      ValueType valueType,
-      RankOrder rankOrder,
-      bool isPublic,
-      String? inviteToken,
-      List<RankedEntry> entries,
-      int memberCount});
->>>>>>> 88d3438 (good progress)
 }
 
 /// @nodoc
@@ -88,11 +74,8 @@ class _$RankedListCopyWithImpl<$Res, $Val extends RankedList>
   // ignore: unused_field
   final $Res Function($Val) _then;
 
-<<<<<<< HEAD
   /// Create a copy of RankedList
   /// with the given fields replaced by the non-null parameter values.
-=======
->>>>>>> 88d3438 (good progress)
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -102,11 +85,15 @@ class _$RankedListCopyWithImpl<$Res, $Val extends RankedList>
     Object? valueType = null,
     Object? rankOrder = null,
     Object? isPublic = null,
+    Object? locked = null,
     Object? inviteToken = freezed,
     Object? entries = null,
     Object? memberCount = null,
+    Object? currentUserRole = freezed,
+    Object? telegramLink = freezed,
+    Object? whatsappLink = freezed,
+    Object? discordLink = freezed,
   }) {
-<<<<<<< HEAD
     return _then(
       _value.copyWith(
             id: null == id
@@ -133,6 +120,10 @@ class _$RankedListCopyWithImpl<$Res, $Val extends RankedList>
                 ? _value.isPublic
                 : isPublic // ignore: cast_nullable_to_non_nullable
                       as bool,
+            locked: null == locked
+                ? _value.locked
+                : locked // ignore: cast_nullable_to_non_nullable
+                      as bool,
             inviteToken: freezed == inviteToken
                 ? _value.inviteToken
                 : inviteToken // ignore: cast_nullable_to_non_nullable
@@ -145,49 +136,25 @@ class _$RankedListCopyWithImpl<$Res, $Val extends RankedList>
                 ? _value.memberCount
                 : memberCount // ignore: cast_nullable_to_non_nullable
                       as int,
+            currentUserRole: freezed == currentUserRole
+                ? _value.currentUserRole
+                : currentUserRole // ignore: cast_nullable_to_non_nullable
+                      as MemberRole?,
+            telegramLink: freezed == telegramLink
+                ? _value.telegramLink
+                : telegramLink // ignore: cast_nullable_to_non_nullable
+                      as String?,
+            whatsappLink: freezed == whatsappLink
+                ? _value.whatsappLink
+                : whatsappLink // ignore: cast_nullable_to_non_nullable
+                      as String?,
+            discordLink: freezed == discordLink
+                ? _value.discordLink
+                : discordLink // ignore: cast_nullable_to_non_nullable
+                      as String?,
           )
           as $Val,
     );
-=======
-    return _then(_value.copyWith(
-      id: null == id
-          ? _value.id
-          : id // ignore: cast_nullable_to_non_nullable
-              as String,
-      title: null == title
-          ? _value.title
-          : title // ignore: cast_nullable_to_non_nullable
-              as String,
-      description: freezed == description
-          ? _value.description
-          : description // ignore: cast_nullable_to_non_nullable
-              as String?,
-      valueType: null == valueType
-          ? _value.valueType
-          : valueType // ignore: cast_nullable_to_non_nullable
-              as ValueType,
-      rankOrder: null == rankOrder
-          ? _value.rankOrder
-          : rankOrder // ignore: cast_nullable_to_non_nullable
-              as RankOrder,
-      isPublic: null == isPublic
-          ? _value.isPublic
-          : isPublic // ignore: cast_nullable_to_non_nullable
-              as bool,
-      inviteToken: freezed == inviteToken
-          ? _value.inviteToken
-          : inviteToken // ignore: cast_nullable_to_non_nullable
-              as String?,
-      entries: null == entries
-          ? _value.entries
-          : entries // ignore: cast_nullable_to_non_nullable
-              as List<RankedEntry>,
-      memberCount: null == memberCount
-          ? _value.memberCount
-          : memberCount // ignore: cast_nullable_to_non_nullable
-              as int,
-    ) as $Val);
->>>>>>> 88d3438 (good progress)
   }
 }
 
@@ -195,7 +162,6 @@ class _$RankedListCopyWithImpl<$Res, $Val extends RankedList>
 abstract class _$$RankedListImplCopyWith<$Res>
     implements $RankedListCopyWith<$Res> {
   factory _$$RankedListImplCopyWith(
-<<<<<<< HEAD
     _$RankedListImpl value,
     $Res Function(_$RankedListImpl) then,
   ) = __$$RankedListImplCopyWithImpl<$Res>;
@@ -208,26 +174,15 @@ abstract class _$$RankedListImplCopyWith<$Res>
     ValueType valueType,
     RankOrder rankOrder,
     bool isPublic,
+    bool locked,
     String? inviteToken,
     List<RankedEntry> entries,
     int memberCount,
+    MemberRole? currentUserRole,
+    String? telegramLink,
+    String? whatsappLink,
+    String? discordLink,
   });
-=======
-          _$RankedListImpl value, $Res Function(_$RankedListImpl) then) =
-      __$$RankedListImplCopyWithImpl<$Res>;
-  @override
-  @useResult
-  $Res call(
-      {String id,
-      String title,
-      String? description,
-      ValueType valueType,
-      RankOrder rankOrder,
-      bool isPublic,
-      String? inviteToken,
-      List<RankedEntry> entries,
-      int memberCount});
->>>>>>> 88d3438 (good progress)
 }
 
 /// @nodoc
@@ -235,18 +190,12 @@ class __$$RankedListImplCopyWithImpl<$Res>
     extends _$RankedListCopyWithImpl<$Res, _$RankedListImpl>
     implements _$$RankedListImplCopyWith<$Res> {
   __$$RankedListImplCopyWithImpl(
-<<<<<<< HEAD
     _$RankedListImpl _value,
     $Res Function(_$RankedListImpl) _then,
   ) : super(_value, _then);
 
   /// Create a copy of RankedList
   /// with the given fields replaced by the non-null parameter values.
-=======
-      _$RankedListImpl _value, $Res Function(_$RankedListImpl) _then)
-      : super(_value, _then);
-
->>>>>>> 88d3438 (good progress)
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -256,11 +205,15 @@ class __$$RankedListImplCopyWithImpl<$Res>
     Object? valueType = null,
     Object? rankOrder = null,
     Object? isPublic = null,
+    Object? locked = null,
     Object? inviteToken = freezed,
     Object? entries = null,
     Object? memberCount = null,
+    Object? currentUserRole = freezed,
+    Object? telegramLink = freezed,
+    Object? whatsappLink = freezed,
+    Object? discordLink = freezed,
   }) {
-<<<<<<< HEAD
     return _then(
       _$RankedListImpl(
         id: null == id
@@ -287,6 +240,10 @@ class __$$RankedListImplCopyWithImpl<$Res>
             ? _value.isPublic
             : isPublic // ignore: cast_nullable_to_non_nullable
                   as bool,
+        locked: null == locked
+            ? _value.locked
+            : locked // ignore: cast_nullable_to_non_nullable
+                  as bool,
         inviteToken: freezed == inviteToken
             ? _value.inviteToken
             : inviteToken // ignore: cast_nullable_to_non_nullable
@@ -299,55 +256,30 @@ class __$$RankedListImplCopyWithImpl<$Res>
             ? _value.memberCount
             : memberCount // ignore: cast_nullable_to_non_nullable
                   as int,
+        currentUserRole: freezed == currentUserRole
+            ? _value.currentUserRole
+            : currentUserRole // ignore: cast_nullable_to_non_nullable
+                  as MemberRole?,
+        telegramLink: freezed == telegramLink
+            ? _value.telegramLink
+            : telegramLink // ignore: cast_nullable_to_non_nullable
+                  as String?,
+        whatsappLink: freezed == whatsappLink
+            ? _value.whatsappLink
+            : whatsappLink // ignore: cast_nullable_to_non_nullable
+                  as String?,
+        discordLink: freezed == discordLink
+            ? _value.discordLink
+            : discordLink // ignore: cast_nullable_to_non_nullable
+                  as String?,
       ),
     );
-=======
-    return _then(_$RankedListImpl(
-      id: null == id
-          ? _value.id
-          : id // ignore: cast_nullable_to_non_nullable
-              as String,
-      title: null == title
-          ? _value.title
-          : title // ignore: cast_nullable_to_non_nullable
-              as String,
-      description: freezed == description
-          ? _value.description
-          : description // ignore: cast_nullable_to_non_nullable
-              as String?,
-      valueType: null == valueType
-          ? _value.valueType
-          : valueType // ignore: cast_nullable_to_non_nullable
-              as ValueType,
-      rankOrder: null == rankOrder
-          ? _value.rankOrder
-          : rankOrder // ignore: cast_nullable_to_non_nullable
-              as RankOrder,
-      isPublic: null == isPublic
-          ? _value.isPublic
-          : isPublic // ignore: cast_nullable_to_non_nullable
-              as bool,
-      inviteToken: freezed == inviteToken
-          ? _value.inviteToken
-          : inviteToken // ignore: cast_nullable_to_non_nullable
-              as String?,
-      entries: null == entries
-          ? _value._entries
-          : entries // ignore: cast_nullable_to_non_nullable
-              as List<RankedEntry>,
-      memberCount: null == memberCount
-          ? _value.memberCount
-          : memberCount // ignore: cast_nullable_to_non_nullable
-              as int,
-    ));
->>>>>>> 88d3438 (good progress)
   }
 }
 
 /// @nodoc
 
 class _$RankedListImpl implements _RankedList {
-<<<<<<< HEAD
   const _$RankedListImpl({
     required this.id,
     required this.title,
@@ -355,23 +287,15 @@ class _$RankedListImpl implements _RankedList {
     required this.valueType,
     required this.rankOrder,
     required this.isPublic,
+    this.locked = false,
     this.inviteToken,
     required final List<RankedEntry> entries,
     required this.memberCount,
+    this.currentUserRole,
+    this.telegramLink,
+    this.whatsappLink,
+    this.discordLink,
   }) : _entries = entries;
-=======
-  const _$RankedListImpl(
-      {required this.id,
-      required this.title,
-      this.description,
-      required this.valueType,
-      required this.rankOrder,
-      required this.isPublic,
-      this.inviteToken,
-      required final List<RankedEntry> entries,
-      required this.memberCount})
-      : _entries = entries;
->>>>>>> 88d3438 (good progress)
 
   @override
   final String id;
@@ -386,6 +310,9 @@ class _$RankedListImpl implements _RankedList {
   @override
   final bool isPublic;
   @override
+  @JsonKey()
+  final bool locked;
+  @override
   final String? inviteToken;
   final List<RankedEntry> _entries;
   @override
@@ -397,10 +324,18 @@ class _$RankedListImpl implements _RankedList {
 
   @override
   final int memberCount;
+  @override
+  final MemberRole? currentUserRole;
+  @override
+  final String? telegramLink;
+  @override
+  final String? whatsappLink;
+  @override
+  final String? discordLink;
 
   @override
   String toString() {
-    return 'RankedList(id: $id, title: $title, description: $description, valueType: $valueType, rankOrder: $rankOrder, isPublic: $isPublic, inviteToken: $inviteToken, entries: $entries, memberCount: $memberCount)';
+    return 'RankedList(id: $id, title: $title, description: $description, valueType: $valueType, rankOrder: $rankOrder, isPublic: $isPublic, locked: $locked, inviteToken: $inviteToken, entries: $entries, memberCount: $memberCount, currentUserRole: $currentUserRole, telegramLink: $telegramLink, whatsappLink: $whatsappLink, discordLink: $discordLink)';
   }
 
   @override
@@ -418,16 +353,24 @@ class _$RankedListImpl implements _RankedList {
                 other.rankOrder == rankOrder) &&
             (identical(other.isPublic, isPublic) ||
                 other.isPublic == isPublic) &&
+            (identical(other.locked, locked) || other.locked == locked) &&
             (identical(other.inviteToken, inviteToken) ||
                 other.inviteToken == inviteToken) &&
             const DeepCollectionEquality().equals(other._entries, _entries) &&
             (identical(other.memberCount, memberCount) ||
-                other.memberCount == memberCount));
+                other.memberCount == memberCount) &&
+            (identical(other.currentUserRole, currentUserRole) ||
+                other.currentUserRole == currentUserRole) &&
+            (identical(other.telegramLink, telegramLink) ||
+                other.telegramLink == telegramLink) &&
+            (identical(other.whatsappLink, whatsappLink) ||
+                other.whatsappLink == whatsappLink) &&
+            (identical(other.discordLink, discordLink) ||
+                other.discordLink == discordLink));
   }
 
   @override
   int get hashCode => Object.hash(
-<<<<<<< HEAD
     runtimeType,
     id,
     title,
@@ -435,28 +378,19 @@ class _$RankedListImpl implements _RankedList {
     valueType,
     rankOrder,
     isPublic,
+    locked,
     inviteToken,
     const DeepCollectionEquality().hash(_entries),
     memberCount,
+    currentUserRole,
+    telegramLink,
+    whatsappLink,
+    discordLink,
   );
 
   /// Create a copy of RankedList
   /// with the given fields replaced by the non-null parameter values.
   @JsonKey(includeFromJson: false, includeToJson: false)
-=======
-      runtimeType,
-      id,
-      title,
-      description,
-      valueType,
-      rankOrder,
-      isPublic,
-      inviteToken,
-      const DeepCollectionEquality().hash(_entries),
-      memberCount);
-
-  @JsonKey(ignore: true)
->>>>>>> 88d3438 (good progress)
   @override
   @pragma('vm:prefer-inline')
   _$$RankedListImplCopyWith<_$RankedListImpl> get copyWith =>
@@ -464,7 +398,6 @@ class _$RankedListImpl implements _RankedList {
 }
 
 abstract class _RankedList implements RankedList {
-<<<<<<< HEAD
   const factory _RankedList({
     required final String id,
     required final String title,
@@ -472,22 +405,15 @@ abstract class _RankedList implements RankedList {
     required final ValueType valueType,
     required final RankOrder rankOrder,
     required final bool isPublic,
+    final bool locked,
     final String? inviteToken,
     required final List<RankedEntry> entries,
     required final int memberCount,
+    final MemberRole? currentUserRole,
+    final String? telegramLink,
+    final String? whatsappLink,
+    final String? discordLink,
   }) = _$RankedListImpl;
-=======
-  const factory _RankedList(
-      {required final String id,
-      required final String title,
-      final String? description,
-      required final ValueType valueType,
-      required final RankOrder rankOrder,
-      required final bool isPublic,
-      final String? inviteToken,
-      required final List<RankedEntry> entries,
-      required final int memberCount}) = _$RankedListImpl;
->>>>>>> 88d3438 (good progress)
 
   @override
   String get id;
@@ -502,28 +428,31 @@ abstract class _RankedList implements RankedList {
   @override
   bool get isPublic;
   @override
+  bool get locked;
+  @override
   String? get inviteToken;
   @override
   List<RankedEntry> get entries;
   @override
   int get memberCount;
-<<<<<<< HEAD
+  @override
+  MemberRole? get currentUserRole;
+  @override
+  String? get telegramLink;
+  @override
+  String? get whatsappLink;
+  @override
+  String? get discordLink;
 
   /// Create a copy of RankedList
   /// with the given fields replaced by the non-null parameter values.
   @override
   @JsonKey(includeFromJson: false, includeToJson: false)
-=======
-  @override
-  @JsonKey(ignore: true)
->>>>>>> 88d3438 (good progress)
   _$$RankedListImplCopyWith<_$RankedListImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }
 
 /// @nodoc
-<<<<<<< HEAD
-=======
 mixin _$RankedEntry {
   String get id => throw _privateConstructorUsedError;
   String get userId => throw _privateConstructorUsedError;
@@ -536,7 +465,9 @@ mixin _$RankedEntry {
   String? get note => throw _privateConstructorUsedError;
   DateTime get submittedAt => throw _privateConstructorUsedError;
 
-  @JsonKey(ignore: true)
+  /// Create a copy of RankedEntry
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   $RankedEntryCopyWith<RankedEntry> get copyWith =>
       throw _privateConstructorUsedError;
 }
@@ -544,20 +475,22 @@ mixin _$RankedEntry {
 /// @nodoc
 abstract class $RankedEntryCopyWith<$Res> {
   factory $RankedEntryCopyWith(
-          RankedEntry value, $Res Function(RankedEntry) then) =
-      _$RankedEntryCopyWithImpl<$Res, RankedEntry>;
+    RankedEntry value,
+    $Res Function(RankedEntry) then,
+  ) = _$RankedEntryCopyWithImpl<$Res, RankedEntry>;
   @useResult
-  $Res call(
-      {String id,
-      String userId,
-      String displayName,
-      int rank,
-      double? valueNumber,
-      int? valueDurationMs,
-      String? valueText,
-      int? manualRank,
-      String? note,
-      DateTime submittedAt});
+  $Res call({
+    String id,
+    String userId,
+    String displayName,
+    int rank,
+    double? valueNumber,
+    int? valueDurationMs,
+    String? valueText,
+    int? manualRank,
+    String? note,
+    DateTime submittedAt,
+  });
 }
 
 /// @nodoc
@@ -570,6 +503,8 @@ class _$RankedEntryCopyWithImpl<$Res, $Val extends RankedEntry>
   // ignore: unused_field
   final $Res Function($Val) _then;
 
+  /// Create a copy of RankedEntry
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -584,48 +519,51 @@ class _$RankedEntryCopyWithImpl<$Res, $Val extends RankedEntry>
     Object? note = freezed,
     Object? submittedAt = null,
   }) {
-    return _then(_value.copyWith(
-      id: null == id
-          ? _value.id
-          : id // ignore: cast_nullable_to_non_nullable
-              as String,
-      userId: null == userId
-          ? _value.userId
-          : userId // ignore: cast_nullable_to_non_nullable
-              as String,
-      displayName: null == displayName
-          ? _value.displayName
-          : displayName // ignore: cast_nullable_to_non_nullable
-              as String,
-      rank: null == rank
-          ? _value.rank
-          : rank // ignore: cast_nullable_to_non_nullable
-              as int,
-      valueNumber: freezed == valueNumber
-          ? _value.valueNumber
-          : valueNumber // ignore: cast_nullable_to_non_nullable
-              as double?,
-      valueDurationMs: freezed == valueDurationMs
-          ? _value.valueDurationMs
-          : valueDurationMs // ignore: cast_nullable_to_non_nullable
-              as int?,
-      valueText: freezed == valueText
-          ? _value.valueText
-          : valueText // ignore: cast_nullable_to_non_nullable
-              as String?,
-      manualRank: freezed == manualRank
-          ? _value.manualRank
-          : manualRank // ignore: cast_nullable_to_non_nullable
-              as int?,
-      note: freezed == note
-          ? _value.note
-          : note // ignore: cast_nullable_to_non_nullable
-              as String?,
-      submittedAt: null == submittedAt
-          ? _value.submittedAt
-          : submittedAt // ignore: cast_nullable_to_non_nullable
-              as DateTime,
-    ) as $Val);
+    return _then(
+      _value.copyWith(
+            id: null == id
+                ? _value.id
+                : id // ignore: cast_nullable_to_non_nullable
+                      as String,
+            userId: null == userId
+                ? _value.userId
+                : userId // ignore: cast_nullable_to_non_nullable
+                      as String,
+            displayName: null == displayName
+                ? _value.displayName
+                : displayName // ignore: cast_nullable_to_non_nullable
+                      as String,
+            rank: null == rank
+                ? _value.rank
+                : rank // ignore: cast_nullable_to_non_nullable
+                      as int,
+            valueNumber: freezed == valueNumber
+                ? _value.valueNumber
+                : valueNumber // ignore: cast_nullable_to_non_nullable
+                      as double?,
+            valueDurationMs: freezed == valueDurationMs
+                ? _value.valueDurationMs
+                : valueDurationMs // ignore: cast_nullable_to_non_nullable
+                      as int?,
+            valueText: freezed == valueText
+                ? _value.valueText
+                : valueText // ignore: cast_nullable_to_non_nullable
+                      as String?,
+            manualRank: freezed == manualRank
+                ? _value.manualRank
+                : manualRank // ignore: cast_nullable_to_non_nullable
+                      as int?,
+            note: freezed == note
+                ? _value.note
+                : note // ignore: cast_nullable_to_non_nullable
+                      as String?,
+            submittedAt: null == submittedAt
+                ? _value.submittedAt
+                : submittedAt // ignore: cast_nullable_to_non_nullable
+                      as DateTime,
+          )
+          as $Val,
+    );
   }
 }
 
@@ -633,21 +571,23 @@ class _$RankedEntryCopyWithImpl<$Res, $Val extends RankedEntry>
 abstract class _$$RankedEntryImplCopyWith<$Res>
     implements $RankedEntryCopyWith<$Res> {
   factory _$$RankedEntryImplCopyWith(
-          _$RankedEntryImpl value, $Res Function(_$RankedEntryImpl) then) =
-      __$$RankedEntryImplCopyWithImpl<$Res>;
+    _$RankedEntryImpl value,
+    $Res Function(_$RankedEntryImpl) then,
+  ) = __$$RankedEntryImplCopyWithImpl<$Res>;
   @override
   @useResult
-  $Res call(
-      {String id,
-      String userId,
-      String displayName,
-      int rank,
-      double? valueNumber,
-      int? valueDurationMs,
-      String? valueText,
-      int? manualRank,
-      String? note,
-      DateTime submittedAt});
+  $Res call({
+    String id,
+    String userId,
+    String displayName,
+    int rank,
+    double? valueNumber,
+    int? valueDurationMs,
+    String? valueText,
+    int? manualRank,
+    String? note,
+    DateTime submittedAt,
+  });
 }
 
 /// @nodoc
@@ -655,9 +595,12 @@ class __$$RankedEntryImplCopyWithImpl<$Res>
     extends _$RankedEntryCopyWithImpl<$Res, _$RankedEntryImpl>
     implements _$$RankedEntryImplCopyWith<$Res> {
   __$$RankedEntryImplCopyWithImpl(
-      _$RankedEntryImpl _value, $Res Function(_$RankedEntryImpl) _then)
-      : super(_value, _then);
+    _$RankedEntryImpl _value,
+    $Res Function(_$RankedEntryImpl) _then,
+  ) : super(_value, _then);
 
+  /// Create a copy of RankedEntry
+  /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -672,65 +615,68 @@ class __$$RankedEntryImplCopyWithImpl<$Res>
     Object? note = freezed,
     Object? submittedAt = null,
   }) {
-    return _then(_$RankedEntryImpl(
-      id: null == id
-          ? _value.id
-          : id // ignore: cast_nullable_to_non_nullable
-              as String,
-      userId: null == userId
-          ? _value.userId
-          : userId // ignore: cast_nullable_to_non_nullable
-              as String,
-      displayName: null == displayName
-          ? _value.displayName
-          : displayName // ignore: cast_nullable_to_non_nullable
-              as String,
-      rank: null == rank
-          ? _value.rank
-          : rank // ignore: cast_nullable_to_non_nullable
-              as int,
-      valueNumber: freezed == valueNumber
-          ? _value.valueNumber
-          : valueNumber // ignore: cast_nullable_to_non_nullable
-              as double?,
-      valueDurationMs: freezed == valueDurationMs
-          ? _value.valueDurationMs
-          : valueDurationMs // ignore: cast_nullable_to_non_nullable
-              as int?,
-      valueText: freezed == valueText
-          ? _value.valueText
-          : valueText // ignore: cast_nullable_to_non_nullable
-              as String?,
-      manualRank: freezed == manualRank
-          ? _value.manualRank
-          : manualRank // ignore: cast_nullable_to_non_nullable
-              as int?,
-      note: freezed == note
-          ? _value.note
-          : note // ignore: cast_nullable_to_non_nullable
-              as String?,
-      submittedAt: null == submittedAt
-          ? _value.submittedAt
-          : submittedAt // ignore: cast_nullable_to_non_nullable
-              as DateTime,
-    ));
+    return _then(
+      _$RankedEntryImpl(
+        id: null == id
+            ? _value.id
+            : id // ignore: cast_nullable_to_non_nullable
+                  as String,
+        userId: null == userId
+            ? _value.userId
+            : userId // ignore: cast_nullable_to_non_nullable
+                  as String,
+        displayName: null == displayName
+            ? _value.displayName
+            : displayName // ignore: cast_nullable_to_non_nullable
+                  as String,
+        rank: null == rank
+            ? _value.rank
+            : rank // ignore: cast_nullable_to_non_nullable
+                  as int,
+        valueNumber: freezed == valueNumber
+            ? _value.valueNumber
+            : valueNumber // ignore: cast_nullable_to_non_nullable
+                  as double?,
+        valueDurationMs: freezed == valueDurationMs
+            ? _value.valueDurationMs
+            : valueDurationMs // ignore: cast_nullable_to_non_nullable
+                  as int?,
+        valueText: freezed == valueText
+            ? _value.valueText
+            : valueText // ignore: cast_nullable_to_non_nullable
+                  as String?,
+        manualRank: freezed == manualRank
+            ? _value.manualRank
+            : manualRank // ignore: cast_nullable_to_non_nullable
+                  as int?,
+        note: freezed == note
+            ? _value.note
+            : note // ignore: cast_nullable_to_non_nullable
+                  as String?,
+        submittedAt: null == submittedAt
+            ? _value.submittedAt
+            : submittedAt // ignore: cast_nullable_to_non_nullable
+                  as DateTime,
+      ),
+    );
   }
 }
 
 /// @nodoc
 
 class _$RankedEntryImpl implements _RankedEntry {
-  const _$RankedEntryImpl(
-      {required this.id,
-      required this.userId,
-      required this.displayName,
-      required this.rank,
-      this.valueNumber,
-      this.valueDurationMs,
-      this.valueText,
-      this.manualRank,
-      this.note,
-      required this.submittedAt});
+  const _$RankedEntryImpl({
+    required this.id,
+    required this.userId,
+    required this.displayName,
+    required this.rank,
+    this.valueNumber,
+    this.valueDurationMs,
+    this.valueText,
+    this.manualRank,
+    this.note,
+    required this.submittedAt,
+  });
 
   @override
   final String id;
@@ -782,10 +728,23 @@ class _$RankedEntryImpl implements _RankedEntry {
   }
 
   @override
-  int get hashCode => Object.hash(runtimeType, id, userId, displayName, rank,
-      valueNumber, valueDurationMs, valueText, manualRank, note, submittedAt);
+  int get hashCode => Object.hash(
+    runtimeType,
+    id,
+    userId,
+    displayName,
+    rank,
+    valueNumber,
+    valueDurationMs,
+    valueText,
+    manualRank,
+    note,
+    submittedAt,
+  );
 
-  @JsonKey(ignore: true)
+  /// Create a copy of RankedEntry
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   @pragma('vm:prefer-inline')
   _$$RankedEntryImplCopyWith<_$RankedEntryImpl> get copyWith =>
@@ -793,17 +752,18 @@ class _$RankedEntryImpl implements _RankedEntry {
 }
 
 abstract class _RankedEntry implements RankedEntry {
-  const factory _RankedEntry(
-      {required final String id,
-      required final String userId,
-      required final String displayName,
-      required final int rank,
-      final double? valueNumber,
-      final int? valueDurationMs,
-      final String? valueText,
-      final int? manualRank,
-      final String? note,
-      required final DateTime submittedAt}) = _$RankedEntryImpl;
+  const factory _RankedEntry({
+    required final String id,
+    required final String userId,
+    required final String displayName,
+    required final int rank,
+    final double? valueNumber,
+    final int? valueDurationMs,
+    final String? valueText,
+    final int? manualRank,
+    final String? note,
+    required final DateTime submittedAt,
+  }) = _$RankedEntryImpl;
 
   @override
   String get id;
@@ -825,33 +785,30 @@ abstract class _RankedEntry implements RankedEntry {
   String? get note;
   @override
   DateTime get submittedAt;
+
+  /// Create a copy of RankedEntry
+  /// with the given fields replaced by the non-null parameter values.
   @override
-  @JsonKey(ignore: true)
+  @JsonKey(includeFromJson: false, includeToJson: false)
   _$$RankedEntryImplCopyWith<_$RankedEntryImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }
 
 /// @nodoc
->>>>>>> 88d3438 (good progress)
 mixin _$ListSummary {
   String get id => throw _privateConstructorUsedError;
   String get title => throw _privateConstructorUsedError;
   ValueType get valueType => throw _privateConstructorUsedError;
-<<<<<<< HEAD
   RankOrder get rankOrder => throw _privateConstructorUsedError;
   bool get isPublic => throw _privateConstructorUsedError;
   int get memberCount => throw _privateConstructorUsedError;
   int? get ownRank => throw _privateConstructorUsedError;
+  MemberRole? get currentUserRole => throw _privateConstructorUsedError;
+  String? get category => throw _privateConstructorUsedError;
 
   /// Create a copy of ListSummary
   /// with the given fields replaced by the non-null parameter values.
   @JsonKey(includeFromJson: false, includeToJson: false)
-=======
-  int get memberCount => throw _privateConstructorUsedError;
-  int? get ownRank => throw _privateConstructorUsedError;
-
-  @JsonKey(ignore: true)
->>>>>>> 88d3438 (good progress)
   $ListSummaryCopyWith<ListSummary> get copyWith =>
       throw _privateConstructorUsedError;
 }
@@ -859,7 +816,6 @@ mixin _$ListSummary {
 /// @nodoc
 abstract class $ListSummaryCopyWith<$Res> {
   factory $ListSummaryCopyWith(
-<<<<<<< HEAD
     ListSummary value,
     $Res Function(ListSummary) then,
   ) = _$ListSummaryCopyWithImpl<$Res, ListSummary>;
@@ -872,18 +828,9 @@ abstract class $ListSummaryCopyWith<$Res> {
     bool isPublic,
     int memberCount,
     int? ownRank,
+    MemberRole? currentUserRole,
+    String? category,
   });
-=======
-          ListSummary value, $Res Function(ListSummary) then) =
-      _$ListSummaryCopyWithImpl<$Res, ListSummary>;
-  @useResult
-  $Res call(
-      {String id,
-      String title,
-      ValueType valueType,
-      int memberCount,
-      int? ownRank});
->>>>>>> 88d3438 (good progress)
 }
 
 /// @nodoc
@@ -896,22 +843,20 @@ class _$ListSummaryCopyWithImpl<$Res, $Val extends ListSummary>
   // ignore: unused_field
   final $Res Function($Val) _then;
 
-<<<<<<< HEAD
   /// Create a copy of ListSummary
   /// with the given fields replaced by the non-null parameter values.
-=======
->>>>>>> 88d3438 (good progress)
   @pragma('vm:prefer-inline')
   @override
   $Res call({
     Object? id = null,
     Object? title = null,
     Object? valueType = null,
-<<<<<<< HEAD
     Object? rankOrder = null,
     Object? isPublic = null,
     Object? memberCount = null,
     Object? ownRank = freezed,
+    Object? currentUserRole = freezed,
+    Object? category = freezed,
   }) {
     return _then(
       _value.copyWith(
@@ -943,36 +888,17 @@ class _$ListSummaryCopyWithImpl<$Res, $Val extends ListSummary>
                 ? _value.ownRank
                 : ownRank // ignore: cast_nullable_to_non_nullable
                       as int?,
+            currentUserRole: freezed == currentUserRole
+                ? _value.currentUserRole
+                : currentUserRole // ignore: cast_nullable_to_non_nullable
+                      as MemberRole?,
+            category: freezed == category
+                ? _value.category
+                : category // ignore: cast_nullable_to_non_nullable
+                      as String?,
           )
           as $Val,
     );
-=======
-    Object? memberCount = null,
-    Object? ownRank = freezed,
-  }) {
-    return _then(_value.copyWith(
-      id: null == id
-          ? _value.id
-          : id // ignore: cast_nullable_to_non_nullable
-              as String,
-      title: null == title
-          ? _value.title
-          : title // ignore: cast_nullable_to_non_nullable
-              as String,
-      valueType: null == valueType
-          ? _value.valueType
-          : valueType // ignore: cast_nullable_to_non_nullable
-              as ValueType,
-      memberCount: null == memberCount
-          ? _value.memberCount
-          : memberCount // ignore: cast_nullable_to_non_nullable
-              as int,
-      ownRank: freezed == ownRank
-          ? _value.ownRank
-          : ownRank // ignore: cast_nullable_to_non_nullable
-              as int?,
-    ) as $Val);
->>>>>>> 88d3438 (good progress)
   }
 }
 
@@ -980,7 +906,6 @@ class _$ListSummaryCopyWithImpl<$Res, $Val extends ListSummary>
 abstract class _$$ListSummaryImplCopyWith<$Res>
     implements $ListSummaryCopyWith<$Res> {
   factory _$$ListSummaryImplCopyWith(
-<<<<<<< HEAD
     _$ListSummaryImpl value,
     $Res Function(_$ListSummaryImpl) then,
   ) = __$$ListSummaryImplCopyWithImpl<$Res>;
@@ -994,19 +919,9 @@ abstract class _$$ListSummaryImplCopyWith<$Res>
     bool isPublic,
     int memberCount,
     int? ownRank,
+    MemberRole? currentUserRole,
+    String? category,
   });
-=======
-          _$ListSummaryImpl value, $Res Function(_$ListSummaryImpl) then) =
-      __$$ListSummaryImplCopyWithImpl<$Res>;
-  @override
-  @useResult
-  $Res call(
-      {String id,
-      String title,
-      ValueType valueType,
-      int memberCount,
-      int? ownRank});
->>>>>>> 88d3438 (good progress)
 }
 
 /// @nodoc
@@ -1014,29 +929,24 @@ class __$$ListSummaryImplCopyWithImpl<$Res>
     extends _$ListSummaryCopyWithImpl<$Res, _$ListSummaryImpl>
     implements _$$ListSummaryImplCopyWith<$Res> {
   __$$ListSummaryImplCopyWithImpl(
-<<<<<<< HEAD
     _$ListSummaryImpl _value,
     $Res Function(_$ListSummaryImpl) _then,
   ) : super(_value, _then);
 
   /// Create a copy of ListSummary
   /// with the given fields replaced by the non-null parameter values.
-=======
-      _$ListSummaryImpl _value, $Res Function(_$ListSummaryImpl) _then)
-      : super(_value, _then);
-
->>>>>>> 88d3438 (good progress)
   @pragma('vm:prefer-inline')
   @override
   $Res call({
     Object? id = null,
     Object? title = null,
     Object? valueType = null,
-<<<<<<< HEAD
     Object? rankOrder = null,
     Object? isPublic = null,
     Object? memberCount = null,
     Object? ownRank = freezed,
+    Object? currentUserRole = freezed,
+    Object? category = freezed,
   }) {
     return _then(
       _$ListSummaryImpl(
@@ -1068,42 +978,22 @@ class __$$ListSummaryImplCopyWithImpl<$Res>
             ? _value.ownRank
             : ownRank // ignore: cast_nullable_to_non_nullable
                   as int?,
+        currentUserRole: freezed == currentUserRole
+            ? _value.currentUserRole
+            : currentUserRole // ignore: cast_nullable_to_non_nullable
+                  as MemberRole?,
+        category: freezed == category
+            ? _value.category
+            : category // ignore: cast_nullable_to_non_nullable
+                  as String?,
       ),
     );
-=======
-    Object? memberCount = null,
-    Object? ownRank = freezed,
-  }) {
-    return _then(_$ListSummaryImpl(
-      id: null == id
-          ? _value.id
-          : id // ignore: cast_nullable_to_non_nullable
-              as String,
-      title: null == title
-          ? _value.title
-          : title // ignore: cast_nullable_to_non_nullable
-              as String,
-      valueType: null == valueType
-          ? _value.valueType
-          : valueType // ignore: cast_nullable_to_non_nullable
-              as ValueType,
-      memberCount: null == memberCount
-          ? _value.memberCount
-          : memberCount // ignore: cast_nullable_to_non_nullable
-              as int,
-      ownRank: freezed == ownRank
-          ? _value.ownRank
-          : ownRank // ignore: cast_nullable_to_non_nullable
-              as int?,
-    ));
->>>>>>> 88d3438 (good progress)
   }
 }
 
 /// @nodoc
 
 class _$ListSummaryImpl implements _ListSummary {
-<<<<<<< HEAD
   const _$ListSummaryImpl({
     required this.id,
     required this.title,
@@ -1112,15 +1002,9 @@ class _$ListSummaryImpl implements _ListSummary {
     required this.isPublic,
     required this.memberCount,
     this.ownRank,
+    this.currentUserRole,
+    this.category,
   });
-=======
-  const _$ListSummaryImpl(
-      {required this.id,
-      required this.title,
-      required this.valueType,
-      required this.memberCount,
-      this.ownRank});
->>>>>>> 88d3438 (good progress)
 
   @override
   final String id;
@@ -1129,24 +1013,21 @@ class _$ListSummaryImpl implements _ListSummary {
   @override
   final ValueType valueType;
   @override
-<<<<<<< HEAD
   final RankOrder rankOrder;
   @override
   final bool isPublic;
   @override
-=======
->>>>>>> 88d3438 (good progress)
   final int memberCount;
   @override
   final int? ownRank;
+  @override
+  final MemberRole? currentUserRole;
+  @override
+  final String? category;
 
   @override
   String toString() {
-<<<<<<< HEAD
-    return 'ListSummary(id: $id, title: $title, valueType: $valueType, rankOrder: $rankOrder, isPublic: $isPublic, memberCount: $memberCount, ownRank: $ownRank)';
-=======
-    return 'ListSummary(id: $id, title: $title, valueType: $valueType, memberCount: $memberCount, ownRank: $ownRank)';
->>>>>>> 88d3438 (good progress)
+    return 'ListSummary(id: $id, title: $title, valueType: $valueType, rankOrder: $rankOrder, isPublic: $isPublic, memberCount: $memberCount, ownRank: $ownRank, currentUserRole: $currentUserRole, category: $category)';
   }
 
   @override
@@ -1158,20 +1039,20 @@ class _$ListSummaryImpl implements _ListSummary {
             (identical(other.title, title) || other.title == title) &&
             (identical(other.valueType, valueType) ||
                 other.valueType == valueType) &&
-<<<<<<< HEAD
             (identical(other.rankOrder, rankOrder) ||
                 other.rankOrder == rankOrder) &&
             (identical(other.isPublic, isPublic) ||
                 other.isPublic == isPublic) &&
-=======
->>>>>>> 88d3438 (good progress)
             (identical(other.memberCount, memberCount) ||
                 other.memberCount == memberCount) &&
-            (identical(other.ownRank, ownRank) || other.ownRank == ownRank));
+            (identical(other.ownRank, ownRank) || other.ownRank == ownRank) &&
+            (identical(other.currentUserRole, currentUserRole) ||
+                other.currentUserRole == currentUserRole) &&
+            (identical(other.category, category) ||
+                other.category == category));
   }
 
   @override
-<<<<<<< HEAD
   int get hashCode => Object.hash(
     runtimeType,
     id,
@@ -1181,17 +1062,13 @@ class _$ListSummaryImpl implements _ListSummary {
     isPublic,
     memberCount,
     ownRank,
+    currentUserRole,
+    category,
   );
 
   /// Create a copy of ListSummary
   /// with the given fields replaced by the non-null parameter values.
   @JsonKey(includeFromJson: false, includeToJson: false)
-=======
-  int get hashCode =>
-      Object.hash(runtimeType, id, title, valueType, memberCount, ownRank);
-
-  @JsonKey(ignore: true)
->>>>>>> 88d3438 (good progress)
   @override
   @pragma('vm:prefer-inline')
   _$$ListSummaryImplCopyWith<_$ListSummaryImpl> get copyWith =>
@@ -1199,7 +1076,6 @@ class _$ListSummaryImpl implements _ListSummary {
 }
 
 abstract class _ListSummary implements ListSummary {
-<<<<<<< HEAD
   const factory _ListSummary({
     required final String id,
     required final String title,
@@ -1208,15 +1084,9 @@ abstract class _ListSummary implements ListSummary {
     required final bool isPublic,
     required final int memberCount,
     final int? ownRank,
+    final MemberRole? currentUserRole,
+    final String? category,
   }) = _$ListSummaryImpl;
-=======
-  const factory _ListSummary(
-      {required final String id,
-      required final String title,
-      required final ValueType valueType,
-      required final int memberCount,
-      final int? ownRank}) = _$ListSummaryImpl;
->>>>>>> 88d3438 (good progress)
 
   @override
   String get id;
@@ -1225,7 +1095,6 @@ abstract class _ListSummary implements ListSummary {
   @override
   ValueType get valueType;
   @override
-<<<<<<< HEAD
   RankOrder get rankOrder;
   @override
   bool get isPublic;
@@ -1233,18 +1102,15 @@ abstract class _ListSummary implements ListSummary {
   int get memberCount;
   @override
   int? get ownRank;
+  @override
+  MemberRole? get currentUserRole;
+  @override
+  String? get category;
 
   /// Create a copy of ListSummary
   /// with the given fields replaced by the non-null parameter values.
   @override
   @JsonKey(includeFromJson: false, includeToJson: false)
-=======
-  int get memberCount;
-  @override
-  int? get ownRank;
-  @override
-  @JsonKey(ignore: true)
->>>>>>> 88d3438 (good progress)
   _$$ListSummaryImplCopyWith<_$ListSummaryImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }
@@ -1255,13 +1121,9 @@ mixin _$ListMember {
   String get displayName => throw _privateConstructorUsedError;
   MemberRole get role => throw _privateConstructorUsedError;
 
-<<<<<<< HEAD
   /// Create a copy of ListMember
   /// with the given fields replaced by the non-null parameter values.
   @JsonKey(includeFromJson: false, includeToJson: false)
-=======
-  @JsonKey(ignore: true)
->>>>>>> 88d3438 (good progress)
   $ListMemberCopyWith<ListMember> get copyWith =>
       throw _privateConstructorUsedError;
 }
@@ -1269,14 +1131,9 @@ mixin _$ListMember {
 /// @nodoc
 abstract class $ListMemberCopyWith<$Res> {
   factory $ListMemberCopyWith(
-<<<<<<< HEAD
     ListMember value,
     $Res Function(ListMember) then,
   ) = _$ListMemberCopyWithImpl<$Res, ListMember>;
-=======
-          ListMember value, $Res Function(ListMember) then) =
-      _$ListMemberCopyWithImpl<$Res, ListMember>;
->>>>>>> 88d3438 (good progress)
   @useResult
   $Res call({String userId, String displayName, MemberRole role});
 }
@@ -1291,11 +1148,8 @@ class _$ListMemberCopyWithImpl<$Res, $Val extends ListMember>
   // ignore: unused_field
   final $Res Function($Val) _then;
 
-<<<<<<< HEAD
   /// Create a copy of ListMember
   /// with the given fields replaced by the non-null parameter values.
-=======
->>>>>>> 88d3438 (good progress)
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -1303,7 +1157,6 @@ class _$ListMemberCopyWithImpl<$Res, $Val extends ListMember>
     Object? displayName = null,
     Object? role = null,
   }) {
-<<<<<<< HEAD
     return _then(
       _value.copyWith(
             userId: null == userId
@@ -1321,22 +1174,6 @@ class _$ListMemberCopyWithImpl<$Res, $Val extends ListMember>
           )
           as $Val,
     );
-=======
-    return _then(_value.copyWith(
-      userId: null == userId
-          ? _value.userId
-          : userId // ignore: cast_nullable_to_non_nullable
-              as String,
-      displayName: null == displayName
-          ? _value.displayName
-          : displayName // ignore: cast_nullable_to_non_nullable
-              as String,
-      role: null == role
-          ? _value.role
-          : role // ignore: cast_nullable_to_non_nullable
-              as MemberRole,
-    ) as $Val);
->>>>>>> 88d3438 (good progress)
   }
 }
 
@@ -1344,14 +1181,9 @@ class _$ListMemberCopyWithImpl<$Res, $Val extends ListMember>
 abstract class _$$ListMemberImplCopyWith<$Res>
     implements $ListMemberCopyWith<$Res> {
   factory _$$ListMemberImplCopyWith(
-<<<<<<< HEAD
     _$ListMemberImpl value,
     $Res Function(_$ListMemberImpl) then,
   ) = __$$ListMemberImplCopyWithImpl<$Res>;
-=======
-          _$ListMemberImpl value, $Res Function(_$ListMemberImpl) then) =
-      __$$ListMemberImplCopyWithImpl<$Res>;
->>>>>>> 88d3438 (good progress)
   @override
   @useResult
   $Res call({String userId, String displayName, MemberRole role});
@@ -1362,18 +1194,12 @@ class __$$ListMemberImplCopyWithImpl<$Res>
     extends _$ListMemberCopyWithImpl<$Res, _$ListMemberImpl>
     implements _$$ListMemberImplCopyWith<$Res> {
   __$$ListMemberImplCopyWithImpl(
-<<<<<<< HEAD
     _$ListMemberImpl _value,
     $Res Function(_$ListMemberImpl) _then,
   ) : super(_value, _then);
 
   /// Create a copy of ListMember
   /// with the given fields replaced by the non-null parameter values.
-=======
-      _$ListMemberImpl _value, $Res Function(_$ListMemberImpl) _then)
-      : super(_value, _then);
-
->>>>>>> 88d3438 (good progress)
   @pragma('vm:prefer-inline')
   @override
   $Res call({
@@ -1381,7 +1207,6 @@ class __$$ListMemberImplCopyWithImpl<$Res>
     Object? displayName = null,
     Object? role = null,
   }) {
-<<<<<<< HEAD
     return _then(
       _$ListMemberImpl(
         userId: null == userId
@@ -1398,38 +1223,17 @@ class __$$ListMemberImplCopyWithImpl<$Res>
                   as MemberRole,
       ),
     );
-=======
-    return _then(_$ListMemberImpl(
-      userId: null == userId
-          ? _value.userId
-          : userId // ignore: cast_nullable_to_non_nullable
-              as String,
-      displayName: null == displayName
-          ? _value.displayName
-          : displayName // ignore: cast_nullable_to_non_nullable
-              as String,
-      role: null == role
-          ? _value.role
-          : role // ignore: cast_nullable_to_non_nullable
-              as MemberRole,
-    ));
->>>>>>> 88d3438 (good progress)
   }
 }
 
 /// @nodoc
 
 class _$ListMemberImpl implements _ListMember {
-<<<<<<< HEAD
   const _$ListMemberImpl({
     required this.userId,
     required this.displayName,
     required this.role,
   });
-=======
-  const _$ListMemberImpl(
-      {required this.userId, required this.displayName, required this.role});
->>>>>>> 88d3438 (good progress)
 
   @override
   final String userId;
@@ -1457,13 +1261,9 @@ class _$ListMemberImpl implements _ListMember {
   @override
   int get hashCode => Object.hash(runtimeType, userId, displayName, role);
 
-<<<<<<< HEAD
   /// Create a copy of ListMember
   /// with the given fields replaced by the non-null parameter values.
   @JsonKey(includeFromJson: false, includeToJson: false)
-=======
-  @JsonKey(ignore: true)
->>>>>>> 88d3438 (good progress)
   @override
   @pragma('vm:prefer-inline')
   _$$ListMemberImplCopyWith<_$ListMemberImpl> get copyWith =>
@@ -1471,18 +1271,11 @@ class _$ListMemberImpl implements _ListMember {
 }
 
 abstract class _ListMember implements ListMember {
-<<<<<<< HEAD
   const factory _ListMember({
     required final String userId,
     required final String displayName,
     required final MemberRole role,
   }) = _$ListMemberImpl;
-=======
-  const factory _ListMember(
-      {required final String userId,
-      required final String displayName,
-      required final MemberRole role}) = _$ListMemberImpl;
->>>>>>> 88d3438 (good progress)
 
   @override
   String get userId;
@@ -1490,16 +1283,11 @@ abstract class _ListMember implements ListMember {
   String get displayName;
   @override
   MemberRole get role;
-<<<<<<< HEAD
 
   /// Create a copy of ListMember
   /// with the given fields replaced by the non-null parameter values.
   @override
   @JsonKey(includeFromJson: false, includeToJson: false)
-=======
-  @override
-  @JsonKey(ignore: true)
->>>>>>> 88d3438 (good progress)
   _$$ListMemberImplCopyWith<_$ListMemberImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }

@@ -1,6 +1,5 @@
 import 'package:fpdart/fpdart.dart';
 import '../../../../core/network/api_error.dart';
-import '../entities/ranked_list.dart';
 import '../lists_repository.dart';
 
 class JoinByInviteUseCase {
@@ -8,7 +7,7 @@ class JoinByInviteUseCase {
 
   JoinByInviteUseCase(this._repository);
 
-  Future<Either<ApiError, RankedList>> call(String token) {
+  Future<Either<ApiError, void>> call(String token) {
     return _repository.joinByInvite(token);
   }
 }

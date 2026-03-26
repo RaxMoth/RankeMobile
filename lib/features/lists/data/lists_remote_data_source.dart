@@ -1,24 +1,21 @@
 import '../../../core/network/api_client.dart';
 
-<<<<<<< HEAD
-class ListsRemoteDataSource {
-  final ApiClient _apiClient;
-
-  ListsRemoteDataSource(this._apiClient);
-
-  Future<List<dynamic>> getLists() async {
-=======
 /// Remote data source for lists API calls
 abstract class ListsRemoteDataSource {
-  Future<List<dynamic>> getMyLists();
+  Future<List<dynamic>> getLists();
   Future<Map<String, dynamic>> getListDetail(String listId);
   Future<Map<String, dynamic>> createList(Map<String, dynamic> data);
   Future<void> deleteList(String listId);
   Future<Map<String, dynamic>> getInvitePreview(String token);
-  Future<void> joinList(String token);
+  Future<Map<String, dynamic>> joinByInvite(String token);
+  Future<Map<String, dynamic>> getInviteLink(String listId);
   Future<List<dynamic>> getMembers(String listId);
   Future<void> removeMember(String listId, String userId);
   Future<void> updateMemberRole(String listId, String userId, String role);
+  Future<Map<String, dynamic>> updateList(String listId, Map<String, dynamic> data);
+  Future<void> deleteEntry(String listId, String entryId);
+  Future<Map<String, dynamic>> regenerateInvite(String listId);
+  Future<List<dynamic>> searchPublicLists({String? query, String? category});
 }
 
 class ListsRemoteDataSourceImpl implements ListsRemoteDataSource {
@@ -27,43 +24,17 @@ class ListsRemoteDataSourceImpl implements ListsRemoteDataSource {
   ListsRemoteDataSourceImpl(this._apiClient);
 
   @override
-  Future<List<dynamic>> getMyLists() async {
->>>>>>> 88d3438 (good progress)
+  Future<List<dynamic>> getLists() async {
     final response = await _apiClient.dio.get('/lists');
     return response.data as List<dynamic>;
   }
 
-<<<<<<< HEAD
-=======
   @override
->>>>>>> 88d3438 (good progress)
   Future<Map<String, dynamic>> getListDetail(String listId) async {
     final response = await _apiClient.dio.get('/lists/$listId');
     return response.data as Map<String, dynamic>;
   }
 
-<<<<<<< HEAD
-  Future<Map<String, dynamic>> createList({
-    required String title,
-    String? description,
-    required String valueType,
-    required String rankOrder,
-    required bool isPublic,
-  }) async {
-    final response = await _apiClient.dio.post(
-      '/lists',
-      data: {
-        'title': title,
-        if (description != null) 'description': description,
-        'valueType': valueType,
-        'rankOrder': rankOrder,
-        'isPublic': isPublic,
-      },
-    );
-    return response.data as Map<String, dynamic>;
-  }
-
-=======
   @override
   Future<Map<String, dynamic>> createList(Map<String, dynamic> data) async {
     final response = await _apiClient.dio.post('/lists', data: data);
@@ -76,43 +47,29 @@ class ListsRemoteDataSourceImpl implements ListsRemoteDataSource {
   }
 
   @override
->>>>>>> 88d3438 (good progress)
   Future<Map<String, dynamic>> getInvitePreview(String token) async {
     final response = await _apiClient.dio.get('/lists/invite/$token');
     return response.data as Map<String, dynamic>;
   }
 
-<<<<<<< HEAD
+  @override
   Future<Map<String, dynamic>> joinByInvite(String token) async {
     final response = await _apiClient.dio.post('/lists/invite/$token/join');
     return response.data as Map<String, dynamic>;
   }
 
+  @override
   Future<Map<String, dynamic>> getInviteLink(String listId) async {
     final response = await _apiClient.dio.get('/lists/$listId/invite');
     return response.data as Map<String, dynamic>;
   }
 
-=======
   @override
-  Future<void> joinList(String token) async {
-    await _apiClient.dio.post('/lists/invite/$token/join');
-  }
-
-  @override
->>>>>>> 88d3438 (good progress)
   Future<List<dynamic>> getMembers(String listId) async {
     final response = await _apiClient.dio.get('/lists/$listId/members');
     return response.data as List<dynamic>;
   }
 
-<<<<<<< HEAD
-  Future<void> updateMemberRole({
-    required String listId,
-    required String userId,
-    required String role,
-  }) async {
-=======
   @override
   Future<void> removeMember(String listId, String userId) async {
     await _apiClient.dio.delete('/lists/$listId/members/$userId');
@@ -124,20 +81,42 @@ class ListsRemoteDataSourceImpl implements ListsRemoteDataSource {
     String userId,
     String role,
   ) async {
->>>>>>> 88d3438 (good progress)
     await _apiClient.dio.patch(
       '/lists/$listId/members/$userId',
       data: {'role': role},
     );
   }
-<<<<<<< HEAD
 
-  Future<void> removeMember({
-    required String listId,
-    required String userId,
-  }) async {
-    await _apiClient.dio.delete('/lists/$listId/members/$userId');
+  @override
+  Future<Map<String, dynamic>> updateList(
+    String listId,
+    Map<String, dynamic> data,
+  ) async {
+    final response = await _apiClient.dio.patch('/lists/$listId', data: data);
+    return response.data as Map<String, dynamic>;
   }
-=======
->>>>>>> 88d3438 (good progress)
+
+  @override
+  Future<void> deleteEntry(String listId, String entryId) async {
+    await _apiClient.dio.delete('/lists/$listId/entries/$entryId');
+  }
+
+  @override
+  Future<Map<String, dynamic>> regenerateInvite(String listId) async {
+    final response =
+        await _apiClient.dio.post('/lists/$listId/invite/regenerate');
+    return response.data as Map<String, dynamic>;
+  }
+
+  @override
+  Future<List<dynamic>> searchPublicLists({
+    String? query,
+    String? category,
+  }) async {
+    final response = await _apiClient.dio.get('/lists/public', queryParameters: {
+      if (query != null) 'q': query,
+      if (category != null) 'category': category,
+    });
+    return response.data as List<dynamic>;
+  }
 }

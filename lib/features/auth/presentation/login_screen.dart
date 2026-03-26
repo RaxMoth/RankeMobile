@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-<<<<<<< HEAD
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../core/theme/colors.dart';
+import '../../../core/theme/text_styles.dart';
 import '../../../shared/widgets/app_button.dart';
 import '../../../shared/widgets/app_text_field.dart';
 import 'providers/auth_provider.dart';
@@ -60,16 +61,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Text(
-                  'Ranke',
-                  style: Theme.of(context).textTheme.displayMedium,
+                  'APEX',
+                  style: AppTextStyles.displayLarge,
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 8),
                 Text(
                   'Sign in to your account',
-                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                        color: Colors.grey,
-                      ),
+                  style: AppTextStyles.subtitle,
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 48),
@@ -114,24 +113,24 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 ),
                 const SizedBox(height: 24),
                 AppButton(
-                  label: 'Sign In',
+                  label: 'SIGN IN',
                   onPressed: _login,
                   isLoading: authState.isLoading,
                 ),
                 const SizedBox(height: 16),
-                const Row(
+                Row(
                   children: [
-                    Expanded(child: Divider()),
+                    const Expanded(child: Divider(color: AppColors.border)),
                     Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 16),
-                      child: Text('or'),
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: Text('or', style: AppTextStyles.label),
                     ),
-                    Expanded(child: Divider()),
+                    const Expanded(child: Divider(color: AppColors.border)),
                   ],
                 ),
                 const SizedBox(height: 16),
                 AppButton(
-                  label: 'Sign in with Apple',
+                  label: 'SIGN IN WITH APPLE',
                   icon: Icons.apple,
                   onPressed: () =>
                       ref.read(authProvider.notifier).signInWithApple(),
@@ -140,29 +139,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 const SizedBox(height: 24),
                 TextButton(
                   onPressed: () => context.go('/register'),
-                  child: const Text("Don't have an account? Sign up"),
+                  child: Text(
+                    "Don't have an account? Sign up",
+                    style: AppTextStyles.label.copyWith(color: AppColors.accent),
+                  ),
                 ),
               ],
             ),
-=======
-
-import '../../../core/theme/colors.dart';
-import '../../../core/theme/text_styles.dart';
-
-/// Login screen — email/password + Sign in with Apple
-class LoginScreen extends StatelessWidget {
-  const LoginScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: SafeArea(
-        child: Center(
-          child: Text(
-            'LOGIN\n(NOT YET IMPLEMENTED)',
-            style: AppTextStyles.sectionHeader.copyWith(color: AppColors.textTertiary),
-            textAlign: TextAlign.center,
->>>>>>> 88d3438 (good progress)
           ),
         ),
       ),

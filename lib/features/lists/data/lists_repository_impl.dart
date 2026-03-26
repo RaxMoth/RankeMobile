@@ -1,8 +1,7 @@
-<<<<<<< HEAD
+import 'package:dio/dio.dart';
 import 'package:fpdart/fpdart.dart';
+
 import '../../../core/network/api_error.dart';
-import '../../../core/network/api_helpers.dart';
-import '../../entries/domain/entities/entry.dart';
 import '../domain/entities/ranked_list.dart';
 import '../domain/lists_repository.dart';
 import 'lists_remote_data_source.dart';
@@ -13,19 +12,29 @@ class ListsRepositoryImpl implements ListsRepository {
   ListsRepositoryImpl(this._dataSource);
 
   @override
-  Future<Either<ApiError, List<ListSummary>>> getLists() {
-    return safeApiCall(() async {
+  Future<Either<ApiError, List<ListSummary>>> getLists() async {
+    try {
       final data = await _dataSource.getLists();
-      return data.map((e) => _mapListSummary(e as Map<String, dynamic>)).toList();
-    });
+      return Right(
+        data.map((e) => _mapListSummary(e as Map<String, dynamic>)).toList(),
+      );
+    } on DioException catch (e) {
+      return Left(_mapDioError(e));
+    } catch (e) {
+      return Left(ApiUnknownError(error: e));
+    }
   }
 
   @override
-  Future<Either<ApiError, RankedList>> getListDetail(String listId) {
-    return safeApiCall(() async {
+  Future<Either<ApiError, RankedList>> getListDetail(String listId) async {
+    try {
       final data = await _dataSource.getListDetail(listId);
-      return _mapRankedList(data);
-    });
+      return Right(_mapRankedList(data));
+    } on DioException catch (e) {
+      return Left(_mapDioError(e));
+    } catch (e) {
+      return Left(ApiUnknownError(error: e));
+    }
   }
 
   @override
@@ -35,49 +44,89 @@ class ListsRepositoryImpl implements ListsRepository {
     required ValueType valueType,
     required RankOrder rankOrder,
     required bool isPublic,
-  }) {
-    return safeApiCall(() async {
-      final data = await _dataSource.createList(
-        title: title,
-        description: description,
-        valueType: valueType.name,
-        rankOrder: rankOrder.name,
-        isPublic: isPublic,
-      );
-      return _mapRankedList(data);
-    });
+    String? telegramLink,
+    String? whatsappLink,
+    String? discordLink,
+  }) async {
+    try {
+      final data = await _dataSource.createList({
+        'title': title,
+        if (description != null) 'description': description,
+        'valueType': valueType.name,
+        'rankOrder': rankOrder.name,
+        'isPublic': isPublic,
+        if (telegramLink != null) 'telegramLink': telegramLink,
+        if (whatsappLink != null) 'whatsappLink': whatsappLink,
+        if (discordLink != null) 'discordLink': discordLink,
+      });
+      return Right(_mapRankedList(data));
+    } on DioException catch (e) {
+      return Left(_mapDioError(e));
+    } catch (e) {
+      return Left(ApiUnknownError(error: e));
+    }
   }
 
   @override
-  Future<Either<ApiError, RankedList>> getInvitePreview(String token) {
-    return safeApiCall(() async {
+  Future<Either<ApiError, void>> deleteList(String listId) async {
+    try {
+      await _dataSource.deleteList(listId);
+      return const Right(null);
+    } on DioException catch (e) {
+      return Left(_mapDioError(e));
+    } catch (e) {
+      return Left(ApiUnknownError(error: e));
+    }
+  }
+
+  @override
+  Future<Either<ApiError, RankedList>> getInvitePreview(String token) async {
+    try {
       final data = await _dataSource.getInvitePreview(token);
-      return _mapRankedList(data);
-    });
+      return Right(_mapRankedList(data));
+    } on DioException catch (e) {
+      return Left(_mapDioError(e));
+    } catch (e) {
+      return Left(ApiUnknownError(error: e));
+    }
   }
 
   @override
-  Future<Either<ApiError, RankedList>> joinByInvite(String token) {
-    return safeApiCall(() async {
-      final data = await _dataSource.joinByInvite(token);
-      return _mapRankedList(data);
-    });
+  Future<Either<ApiError, void>> joinByInvite(String token) async {
+    try {
+      await _dataSource.joinByInvite(token);
+      return const Right(null);
+    } on DioException catch (e) {
+      return Left(_mapDioError(e));
+    } catch (e) {
+      return Left(ApiUnknownError(error: e));
+    }
   }
 
   @override
-  Future<Either<ApiError, String>> getInviteLink(String listId) {
-    return safeApiCall(() async {
+  Future<Either<ApiError, String>> getInviteLink(String listId) async {
+    try {
       final data = await _dataSource.getInviteLink(listId);
-      return data['inviteLink'] as String;
-    });
+      return Right(data['inviteLink'] as String);
+    } on DioException catch (e) {
+      return Left(_mapDioError(e));
+    } catch (e) {
+      return Left(ApiUnknownError(error: e));
+    }
   }
 
   @override
-  Future<Either<ApiError, List<ListMember>>> getMembers(String listId) {
-    return safeApiCall(() async {
+  Future<Either<ApiError, List<ListMember>>> getMembers(String listId) async {
+    try {
       final data = await _dataSource.getMembers(listId);
-      return data.map((e) => _mapMember(e as Map<String, dynamic>)).toList();
-    });
+      return Right(
+        data.map((e) => _mapMember(e as Map<String, dynamic>)).toList(),
+      );
+    } on DioException catch (e) {
+      return Left(_mapDioError(e));
+    } catch (e) {
+      return Left(ApiUnknownError(error: e));
+    }
   }
 
   @override
@@ -85,24 +134,106 @@ class ListsRepositoryImpl implements ListsRepository {
     required String listId,
     required String userId,
     required MemberRole role,
-  }) {
-    return safeApiCall(() async {
-      await _dataSource.updateMemberRole(
-        listId: listId,
-        userId: userId,
-        role: role.name,
-      );
-    });
+  }) async {
+    try {
+      await _dataSource.updateMemberRole(listId, userId, role.name);
+      return const Right(null);
+    } on DioException catch (e) {
+      return Left(_mapDioError(e));
+    } catch (e) {
+      return Left(ApiUnknownError(error: e));
+    }
   }
 
   @override
   Future<Either<ApiError, void>> removeMember({
     required String listId,
     required String userId,
-  }) {
-    return safeApiCall(() async {
-      await _dataSource.removeMember(listId: listId, userId: userId);
-    });
+  }) async {
+    try {
+      await _dataSource.removeMember(listId, userId);
+      return const Right(null);
+    } on DioException catch (e) {
+      return Left(_mapDioError(e));
+    } catch (e) {
+      return Left(ApiUnknownError(error: e));
+    }
+  }
+
+  @override
+  Future<Either<ApiError, RankedList>> updateList({
+    required String listId,
+    String? title,
+    String? description,
+    bool? isPublic,
+    bool? locked,
+    String? telegramLink,
+    String? whatsappLink,
+    String? discordLink,
+  }) async {
+    try {
+      final data = await _dataSource.updateList(listId, {
+        if (title != null) 'title': title,
+        if (description != null) 'description': description,
+        if (isPublic != null) 'isPublic': isPublic,
+        if (locked != null) 'locked': locked,
+        if (telegramLink != null) 'telegramLink': telegramLink,
+        if (whatsappLink != null) 'whatsappLink': whatsappLink,
+        if (discordLink != null) 'discordLink': discordLink,
+      });
+      return Right(_mapRankedList(data));
+    } on DioException catch (e) {
+      return Left(_mapDioError(e));
+    } catch (e) {
+      return Left(ApiUnknownError(error: e));
+    }
+  }
+
+  @override
+  Future<Either<ApiError, void>> deleteEntry({
+    required String listId,
+    required String entryId,
+  }) async {
+    try {
+      await _dataSource.deleteEntry(listId, entryId);
+      return const Right(null);
+    } on DioException catch (e) {
+      return Left(_mapDioError(e));
+    } catch (e) {
+      return Left(ApiUnknownError(error: e));
+    }
+  }
+
+  @override
+  Future<Either<ApiError, String>> regenerateInvite(String listId) async {
+    try {
+      final data = await _dataSource.regenerateInvite(listId);
+      return Right(data['inviteToken'] as String);
+    } on DioException catch (e) {
+      return Left(_mapDioError(e));
+    } catch (e) {
+      return Left(ApiUnknownError(error: e));
+    }
+  }
+
+  @override
+  Future<Either<ApiError, List<ListSummary>>> searchPublicLists({
+    String? query,
+    String? category,
+  }) async {
+    try {
+      final data = await _dataSource.searchPublicLists(
+        query: query,
+        category: category,
+      );
+      return Right(
+        data.map((e) => _mapListSummary(e as Map<String, dynamic>)).toList(),
+      );
+    } on DioException catch (e) {
+      return Left(_mapDioError(e));
+    } catch (e) {
+      return Left(ApiUnknownError(error: e));
+    }
   }
 
   RankedList _mapRankedList(Map<String, dynamic> json) {
@@ -113,12 +244,16 @@ class ListsRepositoryImpl implements ListsRepository {
       valueType: ValueType.values.byName(json['valueType'] as String),
       rankOrder: RankOrder.values.byName(json['rankOrder'] as String),
       isPublic: json['isPublic'] as bool,
+      locked: json['locked'] as bool? ?? false,
       inviteToken: json['inviteToken'] as String?,
       entries: (json['entries'] as List<dynamic>?)
               ?.map((e) => _mapEntry(e as Map<String, dynamic>))
               .toList() ??
           [],
       memberCount: json['memberCount'] as int,
+      currentUserRole: json['currentUserRole'] != null
+          ? MemberRole.values.byName(json['currentUserRole'] as String)
+          : null,
     );
   }
 
@@ -131,6 +266,9 @@ class ListsRepositoryImpl implements ListsRepository {
       isPublic: json['isPublic'] as bool,
       memberCount: json['memberCount'] as int,
       ownRank: json['ownRank'] as int?,
+      currentUserRole: json['currentUserRole'] != null
+          ? MemberRole.values.byName(json['currentUserRole'] as String)
+          : null,
     );
   }
 
@@ -156,7 +294,23 @@ class ListsRepositoryImpl implements ListsRepository {
       role: MemberRole.values.byName(json['role'] as String),
     );
   }
+
+  ApiError _mapDioError(DioException e) {
+    if (e.type == DioExceptionType.connectionError ||
+        e.type == DioExceptionType.connectionTimeout) {
+      return const ApiNetworkError();
+    }
+    final response = e.response;
+    if (response != null) {
+      final data = response.data;
+      if (data is Map<String, dynamic>) {
+        return ApiServerError(
+          code: data['code'] as String? ?? 'UNKNOWN',
+          message: data['message'] as String? ?? 'Server error',
+          statusCode: response.statusCode ?? 500,
+        );
+      }
+    }
+    return ApiUnknownError(error: e);
+  }
 }
-=======
-// TODO: Implement ListsRepositoryImpl following the same pattern as AuthRepositoryImpl
->>>>>>> 88d3438 (good progress)
