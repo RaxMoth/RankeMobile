@@ -9,6 +9,9 @@ import '../../domain/use_cases/get_lists_use_case.dart';
 import '../../domain/use_cases/get_invite_preview_use_case.dart';
 import '../../domain/use_cases/join_by_invite_use_case.dart';
 import '../../../entries/domain/entities/entry.dart';
+import '../../../entries/domain/use_cases/approve_entry_use_case.dart';
+import '../../../entries/domain/use_cases/get_pending_entries_use_case.dart';
+import '../../../entries/domain/use_cases/reject_entry_use_case.dart';
 import '../../../entries/domain/use_cases/submit_entry_use_case.dart';
 
 // --- Home screen list ---
@@ -149,6 +152,50 @@ class InvitePreviewNotifier extends FamilyAsyncNotifier<RankedList, String> {
     result.fold(
       (error) => throw error,
       (_) {},
+    );
+  }
+}
+
+// --- Pending entries (admin approval) ---
+
+final pendingEntriesProvider = AsyncNotifierProvider.family<
+    PendingEntriesNotifier, List<RankedEntry>, String>(
+    PendingEntriesNotifier.new);
+
+class PendingEntriesNotifier
+    extends FamilyAsyncNotifier<List<RankedEntry>, String> {
+  @override
+  Future<List<RankedEntry>> build(String arg) async {
+    final result =
+        await GetIt.instance<GetPendingEntriesUseCase>().call(arg);
+    return result.fold(
+      (error) => throw error,
+      (entries) => entries,
+    );
+  }
+
+  Future<void> approve(String entryId) async {
+    final result = await GetIt.instance<ApproveEntryUseCase>().call(
+      listId: arg,
+      entryId: entryId,
+    );
+    result.fold(
+      (error) => throw error,
+      (_) {
+        ref.invalidateSelf();
+        ref.invalidate(listDetailProvider(arg));
+      },
+    );
+  }
+
+  Future<void> reject(String entryId) async {
+    final result = await GetIt.instance<RejectEntryUseCase>().call(
+      listId: arg,
+      entryId: entryId,
+    );
+    result.fold(
+      (error) => throw error,
+      (_) => ref.invalidateSelf(),
     );
   }
 }

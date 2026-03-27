@@ -63,30 +63,53 @@ class ProfileScreen extends ConsumerWidget {
                   ownedCount: 0, joinedCount: 0, bookmarkedCount: 0),
             ),
           ),
-          // My boards
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(20, 24, 20, 12),
-              child:
-                  Text('MY BOARDS', style: AppTextStyles.sectionHeader),
-            ),
-          ),
+          // Board sections
           listsAsync.when(
-            data: (lists) => lists.isEmpty
-                ? const SliverToBoxAdapter(child: _EmptySection(message: 'NO BOARDS YET'))
-                : SliverPadding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    sliver: SliverList(
-                      delegate: SliverChildBuilderDelegate(
-                        (context, index) => _BoardListItem(
-                          summary: lists[index],
-                          onTap: () =>
-                              context.push('/lists/${lists[index].id}'),
-                        ),
-                        childCount: lists.length,
-                      ),
-                    ),
+            data: (lists) {
+              final owned = lists
+                  .where((l) => l.currentUserRole == MemberRole.owner)
+                  .toList();
+              final joined = lists
+                  .where((l) =>
+                      l.currentUserRole == MemberRole.admin ||
+                      l.currentUserRole == MemberRole.member)
+                  .toList();
+
+              if (owned.isEmpty && joined.isEmpty) {
+                return const SliverToBoxAdapter(
+                  child: Padding(
+                    padding: EdgeInsets.fromLTRB(20, 24, 20, 0),
+                    child: _EmptySection(message: 'NO BOARDS YET'),
                   ),
+                );
+              }
+
+              return SliverPadding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                sliver: SliverList(
+                  delegate: SliverChildListDelegate([
+                    if (owned.isNotEmpty) ...[
+                      const SizedBox(height: 24),
+                      _sectionLabel('OWNED', owned.length),
+                      const SizedBox(height: 8),
+                      ...owned.map((s) => _BoardListItem(
+                            summary: s,
+                            onTap: () => context.push('/lists/${s.id}'),
+                          )),
+                    ],
+                    if (joined.isNotEmpty) ...[
+                      const SizedBox(height: 20),
+                      _sectionLabel('JOINED', joined.length),
+                      const SizedBox(height: 8),
+                      ...joined.map((s) => _BoardListItem(
+                            summary: s,
+                            onTap: () => context.push('/lists/${s.id}'),
+                          )),
+                    ],
+                  ]),
+                ),
+              );
+            },
             loading: () => const SliverToBoxAdapter(
               child: Center(
                 child: Padding(
@@ -136,6 +159,17 @@ class ProfileScreen extends ConsumerWidget {
           Text('OPERATOR STATUS', style: AppTextStyles.subtitle),
         ],
       ),
+    );
+  }
+
+  Widget _sectionLabel(String title, int count) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(title, style: AppTextStyles.sectionHeader),
+        Text('$count',
+            style: AppTextStyles.bodySecondary.copyWith(fontSize: 12)),
+      ],
     );
   }
 }
@@ -364,21 +398,18 @@ class _EmptySection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-      child: Container(
-        padding: const EdgeInsets.all(24),
-        decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: AppColors.border),
-        ),
-        child: Center(
-          child: Text(
-            message,
-            style: AppTextStyles.bodySecondary
-                .copyWith(color: AppColors.textTertiary),
-          ),
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Center(
+        child: Text(
+          message,
+          style: AppTextStyles.bodySecondary
+              .copyWith(color: AppColors.textTertiary),
         ),
       ),
     );

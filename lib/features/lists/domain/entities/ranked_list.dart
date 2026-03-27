@@ -18,6 +18,7 @@ class RankedList with _$RankedList {
     @Default(false) bool locked,
     String? inviteToken,
     required List<RankedEntry> entries,
+    @Default([]) List<RankedEntry> pendingEntries,
     required int memberCount,
     MemberRole? currentUserRole,
     String? telegramLink,
@@ -39,6 +40,7 @@ class RankedEntry with _$RankedEntry {
     int? manualRank,
     String? note,
     required DateTime submittedAt,
+    @Default(EntryStatus.approved) EntryStatus status,
   }) = _RankedEntry;
 }
 
@@ -67,3 +69,5 @@ class ListMember with _$ListMember {
 }
 
 enum MemberRole { owner, admin, member }
+
+enum EntryStatus { pending, approved, rejected }

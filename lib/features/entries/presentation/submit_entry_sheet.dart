@@ -14,11 +14,17 @@ import 'widgets/duration_picker.dart';
 class SubmitEntrySheet extends ConsumerStatefulWidget {
   final String listId;
   final ValueType valueType;
+  final String? telegramLink;
+  final String? whatsappLink;
+  final String? discordLink;
 
   const SubmitEntrySheet({
     super.key,
     required this.listId,
     required this.valueType,
+    this.telegramLink,
+    this.whatsappLink,
+    this.discordLink,
   });
 
   @override
@@ -31,7 +37,13 @@ class _SubmitEntrySheetState extends ConsumerState<SubmitEntrySheet> {
   final _noteController = TextEditingController();
   int _durationMs = 0;
   bool _isSubmitting = false;
+  bool _submitted = false;
   String? _valueError;
+
+  bool get _hasCommsLinks =>
+      widget.telegramLink != null ||
+      widget.whatsappLink != null ||
+      widget.discordLink != null;
 
   @override
   void dispose() {
@@ -91,7 +103,7 @@ class _SubmitEntrySheetState extends ConsumerState<SubmitEntrySheet> {
       await ref
           .read(listDetailProvider(widget.listId).notifier)
           .submitEntry(input);
-      if (mounted) Navigator.of(context).pop();
+      if (mounted) setState(() => _submitted = true);
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -115,81 +127,216 @@ class _SubmitEntrySheetState extends ConsumerState<SubmitEntrySheet> {
         20,
         20 + MediaQuery.of(context).viewInsets.bottom,
       ),
+      child: _submitted ? _buildSuccessState() : _buildForm(),
+    );
+  }
+
+  Widget _buildSuccessState() {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        // Handle bar
+        Center(
+          child: Container(
+            width: 40,
+            height: 4,
+            decoration: BoxDecoration(
+              color: AppColors.border,
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+        ),
+        const SizedBox(height: 32),
+        Container(
+          width: 56,
+          height: 56,
+          decoration: BoxDecoration(
+            color: AppColors.accent.withAlpha(25),
+            borderRadius: BorderRadius.circular(28),
+            border: Border.all(color: AppColors.accent, width: 2),
+          ),
+          child: const Icon(Icons.check, color: AppColors.accent, size: 28),
+        ),
+        const SizedBox(height: 20),
+        Text('SUBMISSION RECEIVED', style: AppTextStyles.screenTitle),
+        const SizedBox(height: 8),
+        Text(
+          'PENDING ADMIN APPROVAL',
+          style: AppTextStyles.subtitle.copyWith(letterSpacing: 2.0),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          'Your entry will appear in standings\nonce approved by a moderator.',
+          style: AppTextStyles.bodySecondary,
+          textAlign: TextAlign.center,
+        ),
+        if (_hasCommsLinks) ...[
+          const SizedBox(height: 20),
+          _buildProofPrompt(),
+        ],
+        const SizedBox(height: 24),
+        SizedBox(
+          width: double.infinity,
+          child: ElevatedButton(
+            onPressed: () => Navigator.of(context).pop(),
+            style: ElevatedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(vertical: 16),
+            ),
+            child: const Text('DONE'),
+          ),
+        ),
+        const SizedBox(height: 8),
+      ],
+    );
+  }
+
+  Widget _buildForm() {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Handle bar
+        Center(
+          child: Container(
+            width: 40,
+            height: 4,
+            decoration: BoxDecoration(
+              color: AppColors.border,
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+        ),
+        const SizedBox(height: 20),
+        // Header
+        Text('SUBMIT ENTRY', style: AppTextStyles.screenTitle),
+        const SizedBox(height: 4),
+        Text(
+          'VALUE TYPE: ${widget.valueType.name.toUpperCase()}',
+          style: AppTextStyles.subtitle,
+        ),
+        const SizedBox(height: 24),
+        // Value input
+        _buildValueInput(),
+        if (_valueError != null) ...[
+          const SizedBox(height: 8),
+          Text(
+            _valueError!,
+            style: AppTextStyles.badge.copyWith(color: AppColors.error),
+          ),
+        ],
+        const SizedBox(height: 20),
+        // Note field
+        Text('NOTE (OPTIONAL)',
+            style: AppTextStyles.sectionHeader.copyWith(fontSize: 11)),
+        const SizedBox(height: 8),
+        TextField(
+          controller: _noteController,
+          maxLines: 2,
+          maxLength: 200,
+          style: AppTextStyles.body,
+          decoration: InputDecoration(
+            hintText: 'ADD CONTEXT TO YOUR ENTRY...',
+            hintStyle: AppTextStyles.bodySecondary.copyWith(
+              color: AppColors.textTertiary,
+            ),
+            counterStyle:
+                AppTextStyles.badge.copyWith(color: AppColors.textTertiary),
+          ),
+        ),
+        // Proof prompt
+        if (_hasCommsLinks) ...[
+          const SizedBox(height: 12),
+          _buildProofPrompt(),
+        ],
+        const SizedBox(height: 20),
+        // Submit button
+        SizedBox(
+          width: double.infinity,
+          child: ElevatedButton(
+            onPressed: _isSubmitting ? null : _submit,
+            style: ElevatedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(vertical: 16),
+            ),
+            child: _isSubmitting
+                ? const SizedBox(
+                    height: 20,
+                    width: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: AppColors.background,
+                    ),
+                  )
+                : const Text('CONFIRM SUBMISSION'),
+          ),
+        ),
+        const SizedBox(height: 8),
+      ],
+    );
+  }
+
+  Widget _buildProofPrompt() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: AppColors.accent.withAlpha(10),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: AppColors.accent.withAlpha(40)),
+      ),
       child: Column(
-        mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Handle bar
-          Center(
-            child: Container(
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: AppColors.border,
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
+          Row(
+            children: [
+              const Icon(Icons.verified_outlined,
+                  color: AppColors.accent, size: 16),
+              const SizedBox(width: 8),
+              Text('SHARE PROOF IN COMMUNITY',
+                  style: AppTextStyles.badge.copyWith(color: AppColors.accent)),
+            ],
           ),
-          const SizedBox(height: 20),
-          // Header
-          Text('SUBMIT ENTRY', style: AppTextStyles.screenTitle),
-          const SizedBox(height: 4),
+          const SizedBox(height: 8),
           Text(
-            'VALUE TYPE: ${widget.valueType.name.toUpperCase()}',
-            style: AppTextStyles.subtitle,
+            'Send evidence (photos, videos) in the group chat to help admins verify your entry.',
+            style: AppTextStyles.badge.copyWith(color: AppColors.textSecondary),
           ),
-          const SizedBox(height: 24),
-          // Value input
-          _buildValueInput(),
-          if (_valueError != null) ...[
-            const SizedBox(height: 8),
-            Text(
-              _valueError!,
-              style: AppTextStyles.badge.copyWith(color: AppColors.error),
-            ),
-          ],
-          const SizedBox(height: 20),
-          // Note field
-          Text('NOTE (OPTIONAL)',
-              style: AppTextStyles.sectionHeader.copyWith(fontSize: 11)),
-          const SizedBox(height: 8),
-          TextField(
-            controller: _noteController,
-            maxLines: 2,
-            maxLength: 200,
-            style: AppTextStyles.body,
-            decoration: InputDecoration(
-              hintText: 'ADD CONTEXT TO YOUR ENTRY...',
-              hintStyle: AppTextStyles.bodySecondary.copyWith(
-                color: AppColors.textTertiary,
-              ),
-              counterStyle:
-                  AppTextStyles.badge.copyWith(color: AppColors.textTertiary),
-            ),
-          ),
-          const SizedBox(height: 20),
-          // Submit button
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              onPressed: _isSubmitting ? null : _submit,
-              style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 16),
-              ),
-              child: _isSubmitting
-                  ? const SizedBox(
-                      height: 20,
-                      width: 20,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: AppColors.background,
-                      ),
-                    )
-                  : const Text('CONFIRM SUBMISSION'),
-            ),
-          ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 10),
+          if (widget.telegramLink != null)
+            _proofLink(Icons.send, 'TELEGRAM', widget.telegramLink!),
+          if (widget.whatsappLink != null)
+            _proofLink(Icons.chat, 'WHATSAPP', widget.whatsappLink!),
+          if (widget.discordLink != null)
+            _proofLink(Icons.headphones, 'DISCORD', widget.discordLink!),
         ],
+      ),
+    );
+  }
+
+  Widget _proofLink(IconData icon, String label, String link) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 6),
+      child: GestureDetector(
+        onTap: () {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(link),
+              backgroundColor: AppColors.surface,
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        },
+        child: Row(
+          children: [
+            Icon(icon, color: AppColors.textSecondary, size: 14),
+            const SizedBox(width: 8),
+            Text(label,
+                style: AppTextStyles.badge
+                    .copyWith(color: AppColors.textSecondary)),
+            const Spacer(),
+            const Icon(Icons.open_in_new,
+                color: AppColors.textTertiary, size: 11),
+          ],
+        ),
       ),
     );
   }

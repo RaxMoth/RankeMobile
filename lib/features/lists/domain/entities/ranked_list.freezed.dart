@@ -26,6 +26,7 @@ mixin _$RankedList {
   bool get locked => throw _privateConstructorUsedError;
   String? get inviteToken => throw _privateConstructorUsedError;
   List<RankedEntry> get entries => throw _privateConstructorUsedError;
+  List<RankedEntry> get pendingEntries => throw _privateConstructorUsedError;
   int get memberCount => throw _privateConstructorUsedError;
   MemberRole? get currentUserRole => throw _privateConstructorUsedError;
   String? get telegramLink => throw _privateConstructorUsedError;
@@ -56,6 +57,7 @@ abstract class $RankedListCopyWith<$Res> {
     bool locked,
     String? inviteToken,
     List<RankedEntry> entries,
+    List<RankedEntry> pendingEntries,
     int memberCount,
     MemberRole? currentUserRole,
     String? telegramLink,
@@ -88,6 +90,7 @@ class _$RankedListCopyWithImpl<$Res, $Val extends RankedList>
     Object? locked = null,
     Object? inviteToken = freezed,
     Object? entries = null,
+    Object? pendingEntries = null,
     Object? memberCount = null,
     Object? currentUserRole = freezed,
     Object? telegramLink = freezed,
@@ -131,6 +134,10 @@ class _$RankedListCopyWithImpl<$Res, $Val extends RankedList>
             entries: null == entries
                 ? _value.entries
                 : entries // ignore: cast_nullable_to_non_nullable
+                      as List<RankedEntry>,
+            pendingEntries: null == pendingEntries
+                ? _value.pendingEntries
+                : pendingEntries // ignore: cast_nullable_to_non_nullable
                       as List<RankedEntry>,
             memberCount: null == memberCount
                 ? _value.memberCount
@@ -177,6 +184,7 @@ abstract class _$$RankedListImplCopyWith<$Res>
     bool locked,
     String? inviteToken,
     List<RankedEntry> entries,
+    List<RankedEntry> pendingEntries,
     int memberCount,
     MemberRole? currentUserRole,
     String? telegramLink,
@@ -208,6 +216,7 @@ class __$$RankedListImplCopyWithImpl<$Res>
     Object? locked = null,
     Object? inviteToken = freezed,
     Object? entries = null,
+    Object? pendingEntries = null,
     Object? memberCount = null,
     Object? currentUserRole = freezed,
     Object? telegramLink = freezed,
@@ -252,6 +261,10 @@ class __$$RankedListImplCopyWithImpl<$Res>
             ? _value._entries
             : entries // ignore: cast_nullable_to_non_nullable
                   as List<RankedEntry>,
+        pendingEntries: null == pendingEntries
+            ? _value._pendingEntries
+            : pendingEntries // ignore: cast_nullable_to_non_nullable
+                  as List<RankedEntry>,
         memberCount: null == memberCount
             ? _value.memberCount
             : memberCount // ignore: cast_nullable_to_non_nullable
@@ -290,12 +303,14 @@ class _$RankedListImpl implements _RankedList {
     this.locked = false,
     this.inviteToken,
     required final List<RankedEntry> entries,
+    final List<RankedEntry> pendingEntries = const [],
     required this.memberCount,
     this.currentUserRole,
     this.telegramLink,
     this.whatsappLink,
     this.discordLink,
-  }) : _entries = entries;
+  }) : _entries = entries,
+       _pendingEntries = pendingEntries;
 
   @override
   final String id;
@@ -322,6 +337,15 @@ class _$RankedListImpl implements _RankedList {
     return EqualUnmodifiableListView(_entries);
   }
 
+  final List<RankedEntry> _pendingEntries;
+  @override
+  @JsonKey()
+  List<RankedEntry> get pendingEntries {
+    if (_pendingEntries is EqualUnmodifiableListView) return _pendingEntries;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableListView(_pendingEntries);
+  }
+
   @override
   final int memberCount;
   @override
@@ -335,7 +359,7 @@ class _$RankedListImpl implements _RankedList {
 
   @override
   String toString() {
-    return 'RankedList(id: $id, title: $title, description: $description, valueType: $valueType, rankOrder: $rankOrder, isPublic: $isPublic, locked: $locked, inviteToken: $inviteToken, entries: $entries, memberCount: $memberCount, currentUserRole: $currentUserRole, telegramLink: $telegramLink, whatsappLink: $whatsappLink, discordLink: $discordLink)';
+    return 'RankedList(id: $id, title: $title, description: $description, valueType: $valueType, rankOrder: $rankOrder, isPublic: $isPublic, locked: $locked, inviteToken: $inviteToken, entries: $entries, pendingEntries: $pendingEntries, memberCount: $memberCount, currentUserRole: $currentUserRole, telegramLink: $telegramLink, whatsappLink: $whatsappLink, discordLink: $discordLink)';
   }
 
   @override
@@ -357,6 +381,10 @@ class _$RankedListImpl implements _RankedList {
             (identical(other.inviteToken, inviteToken) ||
                 other.inviteToken == inviteToken) &&
             const DeepCollectionEquality().equals(other._entries, _entries) &&
+            const DeepCollectionEquality().equals(
+              other._pendingEntries,
+              _pendingEntries,
+            ) &&
             (identical(other.memberCount, memberCount) ||
                 other.memberCount == memberCount) &&
             (identical(other.currentUserRole, currentUserRole) ||
@@ -381,6 +409,7 @@ class _$RankedListImpl implements _RankedList {
     locked,
     inviteToken,
     const DeepCollectionEquality().hash(_entries),
+    const DeepCollectionEquality().hash(_pendingEntries),
     memberCount,
     currentUserRole,
     telegramLink,
@@ -408,6 +437,7 @@ abstract class _RankedList implements RankedList {
     final bool locked,
     final String? inviteToken,
     required final List<RankedEntry> entries,
+    final List<RankedEntry> pendingEntries,
     required final int memberCount,
     final MemberRole? currentUserRole,
     final String? telegramLink,
@@ -433,6 +463,8 @@ abstract class _RankedList implements RankedList {
   String? get inviteToken;
   @override
   List<RankedEntry> get entries;
+  @override
+  List<RankedEntry> get pendingEntries;
   @override
   int get memberCount;
   @override
@@ -464,6 +496,7 @@ mixin _$RankedEntry {
   int? get manualRank => throw _privateConstructorUsedError;
   String? get note => throw _privateConstructorUsedError;
   DateTime get submittedAt => throw _privateConstructorUsedError;
+  EntryStatus get status => throw _privateConstructorUsedError;
 
   /// Create a copy of RankedEntry
   /// with the given fields replaced by the non-null parameter values.
@@ -490,6 +523,7 @@ abstract class $RankedEntryCopyWith<$Res> {
     int? manualRank,
     String? note,
     DateTime submittedAt,
+    EntryStatus status,
   });
 }
 
@@ -518,6 +552,7 @@ class _$RankedEntryCopyWithImpl<$Res, $Val extends RankedEntry>
     Object? manualRank = freezed,
     Object? note = freezed,
     Object? submittedAt = null,
+    Object? status = null,
   }) {
     return _then(
       _value.copyWith(
@@ -561,6 +596,10 @@ class _$RankedEntryCopyWithImpl<$Res, $Val extends RankedEntry>
                 ? _value.submittedAt
                 : submittedAt // ignore: cast_nullable_to_non_nullable
                       as DateTime,
+            status: null == status
+                ? _value.status
+                : status // ignore: cast_nullable_to_non_nullable
+                      as EntryStatus,
           )
           as $Val,
     );
@@ -587,6 +626,7 @@ abstract class _$$RankedEntryImplCopyWith<$Res>
     int? manualRank,
     String? note,
     DateTime submittedAt,
+    EntryStatus status,
   });
 }
 
@@ -614,6 +654,7 @@ class __$$RankedEntryImplCopyWithImpl<$Res>
     Object? manualRank = freezed,
     Object? note = freezed,
     Object? submittedAt = null,
+    Object? status = null,
   }) {
     return _then(
       _$RankedEntryImpl(
@@ -657,6 +698,10 @@ class __$$RankedEntryImplCopyWithImpl<$Res>
             ? _value.submittedAt
             : submittedAt // ignore: cast_nullable_to_non_nullable
                   as DateTime,
+        status: null == status
+            ? _value.status
+            : status // ignore: cast_nullable_to_non_nullable
+                  as EntryStatus,
       ),
     );
   }
@@ -676,6 +721,7 @@ class _$RankedEntryImpl implements _RankedEntry {
     this.manualRank,
     this.note,
     required this.submittedAt,
+    this.status = EntryStatus.approved,
   });
 
   @override
@@ -698,10 +744,13 @@ class _$RankedEntryImpl implements _RankedEntry {
   final String? note;
   @override
   final DateTime submittedAt;
+  @override
+  @JsonKey()
+  final EntryStatus status;
 
   @override
   String toString() {
-    return 'RankedEntry(id: $id, userId: $userId, displayName: $displayName, rank: $rank, valueNumber: $valueNumber, valueDurationMs: $valueDurationMs, valueText: $valueText, manualRank: $manualRank, note: $note, submittedAt: $submittedAt)';
+    return 'RankedEntry(id: $id, userId: $userId, displayName: $displayName, rank: $rank, valueNumber: $valueNumber, valueDurationMs: $valueDurationMs, valueText: $valueText, manualRank: $manualRank, note: $note, submittedAt: $submittedAt, status: $status)';
   }
 
   @override
@@ -724,7 +773,8 @@ class _$RankedEntryImpl implements _RankedEntry {
                 other.manualRank == manualRank) &&
             (identical(other.note, note) || other.note == note) &&
             (identical(other.submittedAt, submittedAt) ||
-                other.submittedAt == submittedAt));
+                other.submittedAt == submittedAt) &&
+            (identical(other.status, status) || other.status == status));
   }
 
   @override
@@ -740,6 +790,7 @@ class _$RankedEntryImpl implements _RankedEntry {
     manualRank,
     note,
     submittedAt,
+    status,
   );
 
   /// Create a copy of RankedEntry
@@ -763,6 +814,7 @@ abstract class _RankedEntry implements RankedEntry {
     final int? manualRank,
     final String? note,
     required final DateTime submittedAt,
+    final EntryStatus status,
   }) = _$RankedEntryImpl;
 
   @override
@@ -785,6 +837,8 @@ abstract class _RankedEntry implements RankedEntry {
   String? get note;
   @override
   DateTime get submittedAt;
+  @override
+  EntryStatus get status;
 
   /// Create a copy of RankedEntry
   /// with the given fields replaced by the non-null parameter values.

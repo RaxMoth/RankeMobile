@@ -96,11 +96,12 @@ class _EditBoardSheetState extends ConsumerState<EditBoardSheet> {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.fromLTRB(
-        20, 20, 20, 20 + MediaQuery.of(context).viewInsets.bottom,
-      ),
-      child: SingleChildScrollView(
+    return SafeArea(
+      child: Padding(
+        padding: EdgeInsets.fromLTRB(
+          20, 20, 20, 20 + MediaQuery.of(context).viewInsets.bottom,
+        ),
+        child: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -198,6 +199,7 @@ class _EditBoardSheetState extends ConsumerState<EditBoardSheet> {
             const SizedBox(height: 8),
           ],
         ),
+      ),
       ),
     );
   }

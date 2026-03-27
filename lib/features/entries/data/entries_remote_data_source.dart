@@ -6,6 +6,12 @@ abstract class EntriesRemoteDataSource {
     String listId,
     Map<String, dynamic> data,
   );
+
+  Future<List<dynamic>> getPendingEntries(String listId);
+
+  Future<void> approveEntry(String listId, String entryId);
+
+  Future<void> rejectEntry(String listId, String entryId);
 }
 
 class EntriesRemoteDataSourceImpl implements EntriesRemoteDataSource {
@@ -23,5 +29,23 @@ class EntriesRemoteDataSourceImpl implements EntriesRemoteDataSource {
       data: data,
     );
     return response.data as Map<String, dynamic>;
+  }
+
+  @override
+  Future<List<dynamic>> getPendingEntries(String listId) async {
+    final response = await _apiClient.dio.get(
+      '/lists/$listId/entries/pending',
+    );
+    return response.data as List<dynamic>;
+  }
+
+  @override
+  Future<void> approveEntry(String listId, String entryId) async {
+    await _apiClient.dio.post('/lists/$listId/entries/$entryId/approve');
+  }
+
+  @override
+  Future<void> rejectEntry(String listId, String entryId) async {
+    await _apiClient.dio.post('/lists/$listId/entries/$entryId/reject');
   }
 }

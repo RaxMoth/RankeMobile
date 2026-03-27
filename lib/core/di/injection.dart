@@ -23,6 +23,9 @@ import '../../features/lists/domain/use_cases/search_public_lists_use_case.dart'
 import '../../features/entries/data/entries_remote_data_source.dart';
 import '../../features/entries/data/entries_repository_impl.dart';
 import '../../features/entries/domain/entries_repository.dart';
+import '../../features/entries/domain/use_cases/approve_entry_use_case.dart';
+import '../../features/entries/domain/use_cases/get_pending_entries_use_case.dart';
+import '../../features/entries/domain/use_cases/reject_entry_use_case.dart';
 import '../../features/entries/domain/use_cases/submit_entry_use_case.dart';
 
 final getIt = GetIt.instance;
@@ -97,4 +100,10 @@ void _registerUseCases() {
   // Entries use cases
   getIt
       .registerFactory(() => SubmitEntryUseCase(getIt<EntriesRepository>()));
+  getIt
+      .registerFactory(() => ApproveEntryUseCase(getIt<EntriesRepository>()));
+  getIt
+      .registerFactory(() => RejectEntryUseCase(getIt<EntriesRepository>()));
+  getIt.registerFactory(
+      () => GetPendingEntriesUseCase(getIt<EntriesRepository>()));
 }

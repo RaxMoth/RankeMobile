@@ -8,4 +8,16 @@ abstract class EntriesRepository {
     required String listId,
     required EntryInput input,
   });
+
+  Future<Either<ApiError, List<RankedEntry>>> getPendingEntries(String listId);
+
+  Future<Either<ApiError, void>> approveEntry({
+    required String listId,
+    required String entryId,
+  });
+
+  Future<Either<ApiError, void>> rejectEntry({
+    required String listId,
+    required String entryId,
+  });
 }

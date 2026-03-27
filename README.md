@@ -1,17 +1,56 @@
-# flutterbase
+# Ranke (Apex)
 
-A new Flutter project.
+A competitive leaderboard app for iOS where users create, join, and compete on ranked boards with typed entries (numbers, durations, or text).
 
-## Getting Started
+## Features
 
-This project is a starting point for a Flutter application.
+- **Ranked Boards** — Create and manage leaderboards with customizable value types (number, duration, text) and rank ordering
+- **Real-time Standings** — Live ranked standings with automatic sorting and rank assignment
+- **Board Discovery** — Search and browse public boards by category
+- **Moderation Tools** — Owners and admins can manage members, delete entries, and edit board settings
+- **Communication Links** — Boards support Telegram, WhatsApp, and Discord group links
+- **Bookmarks** — Save boards to follow without joining
+- **Apple Sign In** — Native authentication with Sign in with Apple
 
-A few resources to get you started if this is your first Flutter project:
+## Architecture
 
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
+Clean Architecture with feature-based modules:
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+```
+lib/
+├── core/           # DI, networking, routing, theme, dev mode
+├── features/
+│   ├── auth/       # Authentication (domain/data/presentation)
+│   ├── entries/    # Entry submission and display
+│   ├── lists/      # Boards, discovery, detail views
+│   ├── profile/    # User profile and stats
+│   └── shell/      # Bottom navigation shell
+├── shared/         # Reusable widgets
+└── main.dart
+```
+
+**Stack**: Flutter · Riverpod · GoRouter · GetIt · Dio · Freezed · fpdart
+
+## Development
+
+```bash
+# Run with dev mode (mock data, no backend needed)
+flutter run
+
+# Regenerate Freezed models
+dart run build_runner build --delete-conflicting-outputs
+
+# Analyze
+flutter analyze
+
+# Build for iOS simulator
+flutter build ios --simulator
+```
+
+Toggle dev mode in `lib/core/dev/dev_config.dart`.
+
+## Requirements
+
+- Flutter 3.x
+- iOS 16+
+- Xcode 15+

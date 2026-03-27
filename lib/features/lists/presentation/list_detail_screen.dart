@@ -55,36 +55,101 @@ class ListDetailScreen extends ConsumerWidget {
   }
 }
 
-class _DetailContent extends ConsumerWidget {
+// ─── Tab Definition ──────────────────────────────────────────
+
+class _TabDef {
+  final String label;
+  final _TabType type;
+  const _TabDef(this.label, this.type);
+}
+
+enum _TabType { standings, info, comms, stats, admin }
+
+// ─── Detail Content (Tabbed) ─────────────────────────────────
+
+class _DetailContent extends ConsumerStatefulWidget {
   final RankedList list;
   final String listId;
 
   const _DetailContent({required this.list, required this.listId});
 
+  @override
+  ConsumerState<_DetailContent> createState() => _DetailContentState();
+}
+
+class _DetailContentState extends ConsumerState<_DetailContent>
+    with TickerProviderStateMixin {
+  late TabController _tabController;
+  late List<_TabDef> _tabs;
+
   bool get _isAdmin =>
-      list.currentUserRole == MemberRole.owner ||
-      list.currentUserRole == MemberRole.admin;
+      widget.list.currentUserRole == MemberRole.owner ||
+      widget.list.currentUserRole == MemberRole.admin;
 
   bool get _hasCommsLinks =>
-      list.telegramLink != null ||
-      list.whatsappLink != null ||
-      list.discordLink != null;
+      widget.list.telegramLink != null ||
+      widget.list.whatsappLink != null ||
+      widget.list.discordLink != null;
+
+  List<_TabDef> _buildTabs() {
+    final tabs = <_TabDef>[
+      const _TabDef('STANDINGS', _TabType.standings),
+      const _TabDef('INFO', _TabType.info),
+    ];
+    if (_hasCommsLinks) {
+      tabs.add(const _TabDef('COMMS', _TabType.comms));
+    }
+    tabs.add(const _TabDef('STATS', _TabType.stats));
+    if (_isAdmin) {
+      tabs.add(const _TabDef('ADMIN', _TabType.admin));
+    }
+    return tabs;
+  }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  void initState() {
+    super.initState();
+    _tabs = _buildTabs();
+    _tabController = TabController(length: _tabs.length, vsync: this);
+  }
+
+  @override
+  void didUpdateWidget(covariant _DetailContent oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    final newTabs = _buildTabs();
+    if (newTabs.length != _tabs.length) {
+      final oldIndex = _tabController.index;
+      _tabController.dispose();
+      _tabs = newTabs;
+      _tabController = TabController(
+        length: _tabs.length,
+        vsync: this,
+        initialIndex: oldIndex.clamp(0, _tabs.length - 1),
+      );
+    }
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final bookmarks = ref.watch(bookmarkProvider);
-    final isBookmarked = bookmarks.contains(listId);
+    final isBookmarked = bookmarks.contains(widget.listId);
 
     return Column(
       children: [
         _DetailHeader(
-          title: list.title.toUpperCase(),
+          title: widget.list.title.toUpperCase(),
           subtitle:
-              '${list.valueType.name.toUpperCase()}  \u2022  ${list.memberCount} MEMBERS',
+              '${widget.list.valueType.name.toUpperCase()}  \u2022  ${widget.list.memberCount} MEMBERS',
           onBack: () => context.pop(),
           trailing: GestureDetector(
             onTap: () =>
-                ref.read(bookmarkProvider.notifier).toggle(listId),
+                ref.read(bookmarkProvider.notifier).toggle(widget.listId),
             child: Icon(
               isBookmarked ? Icons.bookmark : Icons.bookmark_border,
               color: isBookmarked ? AppColors.accent : AppColors.textTertiary,
@@ -92,30 +157,117 @@ class _DetailContent extends ConsumerWidget {
             ),
           ),
         ),
+        // Tab bar
+        Container(
+          decoration: const BoxDecoration(
+            border: Border(bottom: BorderSide(color: AppColors.border)),
+          ),
+          child: TabBar(
+            controller: _tabController,
+            isScrollable: true,
+            tabAlignment: TabAlignment.start,
+            labelStyle: AppTextStyles.tab,
+            unselectedLabelStyle: AppTextStyles.tab,
+            labelColor: AppColors.accent,
+            unselectedLabelColor: AppColors.textTertiary,
+            indicatorColor: AppColors.accent,
+            indicatorWeight: 2.0,
+            dividerColor: Colors.transparent,
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            tabs: _tabs.map((t) => Tab(text: t.label)).toList(),
+          ),
+        ),
+        // Tab content
+        Expanded(
+          child: TabBarView(
+            controller: _tabController,
+            children: _tabs.map((t) => _buildTabContent(t.type)).toList(),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildTabContent(_TabType type) {
+    return switch (type) {
+      _TabType.standings => _StandingsTab(
+          list: widget.list,
+          listId: widget.listId,
+          isAdmin: _isAdmin,
+        ),
+      _TabType.info => _InfoTab(list: widget.list),
+      _TabType.comms => _CommsTab(list: widget.list, isAdmin: _isAdmin),
+      _TabType.stats => _StatsTab(list: widget.list),
+      _TabType.admin => _AdminTab(list: widget.list, listId: widget.listId),
+    };
+  }
+}
+
+// ─── Detail Header ────────────────────────────────────────────
+
+class _DetailHeader extends StatelessWidget {
+  final String title;
+  final String subtitle;
+  final VoidCallback onBack;
+  final Widget? trailing;
+
+  const _DetailHeader({
+    required this.title,
+    required this.subtitle,
+    required this.onBack,
+    this.trailing,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(4, 8, 20, 8),
+      child: Row(
+        children: [
+          IconButton(
+            onPressed: onBack,
+            icon: const Icon(Icons.chevron_left,
+                color: AppColors.textPrimary, size: 28),
+          ),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(title, style: AppTextStyles.screenTitle),
+                const SizedBox(height: 2),
+                Text(subtitle, style: AppTextStyles.subtitle),
+              ],
+            ),
+          ),
+          if (trailing != null) trailing!,
+        ],
+      ),
+    );
+  }
+}
+
+// ─── STANDINGS TAB ───────────────────────────────────────────
+
+class _StandingsTab extends ConsumerWidget {
+  final RankedList list;
+  final String listId;
+  final bool isAdmin;
+
+  const _StandingsTab({
+    required this.list,
+    required this.listId,
+    required this.isAdmin,
+  });
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return Column(
+      children: [
         Expanded(
           child: ListView(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
+            padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
             children: [
-              if (list.description != null && list.description!.isNotEmpty)
-                _ObjectiveSection(description: list.description!),
-              // Communication links
-              if (_hasCommsLinks)
-                _CommsSection(
-                  telegramLink: list.telegramLink,
-                  whatsappLink: list.whatsappLink,
-                  discordLink: list.discordLink,
-                ),
-              _MetricsBar(
-                valueType: list.valueType,
-                entryCount: list.entries.length,
-                memberCount: list.memberCount,
-                locked: list.locked,
-              ),
-              // Admin action bar
-              if (_isAdmin) _AdminActionBar(list: list, listId: listId),
-              const _StandingsHeader(),
-              // Standings from real data
-              if (_isAdmin)
+              if (isAdmin)
                 Padding(
                   padding: const EdgeInsets.only(bottom: 8),
                   child: Text(
@@ -128,13 +280,13 @@ class _DetailContent extends ConsumerWidget {
                 _EmptyStandings()
               else
                 ...list.entries.map(
-                  (entry) => _isAdmin
+                  (entry) => isAdmin
                       ? Dismissible(
                           key: ValueKey(entry.id),
                           direction: DismissDirection.endToStart,
                           confirmDismiss: (_) async {
                             _confirmRemoveEntry(context, ref, entry);
-                            return false; // dialog handles the actual delete
+                            return false;
                           },
                           background: Container(
                             margin: const EdgeInsets.only(bottom: 8),
@@ -160,29 +312,18 @@ class _DetailContent extends ConsumerWidget {
                           valueType: list.valueType,
                         ),
                 ),
-              const SizedBox(height: 20),
-              // Board analytics for admins
-              if (_isAdmin)
-                _AnalyticsSection(
-                  memberCount: list.memberCount,
-                  entryCount: list.entries.length,
-                  lastSubmission: list.entries.isNotEmpty
-                      ? list.entries.first.submittedAt
-                      : null,
-                ),
-              const SizedBox(height: 24),
             ],
           ),
         ),
         if (!list.locked)
           _SubmitButton(
-            onPressed: () => _openSubmitSheet(context, list),
+            onPressed: () => _openSubmitSheet(context),
           ),
       ],
     );
   }
 
-  void _openSubmitSheet(BuildContext context, RankedList list) {
+  void _openSubmitSheet(BuildContext context) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -193,6 +334,9 @@ class _DetailContent extends ConsumerWidget {
       builder: (_) => SubmitEntrySheet(
         listId: listId,
         valueType: list.valueType,
+        telegramLink: list.telegramLink,
+        whatsappLink: list.whatsappLink,
+        discordLink: list.discordLink,
       ),
     );
   }
@@ -256,50 +400,685 @@ class _DetailContent extends ConsumerWidget {
   }
 }
 
-// ─── Detail Header ────────────────────────────────────────────
+// ─── INFO TAB ────────────────────────────────────────────────
 
-class _DetailHeader extends StatelessWidget {
-  final String title;
-  final String subtitle;
-  final VoidCallback onBack;
-  final Widget? trailing;
+class _InfoTab extends StatelessWidget {
+  final RankedList list;
 
-  const _DetailHeader({
-    required this.title,
-    required this.subtitle,
-    required this.onBack,
-    this.trailing,
-  });
+  const _InfoTab({required this.list});
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(4, 8, 20, 16),
-      child: Row(
-        children: [
-          IconButton(
-            onPressed: onBack,
-            icon: const Icon(Icons.chevron_left,
-                color: AppColors.textPrimary, size: 28),
-          ),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(title, style: AppTextStyles.screenTitle),
-                const SizedBox(height: 2),
-                Text(subtitle, style: AppTextStyles.subtitle),
-              ],
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
+      children: [
+        if (list.description != null && list.description!.isNotEmpty)
+          _ObjectiveSection(description: list.description!),
+        _MetricsBar(
+          valueType: list.valueType,
+          entryCount: list.entries.length,
+          memberCount: list.memberCount,
+          locked: list.locked,
+        ),
+        // Board details
+        _InfoCard(
+          children: [
+            _InfoRow(
+              label: 'RANK ORDER',
+              value: list.rankOrder == RankOrder.desc
+                  ? 'HIGHEST WINS'
+                  : 'LOWEST WINS',
+              icon: list.rankOrder == RankOrder.desc
+                  ? Icons.arrow_upward
+                  : Icons.arrow_downward,
             ),
-          ),
-          if (trailing != null) trailing!,
+            const SizedBox(height: 12),
+            _InfoRow(
+              label: 'VISIBILITY',
+              value: list.isPublic ? 'PUBLIC' : 'PRIVATE',
+              icon: list.isPublic ? Icons.public : Icons.lock_outline,
+            ),
+            if (list.locked) ...[
+              const SizedBox(height: 12),
+              _InfoRow(
+                label: 'STATUS',
+                value: 'LOCKED — NO NEW ENTRIES',
+                icon: Icons.lock,
+                valueColor: AppColors.warning,
+              ),
+            ],
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+class _InfoCard extends StatelessWidget {
+  final List<Widget> children;
+
+  const _InfoCard({required this.children});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('BOARD DETAILS', style: AppTextStyles.label),
+          const SizedBox(height: 12),
+          ...children,
         ],
       ),
     );
   }
 }
 
-// ─── Objective Section ────────────────────────────────────────
+class _InfoRow extends StatelessWidget {
+  final String label;
+  final String value;
+  final IconData icon;
+  final Color? valueColor;
+
+  const _InfoRow({
+    required this.label,
+    required this.value,
+    required this.icon,
+    this.valueColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Icon(icon, color: AppColors.textTertiary, size: 16),
+        const SizedBox(width: 10),
+        Text(label,
+            style:
+                AppTextStyles.badge.copyWith(color: AppColors.textTertiary)),
+        const Spacer(),
+        Text(
+          value,
+          style: AppTextStyles.badge.copyWith(
+            color: valueColor ?? AppColors.textPrimary,
+            fontWeight: FontWeight.w800,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+// ─── COMMS TAB ───────────────────────────────────────────────
+
+class _CommsTab extends StatelessWidget {
+  final RankedList list;
+  final bool isAdmin;
+
+  const _CommsTab({required this.list, required this.isAdmin});
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
+      children: [
+        _CommsSection(
+          telegramLink: list.telegramLink,
+          whatsappLink: list.whatsappLink,
+          discordLink: list.discordLink,
+        ),
+      ],
+    );
+  }
+}
+
+// ─── STATS TAB ───────────────────────────────────────────────
+
+class _StatsTab extends StatelessWidget {
+  final RankedList list;
+
+  const _StatsTab({required this.list});
+
+  @override
+  Widget build(BuildContext context) {
+    final entries = list.entries;
+    final lastSubmission =
+        entries.isNotEmpty ? entries.first.submittedAt : null;
+
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
+      children: [
+        _AnalyticsSection(
+          memberCount: list.memberCount,
+          entryCount: entries.length,
+          lastSubmission: lastSubmission,
+        ),
+        const SizedBox(height: 16),
+        // Recent activity
+        if (entries.isNotEmpty) ...[
+          _RecentActivitySection(entries: entries),
+        ],
+      ],
+    );
+  }
+}
+
+class _RecentActivitySection extends StatelessWidget {
+  final List<RankedEntry> entries;
+
+  const _RecentActivitySection({required this.entries});
+
+  @override
+  Widget build(BuildContext context) {
+    final sorted = [...entries]
+      ..sort((a, b) => b.submittedAt.compareTo(a.submittedAt));
+    final recent = sorted.take(5).toList();
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('RECENT ACTIVITY', style: AppTextStyles.label),
+          const SizedBox(height: 12),
+          ...recent.map((entry) => Padding(
+                padding: const EdgeInsets.only(bottom: 10),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 28,
+                      height: 28,
+                      decoration: BoxDecoration(
+                        color: AppColors.surfaceLight,
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: Center(
+                        child: Text(
+                          entry.displayName.isNotEmpty
+                              ? entry.displayName[0].toUpperCase()
+                              : '?',
+                          style: AppTextStyles.badge
+                              .copyWith(color: AppColors.textTertiary),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        '${entry.displayName.toUpperCase()} — RANK ${entry.rank}',
+                        style: AppTextStyles.badge
+                            .copyWith(color: AppColors.textSecondary),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    Text(
+                      _relativeTime(entry.submittedAt),
+                      style: AppTextStyles.badge
+                          .copyWith(color: AppColors.textTertiary),
+                    ),
+                  ],
+                ),
+              )),
+        ],
+      ),
+    );
+  }
+
+  String _relativeTime(DateTime dt) {
+    final diff = DateTime.now().difference(dt);
+    if (diff.inDays > 0) return '${diff.inDays}D AGO';
+    if (diff.inHours > 0) return '${diff.inHours}H AGO';
+    if (diff.inMinutes > 0) return '${diff.inMinutes}M AGO';
+    return 'JUST NOW';
+  }
+}
+
+// ─── ADMIN TAB ───────────────────────────────────────────────
+
+class _AdminTab extends ConsumerWidget {
+  final RankedList list;
+  final String listId;
+
+  const _AdminTab({required this.list, required this.listId});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final pendingAsync = ref.watch(pendingEntriesProvider(listId));
+
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
+      children: [
+        // Pending submissions section
+        pendingAsync.when(
+          data: (pending) => pending.isEmpty
+              ? const SizedBox.shrink()
+              : _PendingSubmissionsSection(
+                  entries: pending,
+                  listId: listId,
+                  valueType: list.valueType,
+                ),
+          loading: () => Container(
+            padding: const EdgeInsets.all(16),
+            margin: const EdgeInsets.only(bottom: 16),
+            decoration: BoxDecoration(
+              color: AppColors.surface,
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: AppColors.border),
+            ),
+            child: const Center(
+              child: SizedBox(
+                height: 20,
+                width: 20,
+                child: CircularProgressIndicator(
+                    color: AppColors.accent, strokeWidth: 2),
+              ),
+            ),
+          ),
+          error: (_, __) => const SizedBox.shrink(),
+        ),
+        // Admin actions
+        _AdminActionCard(
+          icon: Icons.edit_outlined,
+          title: 'EDIT BOARD',
+          subtitle: 'MODIFY TITLE, DESCRIPTION, LINKS',
+          onTap: () => _openEditSheet(context),
+        ),
+        const SizedBox(height: 8),
+        _AdminActionCard(
+          icon: list.locked ? Icons.lock_open : Icons.lock_outline,
+          title: list.locked ? 'UNLOCK BOARD' : 'LOCK BOARD',
+          subtitle: list.locked
+              ? 'ALLOW NEW ENTRY SUBMISSIONS'
+              : 'PREVENT NEW ENTRY SUBMISSIONS',
+          onTap: () async {
+            await ref
+                .read(listDetailProvider(listId).notifier)
+                .updateList(locked: !list.locked);
+          },
+        ),
+        const SizedBox(height: 8),
+        _AdminActionCard(
+          icon: Icons.people_outline,
+          title: 'MANAGE MEMBERS',
+          subtitle: '${list.memberCount} MEMBERS — ROLES & ACCESS',
+          onTap: () => context.push('/lists/$listId/members'),
+        ),
+        const SizedBox(height: 8),
+        _AdminActionCard(
+          icon: Icons.share_outlined,
+          title: 'SHARE INVITE',
+          subtitle: 'GENERATE INVITE LINK',
+          onTap: () => _shareInvite(context, ref),
+        ),
+      ],
+    );
+  }
+
+  void _openEditSheet(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: AppColors.card,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (_) => EditBoardSheet(listId: listId, list: list),
+    );
+  }
+
+  Future<void> _shareInvite(BuildContext context, WidgetRef ref) async {
+    try {
+      final link = await ref
+          .read(listDetailProvider(listId).notifier)
+          .getInviteLink();
+      await Share.share('Join my board on Apex: rankapp://invite/$link');
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('FAILED TO GET INVITE: $e'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+    }
+  }
+}
+
+class _AdminActionCard extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final VoidCallback onTap;
+
+  const _AdminActionCard({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: AppColors.accent.withAlpha(10),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: AppColors.accent.withAlpha(40)),
+        ),
+        child: Row(
+          children: [
+            Icon(icon, color: AppColors.accent, size: 20),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: AppTextStyles.body.copyWith(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 13,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    subtitle,
+                    style: AppTextStyles.badge
+                        .copyWith(color: AppColors.textTertiary),
+                  ),
+                ],
+              ),
+            ),
+            const Icon(Icons.chevron_right,
+                color: AppColors.textTertiary, size: 18),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ─── Pending Submissions ─────────────────────────────────────
+
+class _PendingSubmissionsSection extends ConsumerWidget {
+  final List<RankedEntry> entries;
+  final String listId;
+  final ValueType valueType;
+
+  const _PendingSubmissionsSection({
+    required this.entries,
+    required this.listId,
+    required this.valueType,
+  });
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: AppColors.warning.withAlpha(60)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.hourglass_top,
+                  color: AppColors.warning, size: 16),
+              const SizedBox(width: 8),
+              Text(
+                'PENDING SUBMISSIONS (${entries.length})',
+                style:
+                    AppTextStyles.badge.copyWith(color: AppColors.warning),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          ...entries.map((entry) => _PendingEntryCard(
+                entry: entry,
+                listId: listId,
+                valueType: valueType,
+              )),
+        ],
+      ),
+    );
+  }
+}
+
+class _PendingEntryCard extends ConsumerStatefulWidget {
+  final RankedEntry entry;
+  final String listId;
+  final ValueType valueType;
+
+  const _PendingEntryCard({
+    required this.entry,
+    required this.listId,
+    required this.valueType,
+  });
+
+  @override
+  ConsumerState<_PendingEntryCard> createState() => _PendingEntryCardState();
+}
+
+class _PendingEntryCardState extends ConsumerState<_PendingEntryCard> {
+  bool _isProcessing = false;
+
+  Future<void> _approve() async {
+    setState(() => _isProcessing = true);
+    try {
+      await ref
+          .read(pendingEntriesProvider(widget.listId).notifier)
+          .approve(widget.entry.id);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('FAILED: $e'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isProcessing = false);
+    }
+  }
+
+  Future<void> _reject() async {
+    setState(() => _isProcessing = true);
+    try {
+      await ref
+          .read(pendingEntriesProvider(widget.listId).notifier)
+          .reject(widget.entry.id);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('FAILED: $e'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isProcessing = false);
+    }
+  }
+
+  String _formatValue() {
+    return switch (widget.valueType) {
+      ValueType.number => widget.entry.valueNumber
+              ?.toStringAsFixed(
+                  widget.entry.valueNumber!.truncateToDouble() ==
+                          widget.entry.valueNumber!
+                      ? 0
+                      : 1) ??
+          '—',
+      ValueType.duration => widget.entry.valueDurationMs != null
+          ? formatDuration(widget.entry.valueDurationMs!)
+          : '—',
+      ValueType.text => widget.entry.valueText ?? '—',
+    };
+  }
+
+  String _relativeTime(DateTime dt) {
+    final diff = DateTime.now().difference(dt);
+    if (diff.inDays > 0) return '${diff.inDays}D AGO';
+    if (diff.inHours > 0) return '${diff.inHours}H AGO';
+    if (diff.inMinutes > 0) return '${diff.inMinutes}M AGO';
+    return 'JUST NOW';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: AppColors.card,
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 32,
+                height: 32,
+                decoration: BoxDecoration(
+                  color: AppColors.surfaceLight,
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: Center(
+                  child: Text(
+                    widget.entry.displayName.isNotEmpty
+                        ? widget.entry.displayName[0].toUpperCase()
+                        : '?',
+                    style: AppTextStyles.body.copyWith(
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.textTertiary,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      widget.entry.displayName.toUpperCase(),
+                      style: AppTextStyles.body
+                          .copyWith(fontWeight: FontWeight.w700, fontSize: 13),
+                    ),
+                    if (widget.entry.note != null &&
+                        widget.entry.note!.isNotEmpty)
+                      Text(
+                        widget.entry.note!,
+                        style: AppTextStyles.badge
+                            .copyWith(color: AppColors.textTertiary),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                  ],
+                ),
+              ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(_formatValue(),
+                      style: AppTextStyles.body
+                          .copyWith(fontWeight: FontWeight.w800)),
+                  Text(
+                    _relativeTime(widget.entry.submittedAt),
+                    style: AppTextStyles.badge
+                        .copyWith(color: AppColors.textTertiary),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              Expanded(
+                child: GestureDetector(
+                  onTap: _isProcessing ? null : _reject,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(4),
+                      border: Border.all(color: AppColors.error.withAlpha(80)),
+                    ),
+                    child: Center(
+                      child: Text(
+                        'REJECT',
+                        style: AppTextStyles.badge
+                            .copyWith(color: AppColors.error),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: GestureDetector(
+                  onTap: _isProcessing ? null : _approve,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    decoration: BoxDecoration(
+                      color: AppColors.accent,
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: Center(
+                      child: _isProcessing
+                          ? const SizedBox(
+                              height: 12,
+                              width: 12,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 1.5,
+                                color: AppColors.background,
+                              ),
+                            )
+                          : Text(
+                              'APPROVE',
+                              style: AppTextStyles.badge
+                                  .copyWith(color: AppColors.background),
+                            ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ─── Shared Widgets ──────────────────────────────────────────
 
 class _ObjectiveSection extends StatelessWidget {
   final String description;
@@ -328,8 +1107,6 @@ class _ObjectiveSection extends StatelessWidget {
     );
   }
 }
-
-// ─── Communication Links ──────────────────────────────────────
 
 class _CommsSection extends StatelessWidget {
   final String? telegramLink;
@@ -429,8 +1206,6 @@ class _CommsRow extends StatelessWidget {
   }
 }
 
-// ─── Metrics Bar ──────────────────────────────────────────────
-
 class _MetricsBar extends StatelessWidget {
   final ValueType valueType;
   final int entryCount;
@@ -513,160 +1288,7 @@ class _MetricsBar extends StatelessWidget {
   }
 }
 
-// ─── Admin Action Bar ─────────────────────────────────────────
-
-class _AdminActionBar extends ConsumerWidget {
-  final RankedList list;
-  final String listId;
-
-  const _AdminActionBar({required this.list, required this.listId});
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: AppColors.accent.withAlpha(10),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: AppColors.accent.withAlpha(40)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              const Icon(Icons.shield_outlined,
-                  color: AppColors.accent, size: 16),
-              const SizedBox(width: 8),
-              Text('MODERATOR TOOLS',
-                  style: AppTextStyles.badge.copyWith(color: AppColors.accent)),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              _AdminChip(
-                icon: Icons.edit_outlined,
-                label: 'EDIT',
-                onTap: () => _openEditSheet(context, list),
-              ),
-              _AdminChip(
-                icon: list.locked ? Icons.lock_open : Icons.lock_outline,
-                label: list.locked ? 'UNLOCK' : 'LOCK',
-                onTap: () async {
-                  await ref
-                      .read(listDetailProvider(listId).notifier)
-                      .updateList(locked: !list.locked);
-                },
-              ),
-              _AdminChip(
-                icon: Icons.people_outline,
-                label: 'MEMBERS',
-                onTap: () => context.push('/lists/$listId/members'),
-              ),
-              _AdminChip(
-                icon: Icons.share_outlined,
-                label: 'INVITE',
-                onTap: () => _shareInvite(context, ref),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _openEditSheet(BuildContext context, RankedList list) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: AppColors.card,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
-      builder: (_) => EditBoardSheet(listId: listId, list: list),
-    );
-  }
-
-  Future<void> _shareInvite(BuildContext context, WidgetRef ref) async {
-    try {
-      final link = await ref
-          .read(listDetailProvider(listId).notifier)
-          .getInviteLink();
-      await Share.share('Join my board on Apex: rankapp://invite/$link');
-    } catch (e) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('FAILED TO GET INVITE: $e'),
-            backgroundColor: AppColors.error,
-          ),
-        );
-      }
-    }
-  }
-}
-
-class _AdminChip extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final VoidCallback onTap;
-
-  const _AdminChip({
-    required this.icon,
-    required this.label,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(6),
-          border: Border.all(color: AppColors.border),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, color: AppColors.textSecondary, size: 14),
-            const SizedBox(width: 6),
-            Text(
-              label,
-              style: AppTextStyles.badge
-                  .copyWith(color: AppColors.textSecondary),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-// ─── Standings ────────────────────────────────────────────────
-
-class _StandingsHeader extends StatelessWidget {
-  const _StandingsHeader();
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text('OFFICIAL STANDINGS', style: AppTextStyles.sectionHeader),
-        ],
-      ),
-    );
-  }
-}
+// ─── Standing Row ────────────────────────────────────────────
 
 class _StandingRow extends StatelessWidget {
   final RankedEntry entry;
@@ -706,7 +1328,7 @@ class _StandingRow extends StatelessWidget {
           children: [
             // Rank
             SizedBox(
-              width: 48,
+              width: 36,
               child: Text(
                 entry.rank.toString().padLeft(2, '0'),
                 style: AppTextStyles.rankNumber.copyWith(

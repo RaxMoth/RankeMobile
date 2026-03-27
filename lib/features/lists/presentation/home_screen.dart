@@ -62,7 +62,6 @@ class HomeScreen extends ConsumerWidget {
                         l.currentUserRole == MemberRole.admin ||
                         l.currentUserRole == MemberRole.member)
                     .toList();
-                // Bookmarked: boards whose ID is in bookmarks, excluding already shown
                 final shownIds = {
                   ...owned.map((l) => l.id),
                   ...participating.map((l) => l.id),
@@ -78,29 +77,46 @@ class HomeScreen extends ConsumerWidget {
                   return const SliverFillRemaining(child: _EmptyHome());
                 }
 
-                return SliverList(
-                  delegate: SliverChildListDelegate([
-                    if (owned.isNotEmpty)
-                      _BoardSection(
-                        title: 'MY BOARDS',
-                        subtitle: '${owned.length} OWNED',
-                        lists: owned,
-                      ),
-                    if (participating.isNotEmpty)
-                      _BoardSection(
-                        title: 'PARTICIPATING',
-                        subtitle: '${participating.length} JOINED',
-                        lists: participating,
-                      ),
-                    if (bookmarked.isNotEmpty)
-                      _BoardSection(
-                        title: 'BOOKMARKED',
-                        subtitle: '${bookmarked.length} SAVED',
-                        lists: bookmarked,
-                        isBookmarkSection: true,
-                      ),
-                    const SizedBox(height: 24),
-                  ]),
+                return SliverPadding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  sliver: SliverList(
+                    delegate: SliverChildListDelegate([
+                      if (owned.isNotEmpty) ...[
+                        _SectionHeader(
+                          title: 'MY BOARDS',
+                          count: owned.length,
+                          label: 'OWNED',
+                        ),
+                        const SizedBox(height: 8),
+                        ...owned.map((s) => _BoardTile(summary: s)),
+                        const SizedBox(height: 20),
+                      ],
+                      if (participating.isNotEmpty) ...[
+                        _SectionHeader(
+                          title: 'PARTICIPATING',
+                          count: participating.length,
+                          label: 'JOINED',
+                        ),
+                        const SizedBox(height: 8),
+                        ...participating.map((s) => _BoardTile(summary: s)),
+                        const SizedBox(height: 20),
+                      ],
+                      if (bookmarked.isNotEmpty) ...[
+                        _SectionHeader(
+                          title: 'BOOKMARKED',
+                          count: bookmarked.length,
+                          label: 'SAVED',
+                        ),
+                        const SizedBox(height: 8),
+                        ...bookmarked.map((s) => _BoardTile(
+                              summary: s,
+                              showBookmark: true,
+                            )),
+                        const SizedBox(height: 20),
+                      ],
+                      const SizedBox(height: 24),
+                    ]),
+                  ),
                 );
               },
               loading: () => const SliverFillRemaining(
@@ -131,140 +147,127 @@ class HomeScreen extends ConsumerWidget {
   }
 }
 
-// ─── Board Section ────────────────────────────────────────────
+// ─── Section Header ──────────────────────────────────────────
 
-class _BoardSection extends StatelessWidget {
+class _SectionHeader extends StatelessWidget {
   final String title;
-  final String subtitle;
-  final List<ListSummary> lists;
-  final bool isBookmarkSection;
+  final int count;
+  final String label;
 
-  const _BoardSection({
+  const _SectionHeader({
     required this.title,
-    required this.subtitle,
-    required this.lists,
-    this.isBookmarkSection = false,
+    required this.count,
+    required this.label,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(title, style: AppTextStyles.sectionHeader),
-              Text(subtitle,
-                  style: AppTextStyles.bodySecondary.copyWith(fontSize: 12)),
-            ],
-          ),
-        ),
-        const SizedBox(height: 12),
-        SizedBox(
-          height: 108,
-          child: ListView.separated(
-            scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            itemCount: lists.length,
-            separatorBuilder: (_, __) => const SizedBox(width: 12),
-            itemBuilder: (context, index) => _HomeBoardCard(
-              summary: lists[index],
-              showBookmark: isBookmarkSection,
-            ),
-          ),
-        ),
-        const SizedBox(height: 24),
+        Text(title, style: AppTextStyles.sectionHeader),
+        Text('$count $label',
+            style: AppTextStyles.bodySecondary.copyWith(fontSize: 12)),
       ],
     );
   }
 }
 
-// ─── Board Card ───────────────────────────────────────────────
+// ─── Board Tile (full-width vertical list item) ──────────────
 
-class _HomeBoardCard extends ConsumerWidget {
+class _BoardTile extends ConsumerWidget {
   final ListSummary summary;
   final bool showBookmark;
 
-  const _HomeBoardCard({required this.summary, this.showBookmark = false});
+  const _BoardTile({required this.summary, this.showBookmark = false});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return GestureDetector(
       onTap: () => context.push('/lists/${summary.id}'),
       child: Container(
-        width: 180,
+        margin: const EdgeInsets.only(bottom: 8),
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
           color: AppColors.surface,
           borderRadius: BorderRadius.circular(8),
           border: Border.all(color: AppColors.border),
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        child: Row(
           children: [
-            // Top row: rank or role badge
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                if (summary.ownRank != null)
+            // Rank or role badge
+            SizedBox(
+              width: 52,
+              child: summary.ownRank != null
+                  ? Text(
+                      '#${summary.ownRank.toString().padLeft(2, '0')}',
+                      style: AppTextStyles.label,
+                    )
+                  : summary.currentUserRole != null
+                      ? Text(
+                          summary.currentUserRole!.name.toUpperCase(),
+                          style: AppTextStyles.badge
+                              .copyWith(color: AppColors.textTertiary),
+                        )
+                      : const SizedBox.shrink(),
+            ),
+            const SizedBox(width: 8),
+            // Title and stats
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
                   Text(
-                    'RANK ${summary.ownRank.toString().padLeft(2, '0')}',
-                    style: AppTextStyles.label,
-                  )
-                else if (summary.currentUserRole != null)
-                  Text(
-                    summary.currentUserRole!.name.toUpperCase(),
-                    style: AppTextStyles.label,
-                  )
-                else
-                  const SizedBox.shrink(),
-                if (showBookmark)
-                  GestureDetector(
-                    onTap: () =>
-                        ref.read(bookmarkProvider.notifier).toggle(summary.id),
-                    child: const Icon(Icons.bookmark,
-                        color: AppColors.accent, size: 16),
+                    summary.title.toUpperCase(),
+                    style: AppTextStyles.body
+                        .copyWith(fontWeight: FontWeight.w700, fontSize: 13),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
-              ],
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      const Icon(Icons.people_outline,
+                          size: 13, color: AppColors.textTertiary),
+                      const SizedBox(width: 4),
+                      Text(
+                        _formatCount(summary.memberCount),
+                        style:
+                            AppTextStyles.bodySecondary.copyWith(fontSize: 12),
+                      ),
+                      const SizedBox(width: 10),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 5, vertical: 1),
+                        decoration: BoxDecoration(
+                          color: AppColors.accent.withAlpha(25),
+                          borderRadius: BorderRadius.circular(3),
+                        ),
+                        child: Text(
+                          summary.valueType.name.toUpperCase(),
+                          style: AppTextStyles.badge
+                              .copyWith(color: AppColors.accent),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
-            // Title
-            Text(
-              summary.title.toUpperCase(),
-              style: AppTextStyles.body
-                  .copyWith(fontWeight: FontWeight.w700, fontSize: 13),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-            // Bottom stats
-            Row(
-              children: [
-                const Icon(Icons.people_outline,
-                    size: 13, color: AppColors.textTertiary),
-                const SizedBox(width: 4),
-                Text(
-                  _formatCount(summary.memberCount),
-                  style: AppTextStyles.bodySecondary.copyWith(fontSize: 12),
+            // Bookmark or chevron
+            if (showBookmark)
+              GestureDetector(
+                onTap: () =>
+                    ref.read(bookmarkProvider.notifier).toggle(summary.id),
+                child: const Padding(
+                  padding: EdgeInsets.only(left: 8),
+                  child:
+                      Icon(Icons.bookmark, color: AppColors.accent, size: 18),
                 ),
-                const Spacer(),
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
-                  decoration: BoxDecoration(
-                    color: AppColors.accent.withAlpha(25),
-                    borderRadius: BorderRadius.circular(3),
-                  ),
-                  child: Text(
-                    summary.valueType.name.toUpperCase(),
-                    style:
-                        AppTextStyles.badge.copyWith(color: AppColors.accent),
-                  ),
-                ),
-              ],
-            ),
+              )
+            else
+              const Icon(Icons.chevron_right,
+                  color: AppColors.textTertiary, size: 18),
           ],
         ),
       ),
