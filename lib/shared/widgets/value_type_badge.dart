@@ -14,7 +14,7 @@ class ValueTypeBadge extends StatelessWidget {
   Widget build(BuildContext context) {
     final (label, color) = switch (valueType) {
       ValueType.number => ('NUMBER', AppColors.accent),
-      ValueType.duration => ('DURATION', Colors.orange),
+      ValueType.duration => ('DURATION', AppColors.categoryDuration),
       ValueType.text => ('TEXT', AppColors.categoryCoding),
     };
 

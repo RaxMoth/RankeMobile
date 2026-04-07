@@ -34,5 +34,8 @@ abstract class AppColors {
   static const Color categoryCoding = Color(0xFF42A5F5);
   static const Color categoryHealth = Color(0xFF66BB6A);
 
+  // Value type colors
+  static const Color categoryDuration = Color(0xFFFF9800);
+
   static const Color transparent = Colors.transparent;
 }

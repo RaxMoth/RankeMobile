@@ -1,6 +1,6 @@
-import 'package:dio/dio.dart';
 import 'package:fpdart/fpdart.dart';
 import '../../../core/network/api_error.dart';
+import '../../../core/network/api_helpers.dart';
 import '../../lists/domain/entities/ranked_list.dart';
 import '../domain/entities/entry.dart';
 import '../domain/entries_repository.dart';
@@ -15,67 +15,48 @@ class EntriesRepositoryImpl implements EntriesRepository {
   Future<Either<ApiError, RankedEntry>> submitEntry({
     required String listId,
     required EntryInput input,
-  }) async {
-    try {
+  }) {
+    return safeApiCall(() async {
       final data = await _dataSource.submitEntry(listId, {
         if (input.valueNumber != null) 'valueNumber': input.valueNumber,
         if (input.valueDurationMs != null) 'valueDurationMs': input.valueDurationMs,
         if (input.valueText != null) 'valueText': input.valueText,
         if (input.note != null) 'note': input.note,
       });
-      return Right(_parseEntry(data));
-    } on DioException catch (e) {
-      return Left(_mapDioError(e));
-    } catch (e) {
-      return Left(ApiUnknownError(error: e));
-    }
+      return _parseEntry(data);
+    });
   }
 
   @override
   Future<Either<ApiError, List<RankedEntry>>> getPendingEntries(
-      String listId) async {
-    try {
+      String listId) {
+    return safeApiCall(() async {
       final data = await _dataSource.getPendingEntries(listId);
-      final entries = data
+      return data
           .cast<Map<String, dynamic>>()
           .map(_parseEntry)
           .toList();
-      return Right(entries);
-    } on DioException catch (e) {
-      return Left(_mapDioError(e));
-    } catch (e) {
-      return Left(ApiUnknownError(error: e));
-    }
+    });
   }
 
   @override
   Future<Either<ApiError, void>> approveEntry({
     required String listId,
     required String entryId,
-  }) async {
-    try {
+  }) {
+    return safeApiCall(() async {
       await _dataSource.approveEntry(listId, entryId);
-      return const Right(null);
-    } on DioException catch (e) {
-      return Left(_mapDioError(e));
-    } catch (e) {
-      return Left(ApiUnknownError(error: e));
-    }
+    });
   }
 
   @override
   Future<Either<ApiError, void>> rejectEntry({
     required String listId,
     required String entryId,
-  }) async {
-    try {
+  }) {
+    return safeApiCall(() async {
       await _dataSource.rejectEntry(listId, entryId);
-      return const Right(null);
-    } on DioException catch (e) {
-      return Left(_mapDioError(e));
-    } catch (e) {
-      return Left(ApiUnknownError(error: e));
-    }
+    });
   }
 
   RankedEntry _parseEntry(Map<String, dynamic> data) {
@@ -100,13 +81,5 @@ class EntriesRepositoryImpl implements EntriesRepository {
       'rejected' => EntryStatus.rejected,
       _ => EntryStatus.approved,
     };
-  }
-
-  ApiError _mapDioError(DioException e) {
-    if (e.type == DioExceptionType.connectionError ||
-        e.type == DioExceptionType.connectionTimeout) {
-      return const ApiNetworkError();
-    }
-    return ApiUnknownError(error: e);
   }
 }

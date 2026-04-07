@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/theme/colors.dart';
+import '../../../core/theme/responsive.dart';
 import '../../../core/theme/text_styles.dart';
 import '../../auth/presentation/providers/auth_provider.dart';
 import '../../lists/domain/entities/ranked_list.dart';
@@ -84,29 +85,35 @@ class ProfileScreen extends ConsumerWidget {
                 );
               }
 
+              final items = <Widget>[];
+              if (owned.isNotEmpty) {
+                items.add(const SizedBox(height: 24));
+                items.add(_sectionLabel('OWNED', owned.length));
+                items.add(const SizedBox(height: 8));
+                for (final s in owned) {
+                  items.add(_BoardListItem(
+                    summary: s,
+                    onTap: () => context.push('/lists/${s.id}'),
+                  ));
+                }
+              }
+              if (joined.isNotEmpty) {
+                items.add(const SizedBox(height: 20));
+                items.add(_sectionLabel('JOINED', joined.length));
+                items.add(const SizedBox(height: 8));
+                for (final s in joined) {
+                  items.add(_BoardListItem(
+                    summary: s,
+                    onTap: () => context.push('/lists/${s.id}'),
+                  ));
+                }
+              }
+
               return SliverPadding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
-                sliver: SliverList(
-                  delegate: SliverChildListDelegate([
-                    if (owned.isNotEmpty) ...[
-                      const SizedBox(height: 24),
-                      _sectionLabel('OWNED', owned.length),
-                      const SizedBox(height: 8),
-                      ...owned.map((s) => _BoardListItem(
-                            summary: s,
-                            onTap: () => context.push('/lists/${s.id}'),
-                          )),
-                    ],
-                    if (joined.isNotEmpty) ...[
-                      const SizedBox(height: 20),
-                      _sectionLabel('JOINED', joined.length),
-                      const SizedBox(height: 8),
-                      ...joined.map((s) => _BoardListItem(
-                            summary: s,
-                            onTap: () => context.push('/lists/${s.id}'),
-                          )),
-                    ],
-                  ]),
+                sliver: SliverList.builder(
+                  itemCount: items.length,
+                  itemBuilder: (context, index) => items[index],
                 ),
               );
             },
@@ -197,11 +204,11 @@ class _UserInfoSection extends StatelessWidget {
         child: Row(
           children: [
             Container(
-              width: 52,
-              height: 52,
+              width: Responsive.scale(context, 52),
+              height: Responsive.scale(context, 52),
               decoration: BoxDecoration(
                 color: AppColors.accent.withAlpha(25),
-                borderRadius: BorderRadius.circular(26),
+                borderRadius: BorderRadius.circular(Responsive.scale(context, 26)),
                 border: Border.all(color: AppColors.accent, width: 1.5),
               ),
               child: Center(

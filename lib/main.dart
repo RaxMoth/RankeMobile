@@ -16,16 +16,18 @@ void main() async {
   runApp(const ProviderScope(child: RankeApp()));
 }
 
-class RankeApp extends StatelessWidget {
+class RankeApp extends ConsumerWidget {
   const RankeApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final router = ref.watch(goRouterProvider);
+
     return MaterialApp.router(
       title: 'Apex',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.darkTheme,
-      routerConfig: goRouter,
+      routerConfig: router,
     );
   }
 }

@@ -1,7 +1,7 @@
-import 'package:dio/dio.dart';
 import 'package:fpdart/fpdart.dart';
 
 import '../../../core/network/api_error.dart';
+import '../../../core/network/api_helpers.dart';
 import '../domain/auth_repository.dart';
 import '../domain/entities/user.dart';
 import 'auth_remote_data_source.dart';
@@ -16,18 +16,14 @@ class AuthRepositoryImpl implements AuthRepository {
   Future<Either<ApiError, User>> login({
     required String email,
     required String password,
-  }) async {
-    try {
+  }) {
+    return safeApiCall(() async {
       final data = await _remoteDataSource.login(
         email: email,
         password: password,
       );
-      return Right(_mapToUser(data));
-    } on DioException catch (e) {
-      return Left(_mapDioError(e));
-    } catch (e) {
-      return Left(ApiUnknownError(error: e));
-    }
+      return _mapToUser(data);
+    });
   }
 
   @override
@@ -35,37 +31,31 @@ class AuthRepositoryImpl implements AuthRepository {
     required String email,
     required String password,
     required String displayName,
-  }) async {
-    try {
+  }) {
+    return safeApiCall(() async {
       final data = await _remoteDataSource.register(
         email: email,
         password: password,
         displayName: displayName,
       );
-      return Right(_mapToUser(data));
-    } on DioException catch (e) {
-      return Left(_mapDioError(e));
-    } catch (e) {
-      return Left(ApiUnknownError(error: e));
-    }
+      return _mapToUser(data);
+    });
   }
 
   @override
-  Future<Either<ApiError, User>> signInWithApple() async {
+  Future<Either<ApiError, User>> signInWithApple({
+    required String identityToken,
+    String? fullName,
+  }) async {
     // TODO: implement Apple Sign In flow
     return const Left(ApiUnknownError(error: 'Not implemented'));
   }
 
   @override
-  Future<Either<ApiError, void>> logout() async {
-    try {
+  Future<Either<ApiError, void>> logout() {
+    return safeApiCall(() async {
       await _remoteDataSource.logout();
-      return const Right(null);
-    } on DioException catch (e) {
-      return Left(_mapDioError(e));
-    } catch (e) {
-      return Left(ApiUnknownError(error: e));
-    }
+    });
   }
 
   User _mapToUser(Map<String, dynamic> data) {
@@ -75,24 +65,5 @@ class AuthRepositoryImpl implements AuthRepository {
       email: userData['email'] as String,
       displayName: userData['display_name'] as String,
     );
-  }
-
-  ApiError _mapDioError(DioException e) {
-    if (e.type == DioExceptionType.connectionError ||
-        e.type == DioExceptionType.connectionTimeout) {
-      return const ApiNetworkError();
-    }
-    final response = e.response;
-    if (response != null) {
-      final data = response.data;
-      if (data is Map<String, dynamic>) {
-        return ApiServerError(
-          code: data['code'] as String? ?? 'UNKNOWN',
-          message: data['message'] as String? ?? 'Server error',
-          statusCode: response.statusCode ?? 500,
-        );
-      }
-    }
-    return ApiUnknownError(error: e);
   }
 }

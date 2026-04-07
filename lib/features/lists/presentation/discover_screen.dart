@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/dev/mock_lists_repository.dart';
 import '../../../core/theme/colors.dart';
+import '../../../core/theme/responsive.dart';
 import '../../../core/theme/text_styles.dart';
 import '../../../shared/widgets/value_type_badge.dart';
 import '../domain/entities/ranked_list.dart';
@@ -90,7 +91,7 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
             // Category chips
             SliverToBoxAdapter(
               child: SizedBox(
-                height: 36,
+                height: Responsive.scale(context, 36),
                 child: ListView(
                   scrollDirection: Axis.horizontal,
                   padding: const EdgeInsets.symmetric(horizontal: 20),

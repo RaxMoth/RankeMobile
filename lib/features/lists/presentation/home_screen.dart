@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/theme/colors.dart';
+import '../../../core/theme/responsive.dart';
 import '../../../core/theme/text_styles.dart';
 import '../domain/entities/ranked_list.dart';
 import 'providers/bookmark_provider.dart';
@@ -77,45 +78,17 @@ class HomeScreen extends ConsumerWidget {
                   return const SliverFillRemaining(child: _EmptyHome());
                 }
 
+                final items = _buildFlatItems(
+                  owned: owned,
+                  participating: participating,
+                  bookmarked: bookmarked,
+                );
+
                 return SliverPadding(
                   padding: const EdgeInsets.symmetric(horizontal: 20),
-                  sliver: SliverList(
-                    delegate: SliverChildListDelegate([
-                      if (owned.isNotEmpty) ...[
-                        _SectionHeader(
-                          title: 'MY BOARDS',
-                          count: owned.length,
-                          label: 'OWNED',
-                        ),
-                        const SizedBox(height: 8),
-                        ...owned.map((s) => _BoardTile(summary: s)),
-                        const SizedBox(height: 20),
-                      ],
-                      if (participating.isNotEmpty) ...[
-                        _SectionHeader(
-                          title: 'PARTICIPATING',
-                          count: participating.length,
-                          label: 'JOINED',
-                        ),
-                        const SizedBox(height: 8),
-                        ...participating.map((s) => _BoardTile(summary: s)),
-                        const SizedBox(height: 20),
-                      ],
-                      if (bookmarked.isNotEmpty) ...[
-                        _SectionHeader(
-                          title: 'BOOKMARKED',
-                          count: bookmarked.length,
-                          label: 'SAVED',
-                        ),
-                        const SizedBox(height: 8),
-                        ...bookmarked.map((s) => _BoardTile(
-                              summary: s,
-                              showBookmark: true,
-                            )),
-                        const SizedBox(height: 20),
-                      ],
-                      const SizedBox(height: 24),
-                    ]),
+                  sliver: SliverList.builder(
+                    itemCount: items.length,
+                    itemBuilder: (context, index) => items[index],
                   ),
                 );
               },
@@ -145,6 +118,40 @@ class HomeScreen extends ConsumerWidget {
       ),
     );
   }
+}
+
+List<Widget> _buildFlatItems({
+  required List<ListSummary> owned,
+  required List<ListSummary> participating,
+  required List<ListSummary> bookmarked,
+}) {
+  final items = <Widget>[];
+  if (owned.isNotEmpty) {
+    items.add(_SectionHeader(title: 'MY BOARDS', count: owned.length, label: 'OWNED'));
+    items.add(const SizedBox(height: 8));
+    for (final s in owned) {
+      items.add(_BoardTile(summary: s));
+    }
+    items.add(const SizedBox(height: 20));
+  }
+  if (participating.isNotEmpty) {
+    items.add(_SectionHeader(title: 'PARTICIPATING', count: participating.length, label: 'JOINED'));
+    items.add(const SizedBox(height: 8));
+    for (final s in participating) {
+      items.add(_BoardTile(summary: s));
+    }
+    items.add(const SizedBox(height: 20));
+  }
+  if (bookmarked.isNotEmpty) {
+    items.add(_SectionHeader(title: 'BOOKMARKED', count: bookmarked.length, label: 'SAVED'));
+    items.add(const SizedBox(height: 8));
+    for (final s in bookmarked) {
+      items.add(_BoardTile(summary: s, showBookmark: true));
+    }
+    items.add(const SizedBox(height: 20));
+  }
+  items.add(const SizedBox(height: 24));
+  return items;
 }
 
 // ─── Section Header ──────────────────────────────────────────
@@ -197,7 +204,7 @@ class _BoardTile extends ConsumerWidget {
           children: [
             // Rank or role badge
             SizedBox(
-              width: 52,
+              width: Responsive.scale(context, 52),
               child: summary.ownRank != null
                   ? Text(
                       '#${summary.ownRank.toString().padLeft(2, '0')}',

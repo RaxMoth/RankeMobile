@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../../core/theme/colors.dart';
+import '../../../core/theme/responsive.dart';
 import '../../../core/theme/text_styles.dart';
 import '../domain/entities/ranked_list.dart';
 import '../../entries/presentation/submit_entry_sheet.dart';
@@ -1190,11 +1191,16 @@ class _CommsRow extends StatelessWidget {
             Icon(icon, color: AppColors.accent, size: 16),
             const SizedBox(width: 10),
             Text(label, style: AppTextStyles.badge),
-            const Spacer(),
-            Text(
-              link.length > 30 ? '${link.substring(0, 30)}...' : link,
-              style: AppTextStyles.badge
-                  .copyWith(color: AppColors.textTertiary),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                link,
+                style: AppTextStyles.badge
+                    .copyWith(color: AppColors.textTertiary),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.right,
+              ),
             ),
             const SizedBox(width: 6),
             const Icon(Icons.open_in_new,
@@ -1328,7 +1334,7 @@ class _StandingRow extends StatelessWidget {
           children: [
             // Rank
             SizedBox(
-              width: 36,
+              width: Responsive.scale(context, 36),
               child: Text(
                 entry.rank.toString().padLeft(2, '0'),
                 style: AppTextStyles.rankNumber.copyWith(
@@ -1341,8 +1347,8 @@ class _StandingRow extends StatelessWidget {
             const SizedBox(width: 12),
             // Avatar placeholder
             Container(
-              width: 40,
-              height: 40,
+              width: Responsive.scale(context, 40),
+              height: Responsive.scale(context, 40),
               decoration: BoxDecoration(
                 color: AppColors.surfaceLight,
                 borderRadius: BorderRadius.circular(6),
@@ -1387,11 +1393,16 @@ class _StandingRow extends StatelessWidget {
               ),
             ),
             // Value
-            Text(
-              _formatValue(entry),
-              style: AppTextStyles.statValue.copyWith(
-                color:
-                    isCurrentUser ? AppColors.accent : AppColors.textPrimary,
+            Flexible(
+              flex: 0,
+              child: Text(
+                _formatValue(entry),
+                style: AppTextStyles.statValue.copyWith(
+                  color:
+                      isCurrentUser ? AppColors.accent : AppColors.textPrimary,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
               ),
             ),
           ],

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/theme/responsive.dart';
 import '../../../lists/domain/entities/ranked_list.dart';
 import 'duration_picker.dart';
 
@@ -32,7 +33,7 @@ class EntryRow extends StatelessWidget {
       child: Row(
         children: [
           SizedBox(
-            width: 36,
+            width: Responsive.scale(context, 36),
             child: Text(
               '#${entry.rank}',
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
@@ -59,11 +60,16 @@ class EntryRow extends StatelessWidget {
               ],
             ),
           ),
-          Text(
-            _formatValue(),
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontFeatures: const [FontFeature.tabularFigures()],
-                ),
+          Flexible(
+            flex: 0,
+            child: Text(
+              _formatValue(),
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontFeatures: const [FontFeature.tabularFigures()],
+                  ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
           ),
         ],
       ),

@@ -16,7 +16,10 @@ abstract class AuthRepository {
     required String displayName,
   });
 
-  Future<Either<ApiError, User>> signInWithApple();
+  Future<Either<ApiError, User>> signInWithApple({
+    required String identityToken,
+    String? fullName,
+  });
 
   Future<Either<ApiError, void>> logout();
 }

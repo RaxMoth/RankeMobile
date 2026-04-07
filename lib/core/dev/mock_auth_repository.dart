@@ -38,7 +38,10 @@ class MockAuthRepository implements AuthRepository {
   }
 
   @override
-  Future<Either<ApiError, User>> signInWithApple() async {
+  Future<Either<ApiError, User>> signInWithApple({
+    required String identityToken,
+    String? fullName,
+  }) async {
     await Future.delayed(DevConfig.networkDelay);
     return const Right(_devUser);
   }

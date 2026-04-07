@@ -2,6 +2,8 @@ import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:mutex/mutex.dart';
 
+import '../constants/app_constants.dart';
+
 const kAccessTokenKey = 'access_token';
 const kRefreshTokenKey = 'refresh_token';
 
@@ -16,7 +18,7 @@ class AuthInterceptor extends Interceptor {
   AuthInterceptor({FlutterSecureStorage? storage})
       : _storage = storage ?? const FlutterSecureStorage() {
     _refreshDio = Dio(BaseOptions(
-      baseUrl: 'https://api.example.com', // TODO: use shared config
+      baseUrl: AppConstants.apiBaseUrl,
       connectTimeout: const Duration(seconds: 10),
       receiveTimeout: const Duration(seconds: 30),
     ));
