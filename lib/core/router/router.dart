@@ -12,6 +12,7 @@ import '../../features/lists/presentation/manage_members_screen.dart';
 import '../../features/auth/presentation/login_screen.dart';
 import '../../features/auth/presentation/register_screen.dart';
 import '../../features/profile/presentation/profile_screen.dart';
+import '../../features/profile/presentation/user_profile_screen.dart';
 import '../../features/auth/presentation/providers/auth_provider.dart';
 
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
@@ -97,6 +98,14 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         parentNavigatorKey: _rootNavigatorKey,
         builder: (context, state) => InvitePreviewScreen(
           token: state.pathParameters['token']!,
+        ),
+      ),
+      GoRoute(
+        path: '/users/:id',
+        name: 'userProfile',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => UserProfileScreen(
+          userId: state.pathParameters['id']!,
         ),
       ),
     ],

@@ -155,73 +155,76 @@ class _MemberRow extends ConsumerWidget {
       onDismissed: (_) {
         ref.read(membersProvider(listId).notifier).removeMember(member.userId);
       },
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 8),
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(
-            color: member.role == MemberRole.owner
-                ? AppColors.accent.withAlpha(60)
-                : AppColors.border,
+      child: GestureDetector(
+        onTap: () => context.push('/users/${member.userId}'),
+        child: Container(
+          margin: const EdgeInsets.only(bottom: 8),
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: AppColors.surface,
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(
+              color: member.role == MemberRole.owner
+                  ? AppColors.accent.withAlpha(60)
+                  : AppColors.border,
+            ),
           ),
-        ),
-        child: Row(
-          children: [
-            // Avatar
-            Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: member.role == MemberRole.owner
-                    ? AppColors.accent.withAlpha(25)
-                    : AppColors.surfaceLight,
-                borderRadius: BorderRadius.circular(6),
-              ),
-              child: Center(
-                child: Text(
-                  member.displayName.isNotEmpty
-                      ? member.displayName[0].toUpperCase()
-                      : '?',
-                  style: AppTextStyles.body.copyWith(
-                    fontWeight: FontWeight.w800,
-                    color: member.role == MemberRole.owner
-                        ? AppColors.accent
-                        : AppColors.textTertiary,
+          child: Row(
+            children: [
+              // Avatar
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: member.role == MemberRole.owner
+                      ? AppColors.accent.withAlpha(25)
+                      : AppColors.surfaceLight,
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Center(
+                  child: Text(
+                    member.displayName.isNotEmpty
+                        ? member.displayName[0].toUpperCase()
+                        : '?',
+                    style: AppTextStyles.body.copyWith(
+                      fontWeight: FontWeight.w800,
+                      color: member.role == MemberRole.owner
+                          ? AppColors.accent
+                          : AppColors.textTertiary,
+                    ),
                   ),
                 ),
               ),
-            ),
-            const SizedBox(width: 12),
-            // Name
-            Expanded(
-              child: Text(
-                member.displayName.toUpperCase(),
-                style: AppTextStyles.body.copyWith(fontWeight: FontWeight.w700),
-              ),
-            ),
-            // Role badge (tappable for non-owners)
-            GestureDetector(
-              onTap: member.role != MemberRole.owner
-                  ? () => _showRolePicker(context, ref)
-                  : null,
-              child: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(
-                  color: _roleColor(member.role).withAlpha(20),
-                  borderRadius: BorderRadius.circular(4),
-                  border: Border.all(color: _roleColor(member.role).withAlpha(60)),
-                ),
+              const SizedBox(width: 12),
+              // Name
+              Expanded(
                 child: Text(
-                  member.role.name.toUpperCase(),
-                  style: AppTextStyles.badge
-                      .copyWith(color: _roleColor(member.role)),
+                  member.displayName.toUpperCase(),
+                  style: AppTextStyles.body.copyWith(fontWeight: FontWeight.w700),
                 ),
               ),
-            ),
-          ],
+              // Role badge (tappable for non-owners)
+              GestureDetector(
+                onTap: member.role != MemberRole.owner
+                    ? () => _showRolePicker(context, ref)
+                    : null,
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: _roleColor(member.role).withAlpha(20),
+                    borderRadius: BorderRadius.circular(4),
+                    border: Border.all(color: _roleColor(member.role).withAlpha(60)),
+                  ),
+                  child: Text(
+                    member.role.name.toUpperCase(),
+                    style: AppTextStyles.badge
+                        .copyWith(color: _roleColor(member.role)),
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

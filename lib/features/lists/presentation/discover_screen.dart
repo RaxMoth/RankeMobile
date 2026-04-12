@@ -44,7 +44,13 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
 
     return Scaffold(
       body: SafeArea(
-        child: CustomScrollView(
+        child: RefreshIndicator(
+          color: AppColors.accent,
+          backgroundColor: AppColors.surface,
+          onRefresh: () async {
+            ref.invalidate(discoverResultsProvider);
+          },
+          child: CustomScrollView(
           slivers: [
             // Header
             SliverToBoxAdapter(
@@ -133,6 +139,24 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
                           Text('NO BOARDS FOUND',
                               style: AppTextStyles.sectionHeader
                                   .copyWith(color: AppColors.textTertiary)),
+                          const SizedBox(height: 8),
+                          Text(
+                            'TRY A DIFFERENT SEARCH OR CATEGORY',
+                            style: AppTextStyles.badge
+                                .copyWith(color: AppColors.textTertiary),
+                          ),
+                          if (_searchController.text.isNotEmpty) ...[
+                            const SizedBox(height: 16),
+                            TextButton(
+                              onPressed: () {
+                                _searchController.clear();
+                                ref.read(discoverQueryProvider.notifier).state = '';
+                              },
+                              child: Text('CLEAR SEARCH',
+                                  style: AppTextStyles.button
+                                      .copyWith(color: AppColors.accent)),
+                            ),
+                          ],
                         ],
                       ),
                     ),
@@ -162,6 +186,7 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
             ),
           ],
         ),
+      ),
       ),
     );
   }

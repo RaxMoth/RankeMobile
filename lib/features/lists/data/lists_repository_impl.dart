@@ -2,6 +2,7 @@ import 'package:fpdart/fpdart.dart';
 
 import '../../../core/network/api_error.dart';
 import '../../../core/network/api_helpers.dart';
+import '../../profile/domain/entities/user_profile.dart';
 import '../domain/entities/ranked_list.dart';
 import '../domain/lists_repository.dart';
 import 'lists_remote_data_source.dart';
@@ -226,5 +227,23 @@ class ListsRepositoryImpl implements ListsRepository {
       displayName: json['displayName'] as String,
       role: MemberRole.values.byName(json['role'] as String),
     );
+  }
+
+  @override
+  Future<Either<ApiError, UserProfile>> getUserProfile(String userId) {
+    return safeApiCall(() async {
+      final data = await _dataSource.getUserProfile(userId);
+      final boardsJson = data['boards'] as List<dynamic>? ?? [];
+      return UserProfile(
+        userId: data['userId'] as String,
+        displayName: data['displayName'] as String,
+        memberSince: data['memberSince'] != null
+            ? DateTime.parse(data['memberSince'] as String)
+            : null,
+        boards: boardsJson
+            .map((e) => _mapListSummary(e as Map<String, dynamic>))
+            .toList(),
+      );
+    });
   }
 }

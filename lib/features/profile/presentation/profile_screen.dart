@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/theme/colors.dart';
 import '../../../core/theme/responsive.dart';
 import '../../../core/theme/text_styles.dart';
+import '../../../shared/widgets/board_tile.dart';
 import '../../auth/presentation/providers/auth_provider.dart';
 import '../../lists/domain/entities/ranked_list.dart';
 import '../../lists/presentation/providers/bookmark_provider.dart';
@@ -21,7 +22,13 @@ class ProfileScreen extends ConsumerWidget {
     final bookmarks = ref.watch(bookmarkProvider);
 
     return SafeArea(
-      child: CustomScrollView(
+      child: RefreshIndicator(
+        color: AppColors.accent,
+        backgroundColor: AppColors.surface,
+        onRefresh: () async {
+          ref.invalidate(listsProvider);
+        },
+        child: CustomScrollView(
         slivers: [
           // Header
           SliverToBoxAdapter(child: _buildHeader()),
@@ -91,7 +98,7 @@ class ProfileScreen extends ConsumerWidget {
                 items.add(_sectionLabel('OWNED', owned.length));
                 items.add(const SizedBox(height: 8));
                 for (final s in owned) {
-                  items.add(_BoardListItem(
+                  items.add(BoardTile(
                     summary: s,
                     onTap: () => context.push('/lists/${s.id}'),
                   ));
@@ -102,7 +109,7 @@ class ProfileScreen extends ConsumerWidget {
                 items.add(_sectionLabel('JOINED', joined.length));
                 items.add(const SizedBox(height: 8));
                 for (final s in joined) {
-                  items.add(_BoardListItem(
+                  items.add(BoardTile(
                     summary: s,
                     onTap: () => context.push('/lists/${s.id}'),
                   ));
@@ -151,6 +158,7 @@ class ProfileScreen extends ConsumerWidget {
           ),
           const SliverToBoxAdapter(child: SizedBox(height: 32)),
         ],
+      ),
       ),
     );
   }
@@ -319,85 +327,6 @@ class _StatCard extends StatelessWidget {
   }
 }
 
-class _BoardListItem extends StatelessWidget {
-  final ListSummary summary;
-  final VoidCallback onTap;
-
-  const _BoardListItem({required this.summary, required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 8),
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: AppColors.border),
-        ),
-        child: Row(
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    summary.title.toUpperCase(),
-                    style: AppTextStyles.body
-                        .copyWith(fontWeight: FontWeight.w700, fontSize: 13),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 4),
-                  Row(
-                    children: [
-                      _typeBadge(summary.valueType),
-                      const SizedBox(width: 8),
-                      Icon(Icons.people_outline,
-                          size: 13, color: AppColors.textTertiary),
-                      const SizedBox(width: 4),
-                      Text(
-                        '${summary.memberCount}',
-                        style:
-                            AppTextStyles.bodySecondary.copyWith(fontSize: 12),
-                      ),
-                      if (summary.ownRank != null) ...[
-                        const SizedBox(width: 8),
-                        Text(
-                          '#${summary.ownRank}',
-                          style: AppTextStyles.label,
-                        ),
-                      ],
-                    ],
-                  ),
-                ],
-              ),
-            ),
-            const Icon(Icons.chevron_right,
-                color: AppColors.textTertiary, size: 18),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _typeBadge(ValueType type) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
-      decoration: BoxDecoration(
-        color: AppColors.accent.withAlpha(25),
-        borderRadius: BorderRadius.circular(3),
-      ),
-      child: Text(
-        type.name.toUpperCase(),
-        style: AppTextStyles.badge.copyWith(color: AppColors.accent),
-      ),
-    );
-  }
-}
-
 class _EmptySection extends StatelessWidget {
   final String message;
 
@@ -412,12 +341,28 @@ class _EmptySection extends StatelessWidget {
         borderRadius: BorderRadius.circular(8),
         border: Border.all(color: AppColors.border),
       ),
-      child: Center(
-        child: Text(
-          message,
-          style: AppTextStyles.bodySecondary
-              .copyWith(color: AppColors.textTertiary),
-        ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            message,
+            style: AppTextStyles.bodySecondary
+                .copyWith(color: AppColors.textTertiary),
+          ),
+          const SizedBox(height: 16),
+          OutlinedButton.icon(
+            onPressed: () => context.go('/discover'),
+            icon: const Icon(Icons.explore_outlined, size: 16),
+            label: Text('DISCOVER BOARDS',
+                style: AppTextStyles.button
+                    .copyWith(color: AppColors.accent)),
+            style: OutlinedButton.styleFrom(
+              side: const BorderSide(color: AppColors.accent),
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            ),
+          ),
+        ],
       ),
     );
   }

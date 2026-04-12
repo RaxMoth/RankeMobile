@@ -1315,6 +1315,7 @@ class _StandingRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
+      onTap: () => context.push('/users/${entry.userId}'),
       onLongPress: isAdmin ? onRemove : null,
       child: Container(
         margin: const EdgeInsets.only(bottom: 8),

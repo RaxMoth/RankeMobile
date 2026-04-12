@@ -3,8 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/theme/colors.dart';
-import '../../../core/theme/responsive.dart';
 import '../../../core/theme/text_styles.dart';
+import '../../../shared/widgets/board_tile.dart';
 import '../domain/entities/ranked_list.dart';
 import 'providers/bookmark_provider.dart';
 import 'providers/lists_provider.dart';
@@ -130,7 +130,13 @@ List<Widget> _buildFlatItems({
     items.add(_SectionHeader(title: 'MY BOARDS', count: owned.length, label: 'OWNED'));
     items.add(const SizedBox(height: 8));
     for (final s in owned) {
-      items.add(_BoardTile(summary: s));
+      items.add(Builder(
+        builder: (context) => BoardTile(
+          summary: s,
+          showRankBadge: true,
+          onTap: () => GoRouter.of(context).push('/lists/${s.id}'),
+        ),
+      ));
     }
     items.add(const SizedBox(height: 20));
   }
@@ -138,7 +144,13 @@ List<Widget> _buildFlatItems({
     items.add(_SectionHeader(title: 'PARTICIPATING', count: participating.length, label: 'JOINED'));
     items.add(const SizedBox(height: 8));
     for (final s in participating) {
-      items.add(_BoardTile(summary: s));
+      items.add(Builder(
+        builder: (context) => BoardTile(
+          summary: s,
+          showRankBadge: true,
+          onTap: () => GoRouter.of(context).push('/lists/${s.id}'),
+        ),
+      ));
     }
     items.add(const SizedBox(height: 20));
   }
@@ -146,7 +158,14 @@ List<Widget> _buildFlatItems({
     items.add(_SectionHeader(title: 'BOOKMARKED', count: bookmarked.length, label: 'SAVED'));
     items.add(const SizedBox(height: 8));
     for (final s in bookmarked) {
-      items.add(_BoardTile(summary: s, showBookmark: true));
+      items.add(Builder(
+        builder: (context) => BoardTile(
+          summary: s,
+          showRankBadge: true,
+          showBookmark: true,
+          onTap: () => GoRouter.of(context).push('/lists/${s.id}'),
+        ),
+      ));
     }
     items.add(const SizedBox(height: 20));
   }
@@ -180,113 +199,6 @@ class _SectionHeader extends StatelessWidget {
   }
 }
 
-// ─── Board Tile (full-width vertical list item) ──────────────
-
-class _BoardTile extends ConsumerWidget {
-  final ListSummary summary;
-  final bool showBookmark;
-
-  const _BoardTile({required this.summary, this.showBookmark = false});
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    return GestureDetector(
-      onTap: () => context.push('/lists/${summary.id}'),
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 8),
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: AppColors.border),
-        ),
-        child: Row(
-          children: [
-            // Rank or role badge
-            SizedBox(
-              width: Responsive.scale(context, 52),
-              child: summary.ownRank != null
-                  ? Text(
-                      '#${summary.ownRank.toString().padLeft(2, '0')}',
-                      style: AppTextStyles.label,
-                    )
-                  : summary.currentUserRole != null
-                      ? Text(
-                          summary.currentUserRole!.name.toUpperCase(),
-                          style: AppTextStyles.badge
-                              .copyWith(color: AppColors.textTertiary),
-                        )
-                      : const SizedBox.shrink(),
-            ),
-            const SizedBox(width: 8),
-            // Title and stats
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    summary.title.toUpperCase(),
-                    style: AppTextStyles.body
-                        .copyWith(fontWeight: FontWeight.w700, fontSize: 13),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 4),
-                  Row(
-                    children: [
-                      const Icon(Icons.people_outline,
-                          size: 13, color: AppColors.textTertiary),
-                      const SizedBox(width: 4),
-                      Text(
-                        _formatCount(summary.memberCount),
-                        style:
-                            AppTextStyles.bodySecondary.copyWith(fontSize: 12),
-                      ),
-                      const SizedBox(width: 10),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 5, vertical: 1),
-                        decoration: BoxDecoration(
-                          color: AppColors.accent.withAlpha(25),
-                          borderRadius: BorderRadius.circular(3),
-                        ),
-                        child: Text(
-                          summary.valueType.name.toUpperCase(),
-                          style: AppTextStyles.badge
-                              .copyWith(color: AppColors.accent),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-            // Bookmark or chevron
-            if (showBookmark)
-              GestureDetector(
-                onTap: () =>
-                    ref.read(bookmarkProvider.notifier).toggle(summary.id),
-                child: const Padding(
-                  padding: EdgeInsets.only(left: 8),
-                  child:
-                      Icon(Icons.bookmark, color: AppColors.accent, size: 18),
-                ),
-              )
-            else
-              const Icon(Icons.chevron_right,
-                  color: AppColors.textTertiary, size: 18),
-          ],
-        ),
-      ),
-    );
-  }
-
-  String _formatCount(int count) {
-    if (count >= 1000) return '${(count / 1000).toStringAsFixed(1)}K';
-    return count.toString();
-  }
-}
-
 // ─── Empty State ──────────────────────────────────────────────
 
 class _EmptyHome extends StatelessWidget {
@@ -312,6 +224,37 @@ class _EmptyHome extends StatelessWidget {
               style:
                   AppTextStyles.badge.copyWith(color: AppColors.textTertiary),
               textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 24),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                OutlinedButton.icon(
+                  onPressed: () => GoRouter.of(context).go('/create'),
+                  icon: const Icon(Icons.add, size: 16),
+                  label: Text('CREATE',
+                      style: AppTextStyles.button
+                          .copyWith(color: AppColors.accent)),
+                  style: OutlinedButton.styleFrom(
+                    side: const BorderSide(color: AppColors.accent),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 16, vertical: 10),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                OutlinedButton.icon(
+                  onPressed: () => GoRouter.of(context).go('/discover'),
+                  icon: const Icon(Icons.explore_outlined, size: 16),
+                  label: Text('DISCOVER',
+                      style: AppTextStyles.button
+                          .copyWith(color: AppColors.textSecondary)),
+                  style: OutlinedButton.styleFrom(
+                    side: const BorderSide(color: AppColors.border),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 16, vertical: 10),
+                  ),
+                ),
+              ],
             ),
           ],
         ),

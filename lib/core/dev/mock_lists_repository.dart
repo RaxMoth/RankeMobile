@@ -3,6 +3,7 @@ import 'package:uuid/uuid.dart';
 
 import '../../features/lists/domain/entities/ranked_list.dart';
 import '../../features/lists/domain/lists_repository.dart';
+import '../../features/profile/domain/entities/user_profile.dart';
 import '../network/api_error.dart';
 import 'dev_config.dart';
 
@@ -709,6 +710,64 @@ class MockListsRepository implements ListsRepository {
       );
     }
     return const Right(null);
+  }
+
+  @override
+  Future<Either<ApiError, UserProfile>> getUserProfile(String userId) async {
+    await Future.delayed(DevConfig.networkDelay);
+
+    // Find display name from any member list or entry
+    String? displayName;
+    final userBoards = <ListSummary>[];
+
+    for (final entry in _lists.entries) {
+      final data = entry.value;
+      final listId = entry.key;
+
+      // Check members
+      final members = _members[listId] ?? [];
+      final memberMatch = members.where((m) => m.userId == userId);
+      if (memberMatch.isNotEmpty) {
+        displayName ??= memberMatch.first.displayName;
+      }
+
+      // Check entries
+      final entryMatch = data.list.entries.where((e) => e.userId == userId);
+      if (entryMatch.isNotEmpty) {
+        displayName ??= entryMatch.first.displayName;
+      }
+
+      // If user is a member, add this board to their profile
+      if (memberMatch.isNotEmpty || entryMatch.isNotEmpty) {
+        final ownRank = entryMatch.isNotEmpty ? entryMatch.first.rank : null;
+        userBoards.add(ListSummary(
+          id: listId,
+          title: data.list.title,
+          valueType: data.list.valueType,
+          rankOrder: data.list.rankOrder,
+          isPublic: data.list.isPublic,
+          memberCount: data.list.memberCount,
+          ownRank: ownRank,
+          currentUserRole: memberMatch.isNotEmpty ? memberMatch.first.role : null,
+          category: _categories[listId],
+        ));
+      }
+    }
+
+    if (displayName == null) {
+      return const Left(ApiServerError(
+        code: 'NOT_FOUND',
+        message: 'User not found',
+        statusCode: 404,
+      ));
+    }
+
+    return Right(UserProfile(
+      userId: userId,
+      displayName: displayName,
+      memberSince: DateTime.now().subtract(const Duration(days: 120)),
+      boards: userBoards,
+    ));
   }
 
   /// Exposed for [MockEntriesRepository] to update entries after submission.

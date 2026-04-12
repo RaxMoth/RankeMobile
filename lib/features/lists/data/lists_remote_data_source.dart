@@ -16,6 +16,7 @@ abstract class ListsRemoteDataSource {
   Future<void> deleteEntry(String listId, String entryId);
   Future<Map<String, dynamic>> regenerateInvite(String listId);
   Future<List<dynamic>> searchPublicLists({String? query, String? category});
+  Future<Map<String, dynamic>> getUserProfile(String userId);
 }
 
 class ListsRemoteDataSourceImpl implements ListsRemoteDataSource {
@@ -118,5 +119,11 @@ class ListsRemoteDataSourceImpl implements ListsRemoteDataSource {
       if (category != null) 'category': category,
     });
     return response.data as List<dynamic>;
+  }
+
+  @override
+  Future<Map<String, dynamic>> getUserProfile(String userId) async {
+    final response = await _apiClient.dio.get('/users/$userId/profile');
+    return response.data as Map<String, dynamic>;
   }
 }

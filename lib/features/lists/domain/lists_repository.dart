@@ -1,6 +1,7 @@
 import 'package:fpdart/fpdart.dart';
 
 import '../../../core/network/api_error.dart';
+import '../../profile/domain/entities/user_profile.dart';
 import 'entities/ranked_list.dart';
 
 /// Abstract lists repository interface
@@ -63,4 +64,6 @@ abstract class ListsRepository {
     String? query,
     String? category,
   });
+
+  Future<Either<ApiError, UserProfile>> getUserProfile(String userId);
 }
