@@ -82,7 +82,7 @@ class ManageMembersScreen extends ConsumerWidget {
       final link = await ref
           .read(listDetailProvider(listId).notifier)
           .getInviteLink();
-      await Share.share('Join my board on Apex: rankapp://invite/$link');
+      await Share.share('Join my board on Ranked: rankapp://invite/$link');
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

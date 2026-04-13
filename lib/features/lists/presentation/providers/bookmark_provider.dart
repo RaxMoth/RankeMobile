@@ -1,3 +1,4 @@
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -22,6 +23,7 @@ class BookmarkNotifier extends Notifier<Set<String>> {
   }
 
   void toggle(String listId) {
+    HapticFeedback.lightImpact();
     if (state.contains(listId)) {
       state = {...state}..remove(listId);
     } else {

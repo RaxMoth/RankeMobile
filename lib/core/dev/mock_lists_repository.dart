@@ -530,6 +530,7 @@ class MockListsRepository implements ListsRepository {
     required ValueType valueType,
     required RankOrder rankOrder,
     required bool isPublic,
+    String? category,
     String? telegramLink,
     String? whatsappLink,
     String? discordLink,
@@ -553,6 +554,7 @@ class MockListsRepository implements ListsRepository {
       discordLink: discordLink,
     );
     _lists[id] = _MockListData(list: newList);
+    if (category != null) _categories[id] = category;
     _members[id] = [
       const ListMember(
           userId: _currentUserId,

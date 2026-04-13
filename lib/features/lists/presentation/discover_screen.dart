@@ -4,9 +4,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/dev/mock_lists_repository.dart';
+import '../../../core/strings.dart';
 import '../../../core/theme/colors.dart';
 import '../../../core/theme/responsive.dart';
 import '../../../core/theme/text_styles.dart';
+import '../../../shared/widgets/shimmer_loading.dart';
 import '../../../shared/widgets/value_type_badge.dart';
 import '../domain/entities/ranked_list.dart';
 import 'providers/bookmark_provider.dart';
@@ -52,25 +54,20 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
           },
           child: CustomScrollView(
           slivers: [
-            // Header
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('DISCOVER', style: AppTextStyles.screenTitle),
-                    const SizedBox(height: 4),
-                    Text('EXPLORE PUBLIC BOARDS',
-                        style: AppTextStyles.subtitle),
-                    const SizedBox(height: 16),
-                    // Search bar
+                    Text(S.tabDiscover, style: AppTextStyles.screenTitle),
+                    const SizedBox(height: 12),
                     TextField(
                       controller: _searchController,
                       style: AppTextStyles.body,
                       onChanged: _onSearchChanged,
                       decoration: InputDecoration(
-                        hintText: 'SEARCH BOARDS...',
+                        hintText: S.searchBoards,
                         hintStyle: AppTextStyles.bodySecondary
                             .copyWith(color: AppColors.textTertiary),
                         prefixIcon: const Icon(Icons.search,
@@ -103,7 +100,7 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
                   padding: const EdgeInsets.symmetric(horizontal: 20),
                   children: [
                     _CategoryChip(
-                      label: 'ALL',
+                      label: S.all,
                       isSelected: selectedCategory == null,
                       onTap: () => ref
                           .read(discoverCategoryProvider.notifier)
@@ -136,12 +133,12 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
                           const Icon(Icons.search_off,
                               color: AppColors.textTertiary, size: 48),
                           const SizedBox(height: 12),
-                          Text('NO BOARDS FOUND',
+                          Text(S.noBoardsFound,
                               style: AppTextStyles.sectionHeader
                                   .copyWith(color: AppColors.textTertiary)),
                           const SizedBox(height: 8),
                           Text(
-                            'TRY A DIFFERENT SEARCH OR CATEGORY',
+                            S.tryDifferentSearch,
                             style: AppTextStyles.badge
                                 .copyWith(color: AppColors.textTertiary),
                           ),
@@ -152,7 +149,7 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
                                 _searchController.clear();
                                 ref.read(discoverQueryProvider.notifier).state = '';
                               },
-                              child: Text('CLEAR SEARCH',
+                              child: Text(S.clearSearch,
                                   style: AppTextStyles.button
                                       .copyWith(color: AppColors.accent)),
                             ),
@@ -171,11 +168,7 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
                   ),
                 );
               },
-              loading: () => const SliverFillRemaining(
-                child: Center(
-                    child: CircularProgressIndicator(
-                        color: AppColors.accent, strokeWidth: 2)),
-              ),
+              loading: () => const BoardListSkeleton(count: 6),
               error: (e, _) => SliverFillRemaining(
                 child: Center(
                   child: Text('ERROR: $e',
@@ -208,7 +201,8 @@ class _CategoryChip extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        alignment: Alignment.center,
+        padding: const EdgeInsets.symmetric(horizontal: 16),
         decoration: BoxDecoration(
           color: isSelected ? AppColors.accent : AppColors.surface,
           borderRadius: BorderRadius.circular(6),
@@ -280,7 +274,6 @@ class _DiscoverBoardCard extends ConsumerWidget {
               ],
             ),
             const SizedBox(height: 8),
-            // Stats row
             Row(
               children: [
                 Icon(Icons.people_outline,
@@ -311,7 +304,7 @@ class _DiscoverBoardCard extends ConsumerWidget {
                       borderRadius: BorderRadius.circular(4),
                     ),
                     child: Text(
-                      'JOINED',
+                      S.joined,
                       style: AppTextStyles.badge
                           .copyWith(color: AppColors.accent, fontSize: 9),
                     ),

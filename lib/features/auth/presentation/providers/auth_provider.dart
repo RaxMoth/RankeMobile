@@ -19,7 +19,7 @@ class AuthNotifier extends AsyncNotifier<User?> {
     if (DevConfig.useDevMode) {
       return const User(
         id: 'dev-user-001',
-        email: 'max@apex.dev',
+        email: 'max@ranked.app',
         displayName: 'Max Roth',
       );
     }

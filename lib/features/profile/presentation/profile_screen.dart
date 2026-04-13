@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/strings.dart';
 import '../../../core/theme/colors.dart';
 import '../../../core/theme/responsive.dart';
 import '../../../core/theme/text_styles.dart';
@@ -11,7 +12,6 @@ import '../../lists/domain/entities/ranked_list.dart';
 import '../../lists/presentation/providers/bookmark_provider.dart';
 import '../../lists/presentation/providers/lists_provider.dart';
 
-/// Profile screen — user info, created boards, subscribed boards, logout
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
 
@@ -30,21 +30,19 @@ class ProfileScreen extends ConsumerWidget {
         },
         child: CustomScrollView(
         slivers: [
-          // Header
-          SliverToBoxAdapter(child: _buildHeader()),
           // User info
           SliverToBoxAdapter(
             child: authAsync.when(
               data: (user) => _UserInfoSection(
-                displayName: user?.displayName ?? 'OPERATOR',
+                displayName: user?.displayName ?? '—',
                 email: user?.email ?? '—',
               ),
               loading: () => const _UserInfoSection(
-                displayName: 'LOADING...',
+                displayName: S.loading,
                 email: '—',
               ),
               error: (_, __) => const _UserInfoSection(
-                displayName: 'OPERATOR',
+                displayName: '—',
                 email: '—',
               ),
             ),
@@ -87,7 +85,7 @@ class ProfileScreen extends ConsumerWidget {
                 return const SliverToBoxAdapter(
                   child: Padding(
                     padding: EdgeInsets.fromLTRB(20, 24, 20, 0),
-                    child: _EmptySection(message: 'NO BOARDS YET'),
+                    child: _EmptySection(),
                   ),
                 );
               }
@@ -95,7 +93,7 @@ class ProfileScreen extends ConsumerWidget {
               final items = <Widget>[];
               if (owned.isNotEmpty) {
                 items.add(const SizedBox(height: 24));
-                items.add(_sectionLabel('OWNED', owned.length));
+                items.add(_sectionLabel(S.owned, owned.length));
                 items.add(const SizedBox(height: 8));
                 for (final s in owned) {
                   items.add(BoardTile(
@@ -106,7 +104,7 @@ class ProfileScreen extends ConsumerWidget {
               }
               if (joined.isNotEmpty) {
                 items.add(const SizedBox(height: 20));
-                items.add(_sectionLabel('JOINED', joined.length));
+                items.add(_sectionLabel(S.joined, joined.length));
                 items.add(const SizedBox(height: 8));
                 for (final s in joined) {
                   items.add(BoardTile(
@@ -137,7 +135,7 @@ class ProfileScreen extends ConsumerWidget {
               child: Padding(
                 padding: const EdgeInsets.all(20),
                 child: Text(
-                  'FAILED TO LOAD BOARDS',
+                  S.failedToLoadBoards,
                   style: AppTextStyles.badge
                       .copyWith(color: AppColors.error),
                 ),
@@ -163,21 +161,7 @@ class ProfileScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildHeader() {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text('PROFILE', style: AppTextStyles.displayLarge),
-          const SizedBox(height: 2),
-          Text('OPERATOR STATUS', style: AppTextStyles.subtitle),
-        ],
-      ),
-    );
-  }
-
-  Widget _sectionLabel(String title, int count) {
+  static Widget _sectionLabel(String title, int count) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -201,7 +185,7 @@ class _UserInfoSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 24, 20, 0),
+      padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
       child: Container(
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
@@ -274,26 +258,11 @@ class _StatsSection extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
       child: Row(
         children: [
-          Expanded(
-            child: _StatCard(
-              label: 'OWNED',
-              value: ownedCount.toString(),
-            ),
-          ),
+          Expanded(child: _StatCard(label: S.owned, value: ownedCount.toString())),
           const SizedBox(width: 12),
-          Expanded(
-            child: _StatCard(
-              label: 'JOINED',
-              value: joinedCount.toString(),
-            ),
-          ),
+          Expanded(child: _StatCard(label: S.joined, value: joinedCount.toString())),
           const SizedBox(width: 12),
-          Expanded(
-            child: _StatCard(
-              label: 'SAVED',
-              value: bookmarkedCount.toString(),
-            ),
-          ),
+          Expanded(child: _StatCard(label: S.saved, value: bookmarkedCount.toString())),
         ],
       ),
     );
@@ -328,9 +297,7 @@ class _StatCard extends StatelessWidget {
 }
 
 class _EmptySection extends StatelessWidget {
-  final String message;
-
-  const _EmptySection({required this.message});
+  const _EmptySection();
 
   @override
   Widget build(BuildContext context) {
@@ -345,7 +312,7 @@ class _EmptySection extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(
-            message,
+            S.noBoardsYet,
             style: AppTextStyles.bodySecondary
                 .copyWith(color: AppColors.textTertiary),
           ),
@@ -353,7 +320,7 @@ class _EmptySection extends StatelessWidget {
           OutlinedButton.icon(
             onPressed: () => context.go('/discover'),
             icon: const Icon(Icons.explore_outlined, size: 16),
-            label: Text('DISCOVER BOARDS',
+            label: Text(S.discoverBoards,
                 style: AppTextStyles.button
                     .copyWith(color: AppColors.accent)),
             style: OutlinedButton.styleFrom(
@@ -383,7 +350,7 @@ class _LogoutButton extends StatelessWidget {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
       ),
       child: Text(
-        'SIGN OUT',
+        S.signOut,
         style: AppTextStyles.button.copyWith(color: AppColors.error),
       ),
     );

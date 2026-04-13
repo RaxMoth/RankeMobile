@@ -16,6 +16,7 @@ abstract class ListsRepository {
     required ValueType valueType,
     required RankOrder rankOrder,
     required bool isPublic,
+    String? category,
     String? telegramLink,
     String? whatsappLink,
     String? discordLink,

@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/dev/mock_lists_repository.dart';
 import '../../../core/theme/colors.dart';
 import '../../../core/theme/text_styles.dart';
 import '../domain/entities/ranked_list.dart';
 import 'providers/lists_provider.dart';
 
-/// Create list screen — "INITIALIZE" new leaderboard registry
+/// Create list screen for new boards.
 class CreateListScreen extends ConsumerStatefulWidget {
   const CreateListScreen({super.key});
 
@@ -26,6 +28,7 @@ class _CreateListScreenState extends ConsumerState<CreateListScreen> {
   bool _showCommsFields = false;
   ValueType _valueType = ValueType.number;
   RankOrder _rankOrder = RankOrder.desc;
+  String? _category;
   bool _isSubmitting = false;
   String? _titleError;
 
@@ -60,6 +63,7 @@ class _CreateListScreenState extends ConsumerState<CreateListScreen> {
             valueType: _valueType,
             rankOrder: _rankOrder,
             isPublic: _isPublic,
+            category: _category,
             telegramLink: _telegramController.text.trim().isEmpty
                 ? null
                 : _telegramController.text.trim(),
@@ -70,7 +74,11 @@ class _CreateListScreenState extends ConsumerState<CreateListScreen> {
                 ? null
                 : _discordController.text.trim(),
           );
-      if (mounted) context.pop();
+      HapticFeedback.mediumImpact();
+      if (mounted) {
+        // CREATE is a shell tab, not a pushed route — navigate to HOME
+        context.go('/home');
+      }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -117,6 +125,8 @@ class _CreateListScreenState extends ConsumerState<CreateListScreen> {
                   const SizedBox(height: 24),
                   _buildPublicToggle(),
                   const SizedBox(height: 24),
+                  _buildCategoryPicker(),
+                  const SizedBox(height: 24),
                   _buildRulesField(),
                   const SizedBox(height: 24),
                   _buildCommsSection(),
@@ -143,25 +153,17 @@ class _CreateListScreenState extends ConsumerState<CreateListScreen> {
 
   Widget _buildHeader() {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 16, 8, 0),
+      padding: const EdgeInsets.fromLTRB(20, 12, 8, 0),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('INITIALIZE', style: AppTextStyles.displayLarge),
-              const SizedBox(height: 2),
-              Text('DRAFTING NEW REGISTRY', style: AppTextStyles.subtitle),
-            ],
-          ),
+          Text('CREATE BOARD', style: AppTextStyles.screenTitle),
           TextButton(
-            onPressed: () => context.pop(),
+            onPressed: () => context.go('/home'),
             child: Text(
               'CANCEL',
-              style: AppTextStyles.body.copyWith(
-                color: AppColors.textSecondary,
-                fontWeight: FontWeight.w600,
+              style: AppTextStyles.badge.copyWith(
+                color: AppColors.textTertiary,
                 letterSpacing: 1.0,
               ),
             ),
@@ -372,7 +374,7 @@ class _CreateListScreenState extends ConsumerState<CreateListScreen> {
               ),
               const SizedBox(height: 2),
               Text(
-                'VISIBLE TO ALL APEX USERS',
+                'VISIBLE TO ALL USERS',
                 style:
                     AppTextStyles.badge.copyWith(color: AppColors.textTertiary),
               ),
@@ -384,6 +386,57 @@ class _CreateListScreenState extends ConsumerState<CreateListScreen> {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildCategoryPicker() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('CATEGORY',
+            style: AppTextStyles.sectionHeader.copyWith(fontSize: 11)),
+        const SizedBox(height: 10),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: BoardCategory.all.map((cat) {
+            final isSelected = _category == cat;
+            return GestureDetector(
+              onTap: () => setState(
+                  () => _category = isSelected ? null : cat),
+              child: Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                decoration: BoxDecoration(
+                  color: isSelected
+                      ? AppColors.accent.withAlpha(25)
+                      : AppColors.surface,
+                  borderRadius: BorderRadius.circular(6),
+                  border: Border.all(
+                    color: isSelected ? AppColors.accent : AppColors.border,
+                    width: isSelected ? 1.5 : 1,
+                  ),
+                ),
+                child: Text(
+                  cat,
+                  style: AppTextStyles.badge.copyWith(
+                    color: isSelected
+                        ? AppColors.accent
+                        : AppColors.textSecondary,
+                    fontWeight:
+                        isSelected ? FontWeight.w800 : FontWeight.w500,
+                  ),
+                ),
+              ),
+            );
+          }).toList(),
+        ),
+        const SizedBox(height: 6),
+        Text(
+          _category != null ? 'TAP AGAIN TO DESELECT' : 'OPTIONAL — HELPS USERS DISCOVER YOUR BOARD',
+          style: AppTextStyles.badge.copyWith(color: AppColors.textTertiary),
+        ),
+      ],
     );
   }
 
@@ -519,7 +572,7 @@ class _CreateListScreenState extends ConsumerState<CreateListScreen> {
     return SizedBox(
       width: double.infinity,
       child: ElevatedButton(
-        onPressed: _isSubmitting ? null : _submit,
+        onPressed: _isSubmitting ? null : _showPreview,
         style: ElevatedButton.styleFrom(
           padding: const EdgeInsets.symmetric(vertical: 18),
         ),
@@ -532,8 +585,149 @@ class _CreateListScreenState extends ConsumerState<CreateListScreen> {
                   color: AppColors.background,
                 ),
               )
-            : const Text('CREATE LEADERBOARD'),
+            : const Text('PREVIEW & CREATE'),
       ),
+    );
+  }
+
+  void _showPreview() {
+    final title = _titleController.text.trim();
+    if (title.isEmpty) {
+      setState(() => _titleError = 'BOARD IDENTIFIER REQUIRED');
+      return;
+    }
+    setState(() => _titleError = null);
+
+    HapticFeedback.selectionClick();
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: AppColors.card,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (ctx) => Padding(
+        padding: EdgeInsets.fromLTRB(
+            20, 20, 20, 20 + MediaQuery.of(ctx).viewInsets.bottom),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Handle bar
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: AppColors.border,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+            const SizedBox(height: 20),
+            Text('BOARD PREVIEW', style: AppTextStyles.screenTitle),
+            const SizedBox(height: 4),
+            Text('REVIEW BEFORE CREATION', style: AppTextStyles.subtitle),
+            const SizedBox(height: 20),
+            // Preview card
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: AppColors.surface,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: AppColors.accent.withAlpha(60)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(title.toUpperCase(),
+                      style: AppTextStyles.boardTitle),
+                  if (_scopeController.text.trim().isNotEmpty) ...[
+                    const SizedBox(height: 8),
+                    Text(
+                      _scopeController.text.trim(),
+                      style: AppTextStyles.bodySecondary,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                  const SizedBox(height: 12),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 6,
+                    children: [
+                      _previewChip(
+                          _valueType.name.toUpperCase(), AppColors.accent),
+                      _previewChip(
+                        _rankOrder == RankOrder.desc
+                            ? 'HIGHEST WINS'
+                            : 'LOWEST WINS',
+                        AppColors.textSecondary,
+                      ),
+                      _previewChip(
+                        _isPublic ? 'PUBLIC' : 'PRIVATE',
+                        _isPublic
+                            ? AppColors.success
+                            : AppColors.warning,
+                      ),
+                      if (_category != null)
+                        _previewChip(_category!, AppColors.textSecondary),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 24),
+            // Confirm + cancel
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () => Navigator.pop(ctx),
+                    style: OutlinedButton.styleFrom(
+                      side: const BorderSide(color: AppColors.border),
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                    ),
+                    child: Text('EDIT',
+                        style: AppTextStyles.button
+                            .copyWith(color: AppColors.textSecondary)),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: () {
+                      Navigator.pop(ctx);
+                      _submit();
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.accent,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                    ),
+                    child: Text('CREATE',
+                        style: AppTextStyles.button
+                            .copyWith(color: AppColors.background)),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _previewChip(String label, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: color.withAlpha(20),
+        borderRadius: BorderRadius.circular(4),
+        border: Border.all(color: color.withAlpha(60)),
+      ),
+      child: Text(label,
+          style: AppTextStyles.badge.copyWith(color: color)),
     );
   }
 

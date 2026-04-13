@@ -103,6 +103,7 @@ class _SubmitEntrySheetState extends ConsumerState<SubmitEntrySheet> {
       await ref
           .read(listDetailProvider(widget.listId).notifier)
           .submitEntry(input);
+      HapticFeedback.mediumImpact();
       if (mounted) setState(() => _submitted = true);
     } catch (e) {
       if (mounted) {
@@ -147,16 +148,7 @@ class _SubmitEntrySheetState extends ConsumerState<SubmitEntrySheet> {
           ),
         ),
         const SizedBox(height: 32),
-        Container(
-          width: 56,
-          height: 56,
-          decoration: BoxDecoration(
-            color: AppColors.accent.withAlpha(25),
-            borderRadius: BorderRadius.circular(28),
-            border: Border.all(color: AppColors.accent, width: 2),
-          ),
-          child: const Icon(Icons.check, color: AppColors.accent, size: 28),
-        ),
+        const _AnimatedCheckmark(),
         const SizedBox(height: 20),
         Text('SUBMISSION RECEIVED', style: AppTextStyles.screenTitle),
         const SizedBox(height: 8),
@@ -343,6 +335,7 @@ class _SubmitEntrySheetState extends ConsumerState<SubmitEntrySheet> {
 
   Widget _buildValueInput() {
     return switch (widget.valueType) {
+
       ValueType.number => _buildNumberInput(),
       ValueType.duration => _buildDurationInput(),
       ValueType.text => _buildTextInput(),
@@ -415,6 +408,94 @@ class _SubmitEntrySheetState extends ConsumerState<SubmitEntrySheet> {
           ),
         ),
       ],
+    );
+  }
+}
+
+/// Animated checkmark with scale-in and ring pulse effect.
+class _AnimatedCheckmark extends StatefulWidget {
+  const _AnimatedCheckmark();
+
+  @override
+  State<_AnimatedCheckmark> createState() => _AnimatedCheckmarkState();
+}
+
+class _AnimatedCheckmarkState extends State<_AnimatedCheckmark>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+  late final Animation<double> _scaleAnim;
+  late final Animation<double> _ringAnim;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 600),
+    );
+    _scaleAnim = CurvedAnimation(
+      parent: _controller,
+      curve: const Interval(0.0, 0.6, curve: Curves.elasticOut),
+    );
+    _ringAnim = CurvedAnimation(
+      parent: _controller,
+      curve: const Interval(0.3, 1.0, curve: Curves.easeOut),
+    );
+    _controller.forward();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, child) {
+        return SizedBox(
+          width: 72,
+          height: 72,
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              // Expanding ring
+              Transform.scale(
+                scale: 1.0 + (_ringAnim.value * 0.4),
+                child: Container(
+                  width: 56,
+                  height: 56,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: AppColors.accent
+                          .withAlpha((100 * (1 - _ringAnim.value)).round()),
+                      width: 2,
+                    ),
+                  ),
+                ),
+              ),
+              // Check circle
+              Transform.scale(
+                scale: _scaleAnim.value,
+                child: Container(
+                  width: 56,
+                  height: 56,
+                  decoration: BoxDecoration(
+                    color: AppColors.accent.withAlpha(25),
+                    shape: BoxShape.circle,
+                    border: Border.all(color: AppColors.accent, width: 2),
+                  ),
+                  child: const Icon(
+                      Icons.check, color: AppColors.accent, size: 28),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }

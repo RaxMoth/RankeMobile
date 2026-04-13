@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-
 import '../../features/shell/app_shell.dart';
 import '../../features/lists/presentation/discover_screen.dart';
 import '../../features/lists/presentation/home_screen.dart';
@@ -11,17 +10,24 @@ import '../../features/lists/presentation/invite_preview_screen.dart';
 import '../../features/lists/presentation/manage_members_screen.dart';
 import '../../features/auth/presentation/login_screen.dart';
 import '../../features/auth/presentation/register_screen.dart';
+import '../../features/onboarding/presentation/onboarding_screen.dart';
 import '../../features/profile/presentation/profile_screen.dart';
 import '../../features/profile/presentation/user_profile_screen.dart';
 import '../../features/auth/presentation/providers/auth_provider.dart';
 
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
 
-const _publicPaths = {'/login', '/register'};
+const _publicPaths = {'/login', '/register', '/onboarding'};
+
+/// Whether onboarding has been completed.
+/// Loaded synchronously in main() and overridden via ProviderScope.
+/// Mutable so OnboardingScreen can mark it true after completion.
+final onboardingCompleteProvider = StateProvider<bool>((ref) => false);
 
 /// GoRouter provider with auth guard redirect.
 final goRouterProvider = Provider<GoRouter>((ref) {
   final authState = ref.watch(authProvider);
+  final onboardingDone = ref.watch(onboardingCompleteProvider);
 
   return GoRouter(
     navigatorKey: _rootNavigatorKey,
@@ -61,6 +67,12 @@ final goRouterProvider = Provider<GoRouter>((ref) {
             ),
           ]),
         ],
+      ),
+      // Onboarding
+      GoRoute(
+        path: '/onboarding',
+        name: 'onboarding',
+        builder: (context, state) => const OnboardingScreen(),
       ),
       // Auth routes (no bottom nav)
       GoRoute(
@@ -112,12 +124,19 @@ final goRouterProvider = Provider<GoRouter>((ref) {
     redirect: (context, state) {
       final isLoggedIn = authState.valueOrNull != null;
       final isPublicRoute = _publicPaths.contains(state.matchedLocation);
+      final isOnboarding = state.matchedLocation == '/onboarding';
+
+      // First launch: show onboarding
+      if (!onboardingDone && !isOnboarding) return '/onboarding';
 
       // Not logged in and trying to access protected route → login
       if (!isLoggedIn && !isPublicRoute) return '/login';
 
-      // Logged in and on auth page → home
-      if (isLoggedIn && isPublicRoute) return '/home';
+      // Logged in and on auth/public page → home
+      // But don't redirect away from onboarding until it's completed
+      if (isLoggedIn && isPublicRoute && (onboardingDone || !isOnboarding)) {
+        return '/home';
+      }
 
       return null;
     },

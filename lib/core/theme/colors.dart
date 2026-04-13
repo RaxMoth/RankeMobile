@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-/// Apex-inspired dark terminal color palette
+/// Ranked dark terminal color palette
 abstract class AppColors {
   // Backgrounds
   static const Color background = Color(0xFF0A0A0A);

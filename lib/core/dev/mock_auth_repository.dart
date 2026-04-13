@@ -9,7 +9,7 @@ import 'dev_config.dart';
 class MockAuthRepository implements AuthRepository {
   static const _devUser = User(
     id: 'dev-user-001',
-    email: 'max@apex.dev',
+    email: 'max@ranked.app',
     displayName: 'Max Roth',
     createdAt: null,
   );

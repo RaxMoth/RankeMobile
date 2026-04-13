@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:share_plus/share_plus.dart';
@@ -6,6 +7,7 @@ import 'package:share_plus/share_plus.dart';
 import '../../../core/theme/colors.dart';
 import '../../../core/theme/responsive.dart';
 import '../../../core/theme/text_styles.dart';
+import '../../auth/presentation/providers/auth_provider.dart';
 import '../domain/entities/ranked_list.dart';
 import '../../entries/presentation/submit_entry_sheet.dart';
 import '../../entries/presentation/widgets/duration_picker.dart';
@@ -262,31 +264,30 @@ class _StandingsTab extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final currentUserId =
+        ref.watch(authProvider).valueOrNull?.id;
+
     return Column(
       children: [
         Expanded(
           child: ListView(
             padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
             children: [
-              if (isAdmin)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 8),
-                  child: Text(
-                    'SWIPE LEFT TO REMOVE ENTRIES',
-                    style: AppTextStyles.badge
-                        .copyWith(color: AppColors.textTertiary, fontSize: 9),
-                  ),
-                ),
               if (list.entries.isEmpty)
                 _EmptyStandings()
               else
-                ...list.entries.map(
-                  (entry) => isAdmin
+                ...list.entries.map((entry) {
+                  final isOwnEntry = currentUserId != null &&
+                      entry.userId == currentUserId;
+                  final canDelete = isAdmin || isOwnEntry;
+
+                  return canDelete
                       ? Dismissible(
                           key: ValueKey(entry.id),
                           direction: DismissDirection.endToStart,
                           confirmDismiss: (_) async {
-                            _confirmRemoveEntry(context, ref, entry);
+                            _confirmRemoveEntry(
+                                context, ref, entry, isOwnEntry);
                             return false;
                           },
                           background: Container(
@@ -303,16 +304,18 @@ class _StandingsTab extends ConsumerWidget {
                           child: _StandingRow(
                             entry: entry,
                             valueType: list.valueType,
-                            isAdmin: true,
-                            onRemove: () =>
-                                _confirmRemoveEntry(context, ref, entry),
+                            currentUserId: currentUserId,
+                            canDelete: true,
+                            onRemove: () => _confirmRemoveEntry(
+                                context, ref, entry, isOwnEntry),
                           ),
                         )
                       : _StandingRow(
                           entry: entry,
                           valueType: list.valueType,
-                        ),
-                ),
+                          currentUserId: currentUserId,
+                        );
+                }),
             ],
           ),
         ),
@@ -343,7 +346,8 @@ class _StandingsTab extends ConsumerWidget {
   }
 
   void _confirmRemoveEntry(
-      BuildContext context, WidgetRef ref, RankedEntry entry) {
+      BuildContext context, WidgetRef ref, RankedEntry entry,
+      [bool isOwnEntry = false]) {
     showModalBottomSheet(
       context: context,
       backgroundColor: AppColors.card,
@@ -355,10 +359,13 @@ class _StandingsTab extends ConsumerWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text('REMOVE ENTRY', style: AppTextStyles.screenTitle),
+            Text(isOwnEntry ? 'DELETE MY ENTRY' : 'REMOVE ENTRY',
+                style: AppTextStyles.screenTitle),
             const SizedBox(height: 12),
             Text(
-              'Remove ${entry.displayName}\'s entry from this board?',
+              isOwnEntry
+                  ? 'Delete your entry from this board? This cannot be undone.'
+                  : 'Remove ${entry.displayName}\'s entry from this board?',
               style: AppTextStyles.bodySecondary,
               textAlign: TextAlign.center,
             ),
@@ -746,7 +753,7 @@ class _AdminTab extends ConsumerWidget {
       final link = await ref
           .read(listDetailProvider(listId).notifier)
           .getInviteLink();
-      await Share.share('Join my board on Apex: rankapp://invite/$link');
+      await Share.share('Join my board on Ranked: rankapp://invite/$link');
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -1299,24 +1306,26 @@ class _MetricsBar extends StatelessWidget {
 class _StandingRow extends StatelessWidget {
   final RankedEntry entry;
   final ValueType valueType;
-  final bool isAdmin;
+  final String? currentUserId;
+  final bool canDelete;
   final VoidCallback? onRemove;
 
   const _StandingRow({
     required this.entry,
     required this.valueType,
-    this.isAdmin = false,
+    this.currentUserId,
+    this.canDelete = false,
     this.onRemove,
   });
 
-  // TODO: compare with current user id from auth provider
-  bool get isCurrentUser => false;
+  bool get isCurrentUser =>
+      currentUserId != null && entry.userId == currentUserId;
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () => context.push('/users/${entry.userId}'),
-      onLongPress: isAdmin ? onRemove : null,
+      onTap: () => _showEntryDetail(context),
+      onLongPress: canDelete ? onRemove : null,
       child: Container(
         margin: const EdgeInsets.only(bottom: 8),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
@@ -1423,6 +1432,147 @@ class _StandingRow extends StatelessWidget {
             : '—',
       ValueType.text => entry.valueText ?? '—',
     };
+  }
+
+  void _showEntryDetail(BuildContext context) {
+    HapticFeedback.selectionClick();
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: AppColors.card,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (ctx) => Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Handle bar
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: AppColors.border,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+            const SizedBox(height: 20),
+            // Avatar + name
+            Container(
+              width: 56,
+              height: 56,
+              decoration: BoxDecoration(
+                color: AppColors.accent.withAlpha(25),
+                borderRadius: BorderRadius.circular(28),
+                border: Border.all(color: AppColors.accent, width: 1.5),
+              ),
+              child: Center(
+                child: Text(
+                  entry.displayName.isNotEmpty
+                      ? entry.displayName[0].toUpperCase()
+                      : '?',
+                  style: AppTextStyles.valueDisplay
+                      .copyWith(color: AppColors.accent),
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+            Text(entry.displayName.toUpperCase(),
+                style: AppTextStyles.screenTitle),
+            const SizedBox(height: 4),
+            Text('RANK #${entry.rank}',
+                style: AppTextStyles.subtitle),
+            const SizedBox(height: 20),
+            // Value
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: AppColors.surface,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: AppColors.border),
+              ),
+              child: Column(
+                children: [
+                  Text(
+                    _formatValue(entry),
+                    style: AppTextStyles.displayLarge
+                        .copyWith(color: AppColors.accent),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    valueType.name.toUpperCase(),
+                    style: AppTextStyles.badge
+                        .copyWith(color: AppColors.textTertiary),
+                  ),
+                ],
+              ),
+            ),
+            // Note
+            if (entry.note != null && entry.note!.isNotEmpty) ...[
+              const SizedBox(height: 12),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: AppColors.surface,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: AppColors.border),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('NOTE',
+                        style: AppTextStyles.badge
+                            .copyWith(color: AppColors.textTertiary)),
+                    const SizedBox(height: 6),
+                    Text(entry.note!,
+                        style: AppTextStyles.bodySecondary),
+                  ],
+                ),
+              ),
+            ],
+            const SizedBox(height: 8),
+            // Timestamp
+            Text(
+              'SUBMITTED ${_formatTimestamp(entry.submittedAt)}',
+              style:
+                  AppTextStyles.badge.copyWith(color: AppColors.textTertiary),
+            ),
+            const SizedBox(height: 20),
+            // View profile button
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton(
+                onPressed: () {
+                  Navigator.pop(ctx);
+                  context.push('/users/${entry.userId}');
+                },
+                style: OutlinedButton.styleFrom(
+                  side: const BorderSide(color: AppColors.accent),
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                ),
+                child: Text('VIEW PROFILE',
+                    style:
+                        AppTextStyles.button.copyWith(color: AppColors.accent)),
+              ),
+            ),
+            const SizedBox(height: 8),
+          ],
+        ),
+      ),
+    );
+  }
+
+  String _formatTimestamp(DateTime dt) {
+    final now = DateTime.now();
+    final diff = now.difference(dt);
+    if (diff.inMinutes < 60) return '${diff.inMinutes}M AGO';
+    if (diff.inHours < 24) return '${diff.inHours}H AGO';
+    if (diff.inDays < 7) return '${diff.inDays}D AGO';
+    return '${dt.day}/${dt.month}/${dt.year}';
   }
 }
 

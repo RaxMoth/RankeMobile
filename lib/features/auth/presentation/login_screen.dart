@@ -61,7 +61,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Text(
-                  'APEX',
+                  'RANKED',
                   style: AppTextStyles.displayLarge,
                   textAlign: TextAlign.center,
                 ),

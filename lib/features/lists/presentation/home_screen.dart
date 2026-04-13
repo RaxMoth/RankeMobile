@@ -2,14 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/strings.dart';
 import '../../../core/theme/colors.dart';
 import '../../../core/theme/text_styles.dart';
 import '../../../shared/widgets/board_tile.dart';
+import '../../../shared/widgets/shimmer_loading.dart';
 import '../domain/entities/ranked_list.dart';
 import 'providers/bookmark_provider.dart';
 import 'providers/lists_provider.dart';
 
-/// Home Screen — shows the user's boards grouped by relationship.
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
 
@@ -25,34 +26,12 @@ class HomeScreen extends ConsumerWidget {
         onRefresh: () => ref.read(listsProvider.notifier).refresh(),
         child: CustomScrollView(
           slivers: [
-            // Header
             SliverToBoxAdapter(
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text('APEX', style: AppTextStyles.displayLarge),
-                        const SizedBox(height: 2),
-                        Text('MY BOARDS', style: AppTextStyles.subtitle),
-                      ],
-                    ),
-                    IconButton(
-                      onPressed: () {},
-                      icon: const Icon(
-                        Icons.notifications_none_rounded,
-                        color: AppColors.textSecondary,
-                        size: 24,
-                      ),
-                    ),
-                  ],
-                ),
+                padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
+                child: Text(S.appName, style: AppTextStyles.screenTitle),
               ),
             ),
-            // Content
             listsAsync.when(
               data: (lists) {
                 final owned = lists
@@ -92,11 +71,7 @@ class HomeScreen extends ConsumerWidget {
                   ),
                 );
               },
-              loading: () => const SliverFillRemaining(
-                child: Center(
-                    child: CircularProgressIndicator(
-                        color: AppColors.accent, strokeWidth: 2)),
-              ),
+              loading: () => const BoardListSkeleton(count: 5),
               error: (e, _) => SliverFillRemaining(
                 child: Center(
                   child: Column(
@@ -105,7 +80,7 @@ class HomeScreen extends ConsumerWidget {
                       const Icon(Icons.error_outline,
                           color: AppColors.error, size: 32),
                       const SizedBox(height: 8),
-                      Text('FAILED TO LOAD',
+                      Text(S.failedToLoad,
                           style: AppTextStyles.sectionHeader
                               .copyWith(color: AppColors.error)),
                     ],
@@ -127,7 +102,7 @@ List<Widget> _buildFlatItems({
 }) {
   final items = <Widget>[];
   if (owned.isNotEmpty) {
-    items.add(_SectionHeader(title: 'MY BOARDS', count: owned.length, label: 'OWNED'));
+    items.add(_SectionHeader(title: S.myBoards, count: owned.length, label: S.owned));
     items.add(const SizedBox(height: 8));
     for (final s in owned) {
       items.add(Builder(
@@ -141,7 +116,7 @@ List<Widget> _buildFlatItems({
     items.add(const SizedBox(height: 20));
   }
   if (participating.isNotEmpty) {
-    items.add(_SectionHeader(title: 'PARTICIPATING', count: participating.length, label: 'JOINED'));
+    items.add(_SectionHeader(title: S.participating, count: participating.length, label: S.joined));
     items.add(const SizedBox(height: 8));
     for (final s in participating) {
       items.add(Builder(
@@ -155,7 +130,7 @@ List<Widget> _buildFlatItems({
     items.add(const SizedBox(height: 20));
   }
   if (bookmarked.isNotEmpty) {
-    items.add(_SectionHeader(title: 'BOOKMARKED', count: bookmarked.length, label: 'SAVED'));
+    items.add(_SectionHeader(title: S.bookmarked, count: bookmarked.length, label: S.saved));
     items.add(const SizedBox(height: 8));
     for (final s in bookmarked) {
       items.add(Builder(
@@ -172,8 +147,6 @@ List<Widget> _buildFlatItems({
   items.add(const SizedBox(height: 24));
   return items;
 }
-
-// ─── Section Header ──────────────────────────────────────────
 
 class _SectionHeader extends StatelessWidget {
   final String title;
@@ -199,8 +172,6 @@ class _SectionHeader extends StatelessWidget {
   }
 }
 
-// ─── Empty State ──────────────────────────────────────────────
-
 class _EmptyHome extends StatelessWidget {
   const _EmptyHome();
 
@@ -215,12 +186,12 @@ class _EmptyHome extends StatelessWidget {
             const Icon(Icons.dashboard_outlined,
                 color: AppColors.textTertiary, size: 48),
             const SizedBox(height: 16),
-            Text('NO BOARDS YET',
+            Text(S.noBoardsYet,
                 style: AppTextStyles.sectionHeader
                     .copyWith(color: AppColors.textSecondary)),
             const SizedBox(height: 8),
             Text(
-              'CREATE A BOARD OR DISCOVER\nPUBLIC BOARDS TO GET STARTED',
+              S.noBoardsHint,
               style:
                   AppTextStyles.badge.copyWith(color: AppColors.textTertiary),
               textAlign: TextAlign.center,
@@ -232,7 +203,7 @@ class _EmptyHome extends StatelessWidget {
                 OutlinedButton.icon(
                   onPressed: () => GoRouter.of(context).go('/create'),
                   icon: const Icon(Icons.add, size: 16),
-                  label: Text('CREATE',
+                  label: Text(S.create,
                       style: AppTextStyles.button
                           .copyWith(color: AppColors.accent)),
                   style: OutlinedButton.styleFrom(
@@ -245,7 +216,7 @@ class _EmptyHome extends StatelessWidget {
                 OutlinedButton.icon(
                   onPressed: () => GoRouter.of(context).go('/discover'),
                   icon: const Icon(Icons.explore_outlined, size: 16),
-                  label: Text('DISCOVER',
+                  label: Text(S.discover,
                       style: AppTextStyles.button
                           .copyWith(color: AppColors.textSecondary)),
                   style: OutlinedButton.styleFrom(
