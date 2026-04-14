@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../core/strings.dart';
 import '../../../core/theme/colors.dart';
 import '../../../core/theme/text_styles.dart';
 import '../../../shared/widgets/app_button.dart';
@@ -55,7 +56,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('CREATE ACCOUNT', style: AppTextStyles.screenTitle),
+        title: Text(S.createAccount, style: AppTextStyles.screenTitle),
       ),
       body: SafeArea(
         child: Padding(
@@ -67,11 +68,11 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 const SizedBox(height: 24),
                 AppTextField(
                   controller: _nameController,
-                  label: 'Display Name',
+                  label: S.displayName,
                   prefixIcon: const Icon(Icons.person_outlined),
                   validator: (value) {
                     if (value == null || value.trim().isEmpty) {
-                      return 'Name is required';
+                      return S.nameRequired;
                     }
                     return null;
                   },
@@ -79,22 +80,22 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 const SizedBox(height: 16),
                 AppTextField(
                   controller: _emailController,
-                  label: 'Email',
-                  hint: 'you@example.com',
+                  label: S.email,
+                  hint: S.emailHint,
                   keyboardType: TextInputType.emailAddress,
                   prefixIcon: const Icon(Icons.email_outlined),
                   validator: (value) {
                     if (value == null || value.trim().isEmpty) {
-                      return 'Email is required';
+                      return S.emailRequired;
                     }
-                    if (!value.contains('@')) return 'Invalid email';
+                    if (!value.contains('@')) return S.emailInvalid;
                     return null;
                   },
                 ),
                 const SizedBox(height: 16),
                 AppTextField(
                   controller: _passwordController,
-                  label: 'Password',
+                  label: S.password,
                   obscureText: _obscurePassword,
                   prefixIcon: const Icon(Icons.lock_outlined),
                   suffixIcon: IconButton(
@@ -108,23 +109,23 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   ),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
-                      return 'Password is required';
+                      return S.passwordRequired;
                     }
                     if (value.length < 6) {
-                      return 'Password must be at least 6 characters';
+                      return S.passwordTooShort;
                     }
                     return null;
                   },
                 ),
                 const SizedBox(height: 24),
                 AppButton(
-                  label: 'CREATE ACCOUNT',
+                  label: S.createAccount,
                   onPressed: _register,
                   isLoading: authState.isLoading,
                 ),
                 const SizedBox(height: 16),
                 AppButton(
-                  label: 'SIGN UP WITH APPLE',
+                  label: S.signUpApple,
                   icon: Icons.apple,
                   onPressed: () =>
                       ref.read(authProvider.notifier).signInWithApple(),
@@ -134,7 +135,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 TextButton(
                   onPressed: () => context.go('/login'),
                   child: Text(
-                    'Already have an account? Sign in',
+                    S.hasAccount,
                     style: AppTextStyles.label.copyWith(color: AppColors.accent),
                   ),
                 ),

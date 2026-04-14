@@ -238,6 +238,18 @@ abstract class S {
   static const genericError = 'Something went wrong. Please try again.';
   static const retry = 'RETRY';
 
+  // ── Entry detail ────────────────────────────────────────────────
+  static const note = 'NOTE';
+  static const viewProfile = 'VIEW PROFILE';
+  static String submitted(String time) => 'SUBMITTED $time';
+  static String valueTypeSubtitle(String type) => 'VALUE TYPE: $type';
+  static String rankLabel(int rank) => 'RANK #$rank';
+  static String dAgo(int d) => '${d}D AGO';
+  static String hAgo(int h) => '${h}H AGO';
+  static String mAgo(int m) => '${m}M AGO';
+  static String rankActivity(String name, int rank) => '$name — RANK $rank';
+  static String membersCount(int count) => '$count MEMBERS';
+
   // ── Misc ───────────────────────────────────────────────────────
   static const loading = 'LOADING...';
   static const na = 'N/A';

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../core/network/api_error.dart';
+import '../../core/strings.dart';
 import '../../core/theme/colors.dart';
 import '../../core/theme/text_styles.dart';
 
@@ -18,9 +19,9 @@ class ErrorView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final message = switch (error) {
-      ApiNetworkError() => 'No network connection. Please check your internet.',
+      ApiNetworkError() => S.noNetwork,
       ApiServerError(:final message) => message,
-      ApiUnknownError() => 'Something went wrong. Please try again.',
+      ApiUnknownError() => S.genericError,
     };
 
     return Center(
@@ -40,7 +41,7 @@ class ErrorView extends StatelessWidget {
               const SizedBox(height: 24),
               ElevatedButton(
                 onPressed: onRetry,
-                child: const Text('RETRY'),
+                child: const Text(S.retry),
               ),
             ],
           ],

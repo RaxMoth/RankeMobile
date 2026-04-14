@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/strings.dart';
 import '../../../core/theme/colors.dart';
 import '../../../core/theme/text_styles.dart';
 import '../domain/entities/ranked_list.dart';
@@ -84,7 +85,7 @@ class _EditBoardSheetState extends ConsumerState<EditBoardSheet> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('FAILED TO UPDATE: $e'),
+            content: Text(S.failedToUpdate(e)),
             backgroundColor: AppColors.error,
           ),
         );
@@ -117,20 +118,20 @@ class _EditBoardSheetState extends ConsumerState<EditBoardSheet> {
               ),
             ),
             const SizedBox(height: 20),
-            Text('EDIT BOARD', style: AppTextStyles.screenTitle),
+            Text(S.editBoard, style: AppTextStyles.screenTitle),
             const SizedBox(height: 24),
             // Title
-            Text('TITLE',
+            Text(S.title,
                 style: AppTextStyles.sectionHeader.copyWith(fontSize: 11)),
             const SizedBox(height: 8),
             TextField(
               controller: _titleController,
               style: AppTextStyles.body,
-              decoration: const InputDecoration(hintText: 'BOARD TITLE'),
+              decoration: const InputDecoration(hintText: S.boardTitle),
             ),
             const SizedBox(height: 20),
             // Description
-            Text('DESCRIPTION',
+            Text(S.description,
                 style: AppTextStyles.sectionHeader.copyWith(fontSize: 11)),
             const SizedBox(height: 8),
             TextField(
@@ -138,20 +139,20 @@ class _EditBoardSheetState extends ConsumerState<EditBoardSheet> {
               style: AppTextStyles.body,
               maxLines: 3,
               decoration:
-                  const InputDecoration(hintText: 'DESCRIBE THE BOARD...'),
+                  const InputDecoration(hintText: S.describeBoard),
             ),
             const SizedBox(height: 20),
             // Communication channels
-            Text('COMMUNICATION CHANNELS',
+            Text(S.commsChannels,
                 style: AppTextStyles.sectionHeader.copyWith(fontSize: 11)),
             const SizedBox(height: 8),
-            _commsField(_telegramController, 'TELEGRAM',
+            _commsField(_telegramController, S.telegram,
                 'https://t.me/...', Icons.send),
             const SizedBox(height: 10),
-            _commsField(_whatsappController, 'WHATSAPP',
+            _commsField(_whatsappController, S.whatsapp,
                 'https://wa.me/...', Icons.chat),
             const SizedBox(height: 10),
-            _commsField(_discordController, 'DISCORD',
+            _commsField(_discordController, S.discord,
                 'https://discord.gg/...', Icons.headphones),
             const SizedBox(height: 20),
             // Public toggle
@@ -165,7 +166,7 @@ class _EditBoardSheetState extends ConsumerState<EditBoardSheet> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text('PUBLIC',
+                  Text(S.publicLabel,
                       style: AppTextStyles.body
                           .copyWith(fontWeight: FontWeight.w700)),
                   Switch(
@@ -193,7 +194,7 @@ class _EditBoardSheetState extends ConsumerState<EditBoardSheet> {
                           color: AppColors.background,
                         ),
                       )
-                    : const Text('SAVE CHANGES'),
+                    : const Text(S.saveChanges),
               ),
             ),
             const SizedBox(height: 8),

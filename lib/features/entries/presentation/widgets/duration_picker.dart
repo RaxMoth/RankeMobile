@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../../../../core/strings.dart';
+
 class DurationPickerWidget extends StatefulWidget {
   final ValueChanged<int> onChanged;
   final int? initialMs;
@@ -55,7 +57,7 @@ class _DurationPickerWidgetState extends State<DurationPickerWidget> {
       children: [
         _TimeField(
           controller: _hoursController,
-          label: 'HH',
+          label: S.hh,
           onChanged: (_) => _onChanged(),
         ),
         const Padding(
@@ -64,7 +66,7 @@ class _DurationPickerWidgetState extends State<DurationPickerWidget> {
         ),
         _TimeField(
           controller: _minutesController,
-          label: 'MM',
+          label: S.mm,
           onChanged: (_) => _onChanged(),
         ),
         const Padding(
@@ -73,7 +75,7 @@ class _DurationPickerWidgetState extends State<DurationPickerWidget> {
         ),
         _TimeField(
           controller: _secondsController,
-          label: 'SS',
+          label: S.ss,
           onChanged: (_) => _onChanged(),
         ),
       ],

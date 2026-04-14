@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:share_plus/share_plus.dart';
 
+import '../../../core/strings.dart';
 import '../../../core/theme/colors.dart';
 import '../../../core/theme/text_styles.dart';
 import '../domain/entities/ranked_list.dart';
@@ -34,7 +35,7 @@ class ManageMembersScreen extends ConsumerWidget {
                 ),
                 error: (e, _) => Center(
                   child: Text(
-                    'FAILED TO LOAD MEMBERS',
+                    S.failedToLoadMembers,
                     style: AppTextStyles.sectionHeader
                         .copyWith(color: AppColors.error),
                   ),
@@ -58,14 +59,7 @@ class ManageMembersScreen extends ConsumerWidget {
                 color: AppColors.textPrimary, size: 28),
           ),
           Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('MANAGE MEMBERS', style: AppTextStyles.screenTitle),
-                const SizedBox(height: 2),
-                Text('ROLE & ACCESS CONTROL', style: AppTextStyles.subtitle),
-              ],
-            ),
+            child: Text(S.manageMembers, style: AppTextStyles.screenTitle),
           ),
           IconButton(
             onPressed: () => _shareInvite(context, ref),
@@ -82,12 +76,12 @@ class ManageMembersScreen extends ConsumerWidget {
       final link = await ref
           .read(listDetailProvider(listId).notifier)
           .getInviteLink();
-      await Share.share('Join my board on Ranked: rankapp://invite/$link');
+      await Share.share(S.shareMessage(link));
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('FAILED TO GET INVITE: $e'),
+            content: Text(S.failedToGetInvite(e)),
             backgroundColor: AppColors.error,
           ),
         );
@@ -107,7 +101,7 @@ class _MembersList extends ConsumerWidget {
     if (members.isEmpty) {
       return Center(
         child: Text(
-          'NO MEMBERS',
+          S.noMembers,
           style: AppTextStyles.bodySecondary
               .copyWith(color: AppColors.textTertiary),
         ),
@@ -243,22 +237,22 @@ class _MemberRow extends ConsumerWidget {
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: AppColors.card,
-        title: Text('REMOVE MEMBER',
+        title: Text(S.removeMember,
             style: AppTextStyles.screenTitle.copyWith(fontSize: 16)),
         content: Text(
-          'Remove ${member.displayName} from this board?',
+          S.removeMemberConfirm(member.displayName),
           style: AppTextStyles.bodySecondary,
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: Text('CANCEL',
+            child: Text(S.cancel,
                 style: AppTextStyles.button
                     .copyWith(color: AppColors.textSecondary)),
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: Text('REMOVE',
+            child: Text(S.remove,
                 style: AppTextStyles.button.copyWith(color: AppColors.error)),
           ),
         ],
@@ -281,7 +275,7 @@ class _MemberRow extends ConsumerWidget {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('SET ROLE', style: AppTextStyles.screenTitle),
+            Text(S.setRole, style: AppTextStyles.screenTitle),
             const SizedBox(height: 4),
             Text(member.displayName.toUpperCase(),
                 style: AppTextStyles.subtitle),

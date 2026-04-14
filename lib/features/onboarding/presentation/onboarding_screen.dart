@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../core/router/router.dart';
+import '../../../core/strings.dart';
 import '../../../core/theme/colors.dart';
 import '../../../core/theme/text_styles.dart';
 
@@ -25,21 +26,18 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   static const _pages = [
     _OnboardingPage(
       icon: Icons.leaderboard_outlined,
-      title: 'COMPETE & RANK',
-      body:
-          'Create leaderboards for anything — fitness goals, investments, gaming scores, study hours. Track who\'s on top.',
+      title: S.onboardingTitle1,
+      body: S.onboardingBody1,
     ),
     _OnboardingPage(
       icon: Icons.group_outlined,
-      title: 'BUILD YOUR CREW',
-      body:
-          'Invite friends and colleagues to your boards. Coordinate via Telegram, Discord, or WhatsApp groups.',
+      title: S.onboardingTitle2,
+      body: S.onboardingBody2,
     ),
     _OnboardingPage(
       icon: Icons.verified_outlined,
-      title: 'VERIFIED ENTRIES',
-      body:
-          'Admins approve submissions before they go live. Share proof in your community group to climb the ranks.',
+      title: S.onboardingTitle3,
+      body: S.onboardingBody3,
     ),
   ];
 
@@ -72,7 +70,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                 padding: const EdgeInsets.fromLTRB(0, 12, 16, 0),
                 child: TextButton(
                   onPressed: _complete,
-                  child: Text('SKIP',
+                  child: Text(S.skip,
                       style: AppTextStyles.button
                           .copyWith(color: AppColors.textTertiary)),
                 ),
@@ -165,8 +163,8 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                       ),
                       child: Text(
                         _currentPage == _pages.length - 1
-                            ? 'GET STARTED'
-                            : 'NEXT',
+                            ? S.getStarted
+                            : S.next,
                         style: AppTextStyles.button
                             .copyWith(color: AppColors.background),
                       ),

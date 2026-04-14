@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../core/strings.dart';
 import '../../../core/theme/colors.dart';
 import '../../../core/theme/text_styles.dart';
 import '../../../shared/widgets/app_button.dart';
@@ -61,35 +62,35 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Text(
-                  'RANKED',
+                  S.appName,
                   style: AppTextStyles.displayLarge,
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Sign in to your account',
+                  S.signInSubtitle,
                   style: AppTextStyles.subtitle,
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 48),
                 AppTextField(
                   controller: _emailController,
-                  label: 'Email',
-                  hint: 'you@example.com',
+                  label: S.email,
+                  hint: S.emailHint,
                   keyboardType: TextInputType.emailAddress,
                   prefixIcon: const Icon(Icons.email_outlined),
                   validator: (value) {
                     if (value == null || value.trim().isEmpty) {
-                      return 'Email is required';
+                      return S.emailRequired;
                     }
-                    if (!value.contains('@')) return 'Invalid email';
+                    if (!value.contains('@')) return S.emailInvalid;
                     return null;
                   },
                 ),
                 const SizedBox(height: 16),
                 AppTextField(
                   controller: _passwordController,
-                  label: 'Password',
+                  label: S.password,
                   obscureText: _obscurePassword,
                   prefixIcon: const Icon(Icons.lock_outlined),
                   suffixIcon: IconButton(
@@ -103,17 +104,17 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   ),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
-                      return 'Password is required';
+                      return S.passwordRequired;
                     }
                     if (value.length < 6) {
-                      return 'Password must be at least 6 characters';
+                      return S.passwordTooShort;
                     }
                     return null;
                   },
                 ),
                 const SizedBox(height: 24),
                 AppButton(
-                  label: 'SIGN IN',
+                  label: S.signIn,
                   onPressed: _login,
                   isLoading: authState.isLoading,
                 ),
@@ -123,14 +124,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     const Expanded(child: Divider(color: AppColors.border)),
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: Text('or', style: AppTextStyles.label),
+                      child: Text(S.or, style: AppTextStyles.label),
                     ),
                     const Expanded(child: Divider(color: AppColors.border)),
                   ],
                 ),
                 const SizedBox(height: 16),
                 AppButton(
-                  label: 'SIGN IN WITH APPLE',
+                  label: S.signInApple,
                   icon: Icons.apple,
                   onPressed: () =>
                       ref.read(authProvider.notifier).signInWithApple(),
@@ -140,7 +141,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 TextButton(
                   onPressed: () => context.go('/register'),
                   child: Text(
-                    "Don't have an account? Sign up",
+                    S.noAccount,
                     style: AppTextStyles.label.copyWith(color: AppColors.accent),
                   ),
                 ),

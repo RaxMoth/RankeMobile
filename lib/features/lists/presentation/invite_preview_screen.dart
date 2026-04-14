@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/strings.dart';
 import '../../../core/theme/colors.dart';
 import '../../../core/theme/text_styles.dart';
 import '../../../shared/widgets/value_type_badge.dart';
@@ -31,7 +32,7 @@ class InvitePreviewScreen extends ConsumerWidget {
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: Text('JOINED ${list.title.toUpperCase()}'),
+                      content: Text(S.joinedBoard(list.title)),
                       backgroundColor: AppColors.success,
                       behavior: SnackBarBehavior.floating,
                     ),
@@ -42,7 +43,7 @@ class InvitePreviewScreen extends ConsumerWidget {
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: Text('FAILED TO JOIN: $e'),
+                      content: Text(S.failedToJoin(e)),
                       backgroundColor: AppColors.error,
                       behavior: SnackBarBehavior.floating,
                     ),
@@ -64,12 +65,12 @@ class InvitePreviewScreen extends ConsumerWidget {
                   const Icon(Icons.link_off,
                       color: AppColors.error, size: 48),
                   const SizedBox(height: 16),
-                  Text('INVALID INVITE',
+                  Text(S.invalidInvite,
                       style: AppTextStyles.sectionHeader
                           .copyWith(color: AppColors.error)),
                   const SizedBox(height: 8),
                   Text(
-                    'THIS INVITE LINK MAY HAVE EXPIRED\nOR BEEN REVOKED',
+                    S.inviteExpired,
                     style: AppTextStyles.badge
                         .copyWith(color: AppColors.textTertiary),
                     textAlign: TextAlign.center,
@@ -77,7 +78,7 @@ class InvitePreviewScreen extends ConsumerWidget {
                   const SizedBox(height: 24),
                   TextButton(
                     onPressed: () => context.go('/home'),
-                    child: Text('GO HOME',
+                    child: Text(S.goHome,
                         style: AppTextStyles.button
                             .copyWith(color: AppColors.accent)),
                   ),

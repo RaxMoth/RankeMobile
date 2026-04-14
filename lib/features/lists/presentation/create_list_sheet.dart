@@ -4,12 +4,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/dev/mock_lists_repository.dart';
+import '../../../core/strings.dart';
 import '../../../core/theme/colors.dart';
 import '../../../core/theme/text_styles.dart';
 import '../domain/entities/ranked_list.dart';
 import 'providers/lists_provider.dart';
 
-/// Create list screen for new boards.
 class CreateListScreen extends ConsumerStatefulWidget {
   const CreateListScreen({super.key});
 
@@ -46,7 +46,7 @@ class _CreateListScreenState extends ConsumerState<CreateListScreen> {
   Future<void> _submit() async {
     final title = _titleController.text.trim();
     if (title.isEmpty) {
-      setState(() => _titleError = 'BOARD IDENTIFIER REQUIRED');
+      setState(() => _titleError = S.boardIdentifierRequired);
       return;
     }
     setState(() {
@@ -75,15 +75,12 @@ class _CreateListScreenState extends ConsumerState<CreateListScreen> {
                 : _discordController.text.trim(),
           );
       HapticFeedback.mediumImpact();
-      if (mounted) {
-        // CREATE is a shell tab, not a pushed route — navigate to HOME
-        context.go('/home');
-      }
+      if (mounted) context.go('/home');
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('FAILED TO CREATE BOARD: $e'),
+            content: Text(S.failedToCreateBoard(e)),
             backgroundColor: AppColors.error,
           ),
         );
@@ -99,23 +96,41 @@ class _CreateListScreenState extends ConsumerState<CreateListScreen> {
       body: SafeArea(
         child: Column(
           children: [
-            _buildHeader(),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 12, 8, 0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(S.createBoard, style: AppTextStyles.screenTitle),
+                  TextButton(
+                    onPressed: () => context.go('/home'),
+                    child: Text(
+                      S.cancel,
+                      style: AppTextStyles.badge.copyWith(
+                        color: AppColors.textTertiary,
+                        letterSpacing: 1.0,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
             Expanded(
               child: ListView(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 children: [
                   const SizedBox(height: 24),
                   _buildField(
-                    label: 'BOARD IDENTIFIER',
+                    label: S.boardIdentifier,
                     controller: _titleController,
-                    hint: 'E.G. Q4 REVENUE GAINS',
+                    hint: S.boardIdentifierHint,
                     errorText: _titleError,
                   ),
                   const SizedBox(height: 24),
                   _buildField(
-                    label: 'SCOPE & OBJECTIVE',
+                    label: S.scopeObjective,
                     controller: _scopeController,
-                    hint: 'DESCRIBE THE CRITERIA FOR ENTRY...',
+                    hint: S.scopeHint,
                     maxLines: 3,
                   ),
                   const SizedBox(height: 24),
@@ -132,7 +147,7 @@ class _CreateListScreenState extends ConsumerState<CreateListScreen> {
                   _buildCommsSection(),
                   const SizedBox(height: 16),
                   Text(
-                    'AGREEMENT OF TERMINAL SERVICE TERMS REQUIRED',
+                    S.termsAgreement,
                     style: AppTextStyles.badge.copyWith(
                       color: AppColors.textTertiary,
                       letterSpacing: 1.5,
@@ -147,28 +162,6 @@ class _CreateListScreenState extends ConsumerState<CreateListScreen> {
             ),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _buildHeader() {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 12, 8, 0),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text('CREATE BOARD', style: AppTextStyles.screenTitle),
-          TextButton(
-            onPressed: () => context.go('/home'),
-            child: Text(
-              'CANCEL',
-              style: AppTextStyles.badge.copyWith(
-                color: AppColors.textTertiary,
-                letterSpacing: 1.0,
-              ),
-            ),
-          ),
-        ],
       ),
     );
   }
@@ -211,7 +204,7 @@ class _CreateListScreenState extends ConsumerState<CreateListScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('VALUE TYPE',
+        Text(S.valueType,
             style: AppTextStyles.sectionHeader.copyWith(fontSize: 11)),
         const SizedBox(height: 10),
         Row(
@@ -222,10 +215,7 @@ class _CreateListScreenState extends ConsumerState<CreateListScreen> {
                 onTap: () {
                   setState(() {
                     _valueType = type;
-                    // Text type is always manual ranking
-                    if (type == ValueType.text) {
-                      _rankOrder = RankOrder.asc;
-                    }
+                    if (type == ValueType.text) _rankOrder = RankOrder.asc;
                   });
                 },
                 child: Container(
@@ -239,8 +229,7 @@ class _CreateListScreenState extends ConsumerState<CreateListScreen> {
                         : AppColors.surface,
                     borderRadius: BorderRadius.circular(8),
                     border: Border.all(
-                      color:
-                          isSelected ? AppColors.accent : AppColors.border,
+                      color: isSelected ? AppColors.accent : AppColors.border,
                       width: isSelected ? 1.5 : 1,
                     ),
                   ),
@@ -260,9 +249,8 @@ class _CreateListScreenState extends ConsumerState<CreateListScreen> {
                           color: isSelected
                               ? AppColors.accent
                               : AppColors.textSecondary,
-                          fontWeight: isSelected
-                              ? FontWeight.w800
-                              : FontWeight.w600,
+                          fontWeight:
+                              isSelected ? FontWeight.w800 : FontWeight.w600,
                         ),
                       ),
                     ],
@@ -297,7 +285,7 @@ class _CreateListScreenState extends ConsumerState<CreateListScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'RANK ORDER',
+                S.rankOrder,
                 style: AppTextStyles.body.copyWith(
                   fontWeight: FontWeight.w700,
                   fontSize: 13,
@@ -307,10 +295,10 @@ class _CreateListScreenState extends ConsumerState<CreateListScreen> {
               const SizedBox(height: 2),
               Text(
                 isText
-                    ? 'MANUAL RANKING FOR TEXT'
+                    ? S.manualRankingText
                     : _rankOrder == RankOrder.desc
-                        ? 'HIGHEST VALUE WINS'
-                        : 'LOWEST VALUE WINS',
+                        ? S.highestWins
+                        : S.lowestWins,
                 style:
                     AppTextStyles.badge.copyWith(color: AppColors.textTertiary),
               ),
@@ -319,9 +307,9 @@ class _CreateListScreenState extends ConsumerState<CreateListScreen> {
           if (!isText)
             Row(
               children: [
-                _orderChip('HIGH\u2192LOW', RankOrder.desc),
+                _orderChip(S.highToLow, RankOrder.desc),
                 const SizedBox(width: 8),
-                _orderChip('LOW\u2192HIGH', RankOrder.asc),
+                _orderChip(S.lowToHigh, RankOrder.asc),
               ],
             ),
         ],
@@ -368,13 +356,13 @@ class _CreateListScreenState extends ConsumerState<CreateListScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'PUBLIC REGISTRY',
+                S.publicRegistry,
                 style: AppTextStyles.body
                     .copyWith(fontWeight: FontWeight.w700, fontSize: 13),
               ),
               const SizedBox(height: 2),
               Text(
-                'VISIBLE TO ALL USERS',
+                S.visibleToAll,
                 style:
                     AppTextStyles.badge.copyWith(color: AppColors.textTertiary),
               ),
@@ -393,7 +381,7 @@ class _CreateListScreenState extends ConsumerState<CreateListScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('CATEGORY',
+        Text(S.category,
             style: AppTextStyles.sectionHeader.copyWith(fontSize: 11)),
         const SizedBox(height: 10),
         Wrap(
@@ -402,8 +390,8 @@ class _CreateListScreenState extends ConsumerState<CreateListScreen> {
           children: BoardCategory.all.map((cat) {
             final isSelected = _category == cat;
             return GestureDetector(
-              onTap: () => setState(
-                  () => _category = isSelected ? null : cat),
+              onTap: () =>
+                  setState(() => _category = isSelected ? null : cat),
               child: Container(
                 padding:
                     const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
@@ -423,8 +411,7 @@ class _CreateListScreenState extends ConsumerState<CreateListScreen> {
                     color: isSelected
                         ? AppColors.accent
                         : AppColors.textSecondary,
-                    fontWeight:
-                        isSelected ? FontWeight.w800 : FontWeight.w500,
+                    fontWeight: isSelected ? FontWeight.w800 : FontWeight.w500,
                   ),
                 ),
               ),
@@ -433,7 +420,7 @@ class _CreateListScreenState extends ConsumerState<CreateListScreen> {
         ),
         const SizedBox(height: 6),
         Text(
-          _category != null ? 'TAP AGAIN TO DESELECT' : 'OPTIONAL — HELPS USERS DISCOVER YOUR BOARD',
+          _category != null ? S.categoryDeselectHint : S.categoryHelp,
           style: AppTextStyles.badge.copyWith(color: AppColors.textTertiary),
         ),
       ],
@@ -444,10 +431,8 @@ class _CreateListScreenState extends ConsumerState<CreateListScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'EXECUTION RULES (OPTIONAL)',
-          style: AppTextStyles.sectionHeader.copyWith(fontSize: 11),
-        ),
+        Text(S.executionRules,
+            style: AppTextStyles.sectionHeader.copyWith(fontSize: 11)),
         const SizedBox(height: 10),
         Container(
           decoration: BoxDecoration(
@@ -473,7 +458,7 @@ class _CreateListScreenState extends ConsumerState<CreateListScreen> {
                   maxLines: 2,
                   style: AppTextStyles.body,
                   decoration: InputDecoration(
-                    hintText: 'SPECIFY EVIDENCE REQUIREMENTS...',
+                    hintText: S.rulesHint,
                     hintStyle: AppTextStyles.bodySecondary.copyWith(
                       color: AppColors.accentDim,
                       letterSpacing: 0.5,
@@ -510,17 +495,13 @@ class _CreateListScreenState extends ConsumerState<CreateListScreen> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  'COMMUNICATION CHANNELS',
-                  style: AppTextStyles.sectionHeader.copyWith(fontSize: 11),
-                ),
+                Text(S.commsChannels,
+                    style: AppTextStyles.sectionHeader.copyWith(fontSize: 11)),
                 Row(
                   children: [
-                    Text(
-                      'OPTIONAL',
-                      style: AppTextStyles.badge
-                          .copyWith(color: AppColors.textTertiary),
-                    ),
+                    Text(S.optional,
+                        style: AppTextStyles.badge
+                            .copyWith(color: AppColors.textTertiary)),
                     const SizedBox(width: 8),
                     Icon(
                       _showCommsFields
@@ -537,11 +518,9 @@ class _CreateListScreenState extends ConsumerState<CreateListScreen> {
         ),
         if (_showCommsFields) ...[
           const SizedBox(height: 10),
-          _commsField(
-              _telegramController, 'https://t.me/...', Icons.send),
+          _commsField(_telegramController, 'https://t.me/...', Icons.send),
           const SizedBox(height: 10),
-          _commsField(
-              _whatsappController, 'https://wa.me/...', Icons.chat),
+          _commsField(_whatsappController, 'https://wa.me/...', Icons.chat),
           const SizedBox(height: 10),
           _commsField(
               _discordController, 'https://discord.gg/...', Icons.headphones),
@@ -585,7 +564,7 @@ class _CreateListScreenState extends ConsumerState<CreateListScreen> {
                   color: AppColors.background,
                 ),
               )
-            : const Text('PREVIEW & CREATE'),
+            : const Text(S.previewCreate),
       ),
     );
   }
@@ -593,7 +572,7 @@ class _CreateListScreenState extends ConsumerState<CreateListScreen> {
   void _showPreview() {
     final title = _titleController.text.trim();
     if (title.isEmpty) {
-      setState(() => _titleError = 'BOARD IDENTIFIER REQUIRED');
+      setState(() => _titleError = S.boardIdentifierRequired);
       return;
     }
     setState(() => _titleError = null);
@@ -612,7 +591,6 @@ class _CreateListScreenState extends ConsumerState<CreateListScreen> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Handle bar
             Center(
               child: Container(
                 width: 40,
@@ -624,11 +602,8 @@ class _CreateListScreenState extends ConsumerState<CreateListScreen> {
               ),
             ),
             const SizedBox(height: 20),
-            Text('BOARD PREVIEW', style: AppTextStyles.screenTitle),
-            const SizedBox(height: 4),
-            Text('REVIEW BEFORE CREATION', style: AppTextStyles.subtitle),
+            Text(S.boardPreview, style: AppTextStyles.screenTitle),
             const SizedBox(height: 20),
-            // Preview card
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(16),
@@ -640,8 +615,7 @@ class _CreateListScreenState extends ConsumerState<CreateListScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(title.toUpperCase(),
-                      style: AppTextStyles.boardTitle),
+                  Text(title.toUpperCase(), style: AppTextStyles.boardTitle),
                   if (_scopeController.text.trim().isNotEmpty) ...[
                     const SizedBox(height: 8),
                     Text(
@@ -660,15 +634,13 @@ class _CreateListScreenState extends ConsumerState<CreateListScreen> {
                           _valueType.name.toUpperCase(), AppColors.accent),
                       _previewChip(
                         _rankOrder == RankOrder.desc
-                            ? 'HIGHEST WINS'
-                            : 'LOWEST WINS',
+                            ? S.highestWinsShort
+                            : S.lowestWinsShort,
                         AppColors.textSecondary,
                       ),
                       _previewChip(
-                        _isPublic ? 'PUBLIC' : 'PRIVATE',
-                        _isPublic
-                            ? AppColors.success
-                            : AppColors.warning,
+                        _isPublic ? S.publicLabel : S.privateLabel,
+                        _isPublic ? AppColors.success : AppColors.warning,
                       ),
                       if (_category != null)
                         _previewChip(_category!, AppColors.textSecondary),
@@ -678,7 +650,6 @@ class _CreateListScreenState extends ConsumerState<CreateListScreen> {
               ),
             ),
             const SizedBox(height: 24),
-            // Confirm + cancel
             Row(
               children: [
                 Expanded(
@@ -688,7 +659,7 @@ class _CreateListScreenState extends ConsumerState<CreateListScreen> {
                       side: const BorderSide(color: AppColors.border),
                       padding: const EdgeInsets.symmetric(vertical: 14),
                     ),
-                    child: Text('EDIT',
+                    child: Text(S.edit,
                         style: AppTextStyles.button
                             .copyWith(color: AppColors.textSecondary)),
                   ),
@@ -704,7 +675,7 @@ class _CreateListScreenState extends ConsumerState<CreateListScreen> {
                       backgroundColor: AppColors.accent,
                       padding: const EdgeInsets.symmetric(vertical: 14),
                     ),
-                    child: Text('CREATE',
+                    child: Text(S.create,
                         style: AppTextStyles.button
                             .copyWith(color: AppColors.background)),
                   ),
@@ -726,8 +697,7 @@ class _CreateListScreenState extends ConsumerState<CreateListScreen> {
         borderRadius: BorderRadius.circular(4),
         border: Border.all(color: color.withAlpha(60)),
       ),
-      child: Text(label,
-          style: AppTextStyles.badge.copyWith(color: color)),
+      child: Text(label, style: AppTextStyles.badge.copyWith(color: color)),
     );
   }
 
@@ -741,12 +711,9 @@ class _CreateListScreenState extends ConsumerState<CreateListScreen> {
 
   String _descriptionForType(ValueType type) {
     return switch (type) {
-      ValueType.number =>
-        'NUMERIC VALUES \u2022 e.g. 48.2, 156, 31240',
-      ValueType.duration =>
-        'TIME-BASED VALUES \u2022 e.g. 15:23, 1:02:45',
-      ValueType.text =>
-        'TEXT ENTRIES WITH MANUAL RANKING \u2022 e.g. "Completed Q4"',
+      ValueType.number => S.valueTypeNumber,
+      ValueType.duration => S.valueTypeDuration,
+      ValueType.text => S.valueTypeText,
     };
   }
 }
