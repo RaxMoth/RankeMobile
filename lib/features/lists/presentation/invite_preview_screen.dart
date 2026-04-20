@@ -6,6 +6,7 @@ import '../../../core/strings.dart';
 import '../../../core/theme/colors.dart';
 import '../../../core/theme/text_styles.dart';
 import '../../../shared/widgets/value_type_badge.dart';
+import '../domain/entities/ranked_list.dart';
 import 'providers/lists_provider.dart';
 
 /// Invite preview screen — shown via deep link, lets user preview and join a board.
@@ -25,9 +26,7 @@ class InvitePreviewScreen extends ConsumerWidget {
             list: list,
             onJoin: () async {
               try {
-                await ref
-                    .read(invitePreviewProvider(token).notifier)
-                    .join();
+                await ref.read(invitePreviewProvider(token).notifier).join();
                 ref.invalidate(listsProvider);
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
@@ -62,25 +61,31 @@ class InvitePreviewScreen extends ConsumerWidget {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(Icons.link_off,
-                      color: AppColors.error, size: 48),
+                  const Icon(Icons.link_off, color: AppColors.error, size: 48),
                   const SizedBox(height: 16),
-                  Text(S.invalidInvite,
-                      style: AppTextStyles.sectionHeader
-                          .copyWith(color: AppColors.error)),
+                  Text(
+                    S.invalidInvite,
+                    style: AppTextStyles.sectionHeader.copyWith(
+                      color: AppColors.error,
+                    ),
+                  ),
                   const SizedBox(height: 8),
                   Text(
                     S.inviteExpired,
-                    style: AppTextStyles.badge
-                        .copyWith(color: AppColors.textTertiary),
+                    style: AppTextStyles.badge.copyWith(
+                      color: AppColors.textTertiary,
+                    ),
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 24),
                   TextButton(
                     onPressed: () => context.go('/home'),
-                    child: Text(S.goHome,
-                        style: AppTextStyles.button
-                            .copyWith(color: AppColors.accent)),
+                    child: Text(
+                      S.goHome,
+                      style: AppTextStyles.button.copyWith(
+                        color: AppColors.accent,
+                      ),
+                    ),
                   ),
                 ],
               ),
@@ -93,7 +98,7 @@ class InvitePreviewScreen extends ConsumerWidget {
 }
 
 class _InviteContent extends StatelessWidget {
-  final dynamic list;
+  final RankedList list;
   final VoidCallback onJoin;
   final VoidCallback onBack;
 
@@ -114,20 +119,13 @@ class _InviteContent extends StatelessWidget {
             children: [
               IconButton(
                 onPressed: onBack,
-                icon: const Icon(Icons.chevron_left,
-                    color: AppColors.textPrimary, size: 28),
-              ),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('INVITE', style: AppTextStyles.displayLarge),
-                    const SizedBox(height: 2),
-                    Text('YOU\'VE BEEN INVITED',
-                        style: AppTextStyles.subtitle),
-                  ],
+                icon: const Icon(
+                  Icons.chevron_left,
+                  color: AppColors.textPrimary,
+                  size: 28,
                 ),
               ),
+              Text(S.joinBoard, style: AppTextStyles.screenTitle),
             ],
           ),
           const Spacer(),
@@ -142,8 +140,11 @@ class _InviteContent extends StatelessWidget {
             ),
             child: Column(
               children: [
-                const Icon(Icons.group_add_outlined,
-                    color: AppColors.accent, size: 48),
+                const Icon(
+                  Icons.group_add_outlined,
+                  color: AppColors.accent,
+                  size: 48,
+                ),
                 const SizedBox(height: 20),
                 Text(
                   list.title.toUpperCase(),
@@ -156,13 +157,17 @@ class _InviteContent extends StatelessWidget {
                   children: [
                     ValueTypeBadge(valueType: list.valueType),
                     const SizedBox(width: 12),
-                    Icon(Icons.people_outline,
-                        size: 14, color: AppColors.textTertiary),
+                    Icon(
+                      Icons.people_outline,
+                      size: 14,
+                      color: AppColors.textTertiary,
+                    ),
                     const SizedBox(width: 4),
                     Text(
-                      '${list.memberCount} MEMBERS',
-                      style: AppTextStyles.badge
-                          .copyWith(color: AppColors.textTertiary),
+                      S.membersCount(list.memberCount),
+                      style: AppTextStyles.badge.copyWith(
+                        color: AppColors.textTertiary,
+                      ),
                     ),
                   ],
                 ),
@@ -180,10 +185,11 @@ class _InviteContent extends StatelessWidget {
                 const SizedBox(height: 8),
                 Text(
                   list.rankOrder.name == 'desc'
-                      ? 'HIGHEST WINS'
-                      : 'LOWEST WINS',
-                  style: AppTextStyles.badge
-                      .copyWith(color: AppColors.textTertiary),
+                      ? S.highestWinsShort
+                      : S.lowestWinsShort,
+                  style: AppTextStyles.badge.copyWith(
+                    color: AppColors.textTertiary,
+                  ),
                 ),
               ],
             ),
@@ -199,12 +205,11 @@ class _InviteContent extends StatelessWidget {
                 disabledBackgroundColor: AppColors.surfaceLight,
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8)),
+                  borderRadius: BorderRadius.circular(8),
+                ),
               ),
               child: Text(
-                list.currentUserRole != null
-                    ? 'ALREADY A MEMBER'
-                    : 'JOIN BOARD',
+                list.currentUserRole != null ? S.alreadyMember : S.joinBoard,
                 style: AppTextStyles.button.copyWith(
                   color: list.currentUserRole != null
                       ? AppColors.textTertiary
@@ -216,9 +221,12 @@ class _InviteContent extends StatelessWidget {
           const SizedBox(height: 12),
           TextButton(
             onPressed: onBack,
-            child: Text('MAYBE LATER',
-                style: AppTextStyles.button
-                    .copyWith(color: AppColors.textSecondary)),
+            child: Text(
+              S.maybeLater,
+              style: AppTextStyles.button.copyWith(
+                color: AppColors.textSecondary,
+              ),
+            ),
           ),
           const Spacer(),
         ],

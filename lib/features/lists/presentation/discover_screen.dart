@@ -8,6 +8,7 @@ import '../../../core/strings.dart';
 import '../../../core/theme/colors.dart';
 import '../../../core/theme/responsive.dart';
 import '../../../core/theme/text_styles.dart';
+import '../../../shared/widgets/create_fab.dart';
 import '../../../shared/widgets/shimmer_loading.dart';
 import '../../../shared/widgets/value_type_badge.dart';
 import '../domain/entities/ranked_list.dart';
@@ -45,6 +46,7 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
     final selectedCategory = ref.watch(discoverCategoryProvider);
 
     return Scaffold(
+      floatingActionButton: const CreateFab(),
       body: SafeArea(
         child: RefreshIndicator(
           color: AppColors.accent,
@@ -60,8 +62,6 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(S.tabDiscover, style: AppTextStyles.screenTitle),
-                    const SizedBox(height: 12),
                     TextField(
                       controller: _searchController,
                       style: AppTextStyles.body,
@@ -91,32 +91,26 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
                 ),
               ),
             ),
-            // Category chips
+            // Category chips — no "ALL" chip; unselected = show all, tap again to deselect
             SliverToBoxAdapter(
               child: SizedBox(
                 height: Responsive.scale(context, 36),
-                child: ListView(
+                child: ListView.separated(
                   scrollDirection: Axis.horizontal,
                   padding: const EdgeInsets.symmetric(horizontal: 20),
-                  children: [
-                    _CategoryChip(
-                      label: S.all,
-                      isSelected: selectedCategory == null,
+                  itemCount: BoardCategory.all.length,
+                  separatorBuilder: (_, _) => const SizedBox(width: 8),
+                  itemBuilder: (context, i) {
+                    final cat = BoardCategory.all[i];
+                    final isSelected = selectedCategory == cat;
+                    return _CategoryChip(
+                      label: cat,
+                      isSelected: isSelected,
                       onTap: () => ref
                           .read(discoverCategoryProvider.notifier)
-                          .state = null,
-                    ),
-                    ...BoardCategory.all.map((cat) => Padding(
-                          padding: const EdgeInsets.only(left: 8),
-                          child: _CategoryChip(
-                            label: cat,
-                            isSelected: selectedCategory == cat,
-                            onTap: () => ref
-                                .read(discoverCategoryProvider.notifier)
-                                .state = cat,
-                          ),
-                        )),
-                  ],
+                          .state = isSelected ? null : cat,
+                    );
+                  },
                 ),
               ),
             ),

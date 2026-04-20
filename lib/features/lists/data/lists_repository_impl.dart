@@ -43,14 +43,14 @@ class ListsRepositoryImpl implements ListsRepository {
     return safeApiCall(() async {
       final data = await _dataSource.createList({
         'title': title,
-        if (description != null) 'description': description,
+        'description': ?description,
         'valueType': valueType.name,
         'rankOrder': rankOrder.name,
         'isPublic': isPublic,
-        if (category != null) 'category': category,
-        if (telegramLink != null) 'telegramLink': telegramLink,
-        if (whatsappLink != null) 'whatsappLink': whatsappLink,
-        if (discordLink != null) 'discordLink': discordLink,
+        'category': ?category,
+        'telegramLink': ?telegramLink,
+        'whatsappLink': ?whatsappLink,
+        'discordLink': ?discordLink,
       });
       return _mapRankedList(data);
     });
@@ -128,13 +128,13 @@ class ListsRepositoryImpl implements ListsRepository {
   }) {
     return safeApiCall(() async {
       final data = await _dataSource.updateList(listId, {
-        if (title != null) 'title': title,
-        if (description != null) 'description': description,
-        if (isPublic != null) 'isPublic': isPublic,
-        if (locked != null) 'locked': locked,
-        if (telegramLink != null) 'telegramLink': telegramLink,
-        if (whatsappLink != null) 'whatsappLink': whatsappLink,
-        if (discordLink != null) 'discordLink': discordLink,
+        'title': ?title,
+        'description': ?description,
+        'isPublic': ?isPublic,
+        'locked': ?locked,
+        'telegramLink': ?telegramLink,
+        'whatsappLink': ?whatsappLink,
+        'discordLink': ?discordLink,
       });
       return _mapRankedList(data);
     });

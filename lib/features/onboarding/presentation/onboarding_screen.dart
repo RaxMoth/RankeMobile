@@ -42,7 +42,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   ];
 
   Future<void> _complete() async {
-    HapticFeedback.mediumImpact();
+    await HapticFeedback.mediumImpact();
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(_onboardingCompleteKey, true);
     // Update in-memory state so router redirect sees the change immediately
@@ -70,9 +70,12 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                 padding: const EdgeInsets.fromLTRB(0, 12, 16, 0),
                 child: TextButton(
                   onPressed: _complete,
-                  child: Text(S.skip,
-                      style: AppTextStyles.button
-                          .copyWith(color: AppColors.textTertiary)),
+                  child: Text(
+                    S.skip,
+                    style: AppTextStyles.button.copyWith(
+                      color: AppColors.textTertiary,
+                    ),
+                  ),
                 ),
               ),
             ),
@@ -98,11 +101,16 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                           decoration: BoxDecoration(
                             color: AppColors.accent.withAlpha(20),
                             borderRadius: BorderRadius.circular(40),
-                            border:
-                                Border.all(color: AppColors.accent, width: 2),
+                            border: Border.all(
+                              color: AppColors.accent,
+                              width: 2,
+                            ),
                           ),
-                          child:
-                              Icon(page.icon, color: AppColors.accent, size: 36),
+                          child: Icon(
+                            page.icon,
+                            color: AppColors.accent,
+                            size: 36,
+                          ),
                         ),
                         const SizedBox(height: 32),
                         Text(page.title, style: AppTextStyles.displayLarge),
@@ -159,14 +167,16 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                         backgroundColor: AppColors.accent,
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8)),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
                       ),
                       child: Text(
                         _currentPage == _pages.length - 1
                             ? S.getStarted
                             : S.next,
-                        style: AppTextStyles.button
-                            .copyWith(color: AppColors.background),
+                        style: AppTextStyles.button.copyWith(
+                          color: AppColors.background,
+                        ),
                       ),
                     ),
                   ),

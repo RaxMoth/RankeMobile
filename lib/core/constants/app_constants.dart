@@ -1,7 +1,9 @@
+import '../config/app_config.dart';
+
 /// Application-wide constants
 abstract class AppConstants {
   // API Configuration
-  static const String apiBaseUrl = 'https://api.example.com';
+  static String get apiBaseUrl => AppConfig.apiBaseUrl;
   static const Duration apiTimeout = Duration(seconds: 30);
 
   // Secure Storage Keys
@@ -15,8 +17,8 @@ abstract class AppConstants {
   static const String languageKey = 'language_preference';
 
   // App Configuration
-  static const String appName = 'Ranke';
-  static const String appVersion = '1.0.0';
+  static String get appName => AppConfig.appDisplayName;
+  static String get appVersion => AppConfig.appVersionLabel;
 
   // UI Padding Constants
   static const double paddingXSmall = 4.0;

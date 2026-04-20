@@ -4,14 +4,18 @@ import 'package:flutter/material.dart';
 abstract class AppColors {
   // Backgrounds
   static const Color background = Color(0xFF0A0A0A);
+  static const Color backgroundElevated = Color(0xFF101113);
   static const Color surface = Color(0xFF141414);
   static const Color surfaceLight = Color(0xFF1E1E1E);
   static const Color card = Color(0xFF1A1A1A);
+  static const Color glass = Color(0x1FFFFFFF);
 
   // Accent — amber/gold
   static const Color accent = Color(0xFFD4A017);
   static const Color accentLight = Color(0xFFE8C547);
   static const Color accentDim = Color(0xFF8B6914);
+  static const Color accentSoft = Color(0xFFF7CF69);
+  static const Color electricBlue = Color(0xFF47B5FF);
 
   // Text
   static const Color textPrimary = Color(0xFFFFFFFF);
@@ -27,6 +31,10 @@ abstract class AppColors {
   static const Color success = Color(0xFF4CAF50);
   static const Color error = Color(0xFFE53935);
   static const Color warning = Color(0xFFFFC107);
+
+  // Ambient gradients
+  static const Color ambientTop = Color(0xFF12141A);
+  static const Color ambientBottom = Color(0xFF090909);
 
   // Category colors (for left border accents on directory items)
   static const Color categoryFinance = Color(0xFFD4A017);

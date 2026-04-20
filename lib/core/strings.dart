@@ -1,3 +1,5 @@
+import 'constants/app_constants.dart';
+
 /// Centralized UI strings for the Ranked app.
 /// All user-facing text lives here for maintainability and future i18n.
 abstract class S {
@@ -41,26 +43,26 @@ abstract class S {
   static const saved = 'SAVED';
   static const noBoardsYet = 'NO BOARDS YET';
   static const noBoardsHint =
-      'CREATE A BOARD OR DISCOVER\nPUBLIC BOARDS TO GET STARTED';
+      'Create a board or discover\npublic boards to get started';
   static const create = 'CREATE';
   static const discover = 'DISCOVER';
   static const failedToLoad = 'FAILED TO LOAD';
 
   // ── Discover ───────────────────────────────────────────────────
-  static const searchBoards = 'SEARCH BOARDS...';
+  static const searchBoards = 'Search boards...';
   static const all = 'ALL';
   static const noBoardsFound = 'NO BOARDS FOUND';
-  static const tryDifferentSearch = 'TRY A DIFFERENT SEARCH OR CATEGORY';
+  static const tryDifferentSearch = 'Try a different search or category';
   static const clearSearch = 'CLEAR SEARCH';
 
   // ── Create board ───────────────────────────────────────────────
   static const createBoard = 'CREATE BOARD';
   static const cancel = 'CANCEL';
   static const boardIdentifier = 'BOARD IDENTIFIER';
-  static const boardIdentifierHint = 'E.G. Q4 REVENUE GAINS';
-  static const boardIdentifierRequired = 'BOARD IDENTIFIER REQUIRED';
+  static const boardIdentifierHint = 'e.g. Q4 revenue gains';
+  static const boardIdentifierRequired = 'Board identifier required';
   static const scopeObjective = 'SCOPE & OBJECTIVE';
-  static const scopeHint = 'DESCRIBE THE CRITERIA FOR ENTRY...';
+  static const scopeHint = 'Describe the criteria for entry...';
   static const valueType = 'VALUE TYPE';
   static const rankOrder = 'RANK ORDER';
   static const manualRankingText = 'MANUAL RANKING FOR TEXT';
@@ -71,10 +73,10 @@ abstract class S {
   static const publicRegistry = 'PUBLIC REGISTRY';
   static const visibleToAll = 'VISIBLE TO ALL USERS';
   static const category = 'CATEGORY';
-  static const categoryDeselectHint = 'TAP AGAIN TO DESELECT';
-  static const categoryHelp = 'OPTIONAL — HELPS USERS DISCOVER YOUR BOARD';
+  static const categoryDeselectHint = 'Tap again to deselect';
+  static const categoryHelp = 'Optional — helps users discover your board';
   static const executionRules = 'EXECUTION RULES (OPTIONAL)';
-  static const rulesHint = 'SPECIFY EVIDENCE REQUIREMENTS...';
+  static const rulesHint = 'Specify evidence requirements...';
   static const commsChannels = 'COMMUNICATION CHANNELS';
   static const optional = 'OPTIONAL';
   static const termsAgreement = 'AGREEMENT OF TERMINAL SERVICE TERMS REQUIRED';
@@ -89,12 +91,11 @@ abstract class S {
   static String failedToCreateBoard(Object e) => 'FAILED TO CREATE BOARD: $e';
 
   // ── Value type descriptions ────────────────────────────────────
-  static const valueTypeNumber =
-      'NUMERIC VALUES \u2022 e.g. 48.2, 156, 31240';
+  static const valueTypeNumber = 'Numeric values \u2022 e.g. 48.2, 156, 31240';
   static const valueTypeDuration =
-      'TIME-BASED VALUES \u2022 e.g. 15:23, 1:02:45';
+      'Time-based values \u2022 e.g. 15:23, 1:02:45';
   static const valueTypeText =
-      'TEXT ENTRIES WITH MANUAL RANKING \u2022 e.g. "Completed Q4"';
+      'Text entries with manual ranking \u2022 e.g. "Completed Q4"';
 
   // ── Board detail ───────────────────────────────────────────────
   static const standings = 'STANDINGS';
@@ -142,21 +143,20 @@ abstract class S {
       'Your entry will appear in standings\nonce approved by a moderator.';
   static const done = 'DONE';
   static const noteOptional = 'NOTE (OPTIONAL)';
-  static const noteHint = 'ADD CONTEXT TO YOUR ENTRY...';
+  static const noteHint = 'Add context to your entry...';
   static const value = 'VALUE';
   static const duration = 'DURATION';
-  static const enterValidNumber = 'ENTER A VALID NUMBER';
-  static const enterValidDuration = 'ENTER A VALID DURATION';
-  static const enterValue = 'ENTER A VALUE';
-  static const enterValueHint = 'ENTER YOUR VALUE...';
+  static const enterValidNumber = 'Enter a valid number';
+  static const enterValidDuration = 'Enter a valid duration';
+  static const enterValue = 'Enter a value';
+  static const enterValueHint = 'Enter your value...';
   static const shareProof = 'SHARE PROOF IN COMMUNITY';
   static const shareProofHint =
       'Send evidence (photos, videos) in the group chat to help admins verify your entry.';
   static String submissionFailed(Object e) => 'SUBMISSION FAILED: $e';
 
   // ── Pending entries (admin) ────────────────────────────────────
-  static String pendingSubmissions(int count) =>
-      'PENDING SUBMISSIONS ($count)';
+  static String pendingSubmissions(int count) => 'PENDING SUBMISSIONS ($count)';
   static const approve = 'APPROVE';
   static const reject = 'REJECT';
   static String failed(Object e) => 'FAILED: $e';
@@ -233,8 +233,7 @@ abstract class S {
   static const ss = 'SS';
 
   // ── Error view ─────────────────────────────────────────────────
-  static const noNetwork =
-      'No network connection. Please check your internet.';
+  static const noNetwork = 'No network connection. Please check your internet.';
   static const genericError = 'Something went wrong. Please try again.';
   static const retry = 'RETRY';
 
@@ -249,6 +248,25 @@ abstract class S {
   static String mAgo(int m) => '${m}M AGO';
   static String rankActivity(String name, int rank) => '$name — RANK $rank';
   static String membersCount(int count) => '$count MEMBERS';
+
+  // ── Settings ────────────────────────────────────────────────────
+  static const settings = 'SETTINGS';
+  static const account = 'ACCOUNT';
+  static const legal = 'LEGAL';
+  static const dataAndPrivacy = 'DATA & PRIVACY';
+  static const termsOfService = 'TERMS OF SERVICE';
+  static const privacyPolicy = 'PRIVACY POLICY';
+  static const viewPublicProfile = 'VIEW PUBLIC PROFILE';
+  static String get appVersion => AppConstants.appVersion;
+  static const comingSoon = 'COMING SOON';
+
+  // ── Home filter empty states ───────────────────────────────────
+  static const noBoardsCreated = 'NO BOARDS CREATED';
+  static const noBoardsJoined = 'NO BOARDS JOINED';
+  static const noSavedBoards = 'NO SAVED BOARDS';
+  static const createBoardHint = 'CREATE YOUR FIRST BOARD\nTO GET STARTED';
+  static const joinBoardHint = 'DISCOVER PUBLIC BOARDS\nTO JOIN';
+  static const saveBoardHint = 'BOOKMARK BOARDS FROM\nTHE DISCOVER TAB';
 
   // ── Misc ───────────────────────────────────────────────────────
   static const loading = 'LOADING...';

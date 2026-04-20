@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -6,226 +7,311 @@ import '../../../core/strings.dart';
 import '../../../core/theme/colors.dart';
 import '../../../core/theme/text_styles.dart';
 import '../../../shared/widgets/board_tile.dart';
+import '../../../shared/widgets/create_fab.dart';
 import '../../../shared/widgets/shimmer_loading.dart';
 import '../domain/entities/ranked_list.dart';
 import 'providers/bookmark_provider.dart';
+import 'providers/home_filter_provider.dart';
 import 'providers/lists_provider.dart';
 
-class HomeScreen extends ConsumerWidget {
+class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends ConsumerState<HomeScreen> {
+  static const double _minSwipeDistance = 44;
+  static const double _horizontalDominance = 1.35;
+
+  double _dragDx = 0;
+  double _dragDy = 0;
+
+  void _onHorizontalDragStart(DragStartDetails details) {
+    _dragDx = 0;
+    _dragDy = 0;
+  }
+
+  void _onHorizontalDragUpdate(DragUpdateDetails details) {
+    _dragDx += details.delta.dx;
+    _dragDy += details.delta.dy;
+  }
+
+  void _onHorizontalDragEnd(DragEndDetails details) {
+    final isHorizontalGesture =
+        _dragDx.abs() > (_dragDy.abs() * _horizontalDominance);
+    if (!isHorizontalGesture || _dragDx.abs() < _minSwipeDistance) {
+      return;
+    }
+
+    final active = ref.read(homeFilterProvider);
+    final filters = HomeFilter.values;
+    final currentIndex = filters.indexOf(active);
+
+    if (_dragDx < 0 && currentIndex < filters.length - 1) {
+      HapticFeedback.lightImpact();
+      ref.read(homeFilterProvider.notifier).state = filters[currentIndex + 1];
+      return;
+    }
+
+    if (_dragDx > 0 && currentIndex > 0) {
+      HapticFeedback.lightImpact();
+      ref.read(homeFilterProvider.notifier).state = filters[currentIndex - 1];
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final listsAsync = ref.watch(listsProvider);
     final bookmarks = ref.watch(bookmarkProvider);
+    final filter = ref.watch(homeFilterProvider);
 
-    return SafeArea(
+    return Scaffold(
+      backgroundColor: Colors.transparent,
+      floatingActionButton: const CreateFab(),
+      body: SafeArea(
       child: RefreshIndicator(
         color: AppColors.accent,
         backgroundColor: AppColors.surface,
         onRefresh: () => ref.read(listsProvider.notifier).refresh(),
-        child: CustomScrollView(
-          slivers: [
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
-                child: Text(S.appName, style: AppTextStyles.screenTitle),
+        child: GestureDetector(
+          behavior: HitTestBehavior.translucent,
+          onHorizontalDragStart: _onHorizontalDragStart,
+          onHorizontalDragUpdate: _onHorizontalDragUpdate,
+          onHorizontalDragEnd: _onHorizontalDragEnd,
+          child: CustomScrollView(
+            slivers: [
+              // Filter bar — full width, no title
+              const SliverToBoxAdapter(
+                child: Padding(
+                  padding: EdgeInsets.fromLTRB(20, 16, 20, 8),
+                  child: _FilterBar(),
+                ),
               ),
-            ),
-            listsAsync.when(
-              data: (lists) {
-                final owned = lists
-                    .where((l) => l.currentUserRole == MemberRole.owner)
-                    .toList();
-                final participating = lists
-                    .where((l) =>
-                        l.currentUserRole == MemberRole.admin ||
-                        l.currentUserRole == MemberRole.member)
-                    .toList();
-                final shownIds = {
-                  ...owned.map((l) => l.id),
-                  ...participating.map((l) => l.id),
-                };
-                final bookmarked = lists
-                    .where((l) =>
-                        bookmarks.contains(l.id) && !shownIds.contains(l.id))
-                    .toList();
+              // Content
+              listsAsync.when(
+                data: (lists) {
+                  final owned = lists
+                      .where((l) => l.currentUserRole == MemberRole.owner)
+                      .toList();
+                  final participating = lists
+                      .where(
+                        (l) =>
+                            l.currentUserRole == MemberRole.admin ||
+                            l.currentUserRole == MemberRole.member,
+                      )
+                      .toList();
+                  final shownIds = {
+                    ...owned.map((l) => l.id),
+                    ...participating.map((l) => l.id),
+                  };
+                  final saved = lists
+                      .where(
+                        (l) =>
+                            bookmarks.contains(l.id) &&
+                            !shownIds.contains(l.id),
+                      )
+                      .toList();
 
-                if (owned.isEmpty &&
-                    participating.isEmpty &&
-                    bookmarked.isEmpty) {
-                  return const SliverFillRemaining(child: _EmptyHome());
-                }
+                  final filtered = switch (filter) {
+                    HomeFilter.owned => owned,
+                    HomeFilter.joined => participating,
+                    HomeFilter.saved => saved,
+                  };
 
-                final items = _buildFlatItems(
-                  owned: owned,
-                  participating: participating,
-                  bookmarked: bookmarked,
-                );
+                  if (filtered.isEmpty) {
+                    return SliverFillRemaining(
+                      child: _EmptyFilterState(filter: filter),
+                    );
+                  }
 
-                return SliverPadding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  sliver: SliverList.builder(
-                    itemCount: items.length,
-                    itemBuilder: (context, index) => items[index],
-                  ),
-                );
-              },
-              loading: () => const BoardListSkeleton(count: 5),
-              error: (e, _) => SliverFillRemaining(
-                child: Center(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(Icons.error_outline,
-                          color: AppColors.error, size: 32),
-                      const SizedBox(height: 8),
-                      Text(S.failedToLoad,
-                          style: AppTextStyles.sectionHeader
-                              .copyWith(color: AppColors.error)),
-                    ],
+                  return SliverPadding(
+                    padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
+                    sliver: SliverList.builder(
+                      itemCount: filtered.length,
+                      itemBuilder: (context, index) {
+                        final item = filtered[index];
+                        return BoardTile(
+                          summary: item,
+                          showRankBadge: true,
+                          showBookmark: filter == HomeFilter.saved,
+                          onTap: () => context.push('/lists/${item.id}'),
+                        );
+                      },
+                    ),
+                  );
+                },
+                loading: () => const BoardListSkeleton(count: 5),
+                error: (e, _) => SliverFillRemaining(
+                  child: Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(
+                          Icons.error_outline,
+                          color: AppColors.error,
+                          size: 32,
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          S.failedToLoad,
+                          style: AppTextStyles.sectionHeader.copyWith(
+                            color: AppColors.error,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
+      ),
       ),
     );
   }
 }
 
-List<Widget> _buildFlatItems({
-  required List<ListSummary> owned,
-  required List<ListSummary> participating,
-  required List<ListSummary> bookmarked,
-}) {
-  final items = <Widget>[];
-  if (owned.isNotEmpty) {
-    items.add(_SectionHeader(title: S.myBoards, count: owned.length, label: S.owned));
-    items.add(const SizedBox(height: 8));
-    for (final s in owned) {
-      items.add(Builder(
-        builder: (context) => BoardTile(
-          summary: s,
-          showRankBadge: true,
-          onTap: () => GoRouter.of(context).push('/lists/${s.id}'),
-        ),
-      ));
-    }
-    items.add(const SizedBox(height: 20));
-  }
-  if (participating.isNotEmpty) {
-    items.add(_SectionHeader(title: S.participating, count: participating.length, label: S.joined));
-    items.add(const SizedBox(height: 8));
-    for (final s in participating) {
-      items.add(Builder(
-        builder: (context) => BoardTile(
-          summary: s,
-          showRankBadge: true,
-          onTap: () => GoRouter.of(context).push('/lists/${s.id}'),
-        ),
-      ));
-    }
-    items.add(const SizedBox(height: 20));
-  }
-  if (bookmarked.isNotEmpty) {
-    items.add(_SectionHeader(title: S.bookmarked, count: bookmarked.length, label: S.saved));
-    items.add(const SizedBox(height: 8));
-    for (final s in bookmarked) {
-      items.add(Builder(
-        builder: (context) => BoardTile(
-          summary: s,
-          showRankBadge: true,
-          showBookmark: true,
-          onTap: () => GoRouter.of(context).push('/lists/${s.id}'),
-        ),
-      ));
-    }
-    items.add(const SizedBox(height: 20));
-  }
-  items.add(const SizedBox(height: 24));
-  return items;
-}
+// ─── Filter Bar — compact segmented pill ─────────────────────
 
-class _SectionHeader extends StatelessWidget {
-  final String title;
-  final int count;
-  final String label;
+class _FilterBar extends ConsumerWidget {
+  const _FilterBar();
 
-  const _SectionHeader({
-    required this.title,
-    required this.count,
-    required this.label,
-  });
+  static const _filters = [
+    (HomeFilter.owned, Icons.shield_outlined, Icons.shield),
+    (HomeFilter.joined, Icons.people_outlined, Icons.people),
+    (HomeFilter.saved, Icons.bookmark_border, Icons.bookmark),
+  ];
 
   @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(title, style: AppTextStyles.sectionHeader),
-        Text('$count $label',
-            style: AppTextStyles.bodySecondary.copyWith(fontSize: 12)),
-      ],
+  Widget build(BuildContext context, WidgetRef ref) {
+    final active = ref.watch(homeFilterProvider);
+
+    return Container(
+      height: 44,
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Row(
+        children: [
+          for (final (filter, icon, activeIcon) in _filters)
+            Expanded(
+              child: GestureDetector(
+                onTap: () {
+                  HapticFeedback.lightImpact();
+                  ref.read(homeFilterProvider.notifier).state = filter;
+                },
+                behavior: HitTestBehavior.opaque,
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 180),
+                  margin: const EdgeInsets.all(3),
+                  decoration: BoxDecoration(
+                    color: active == filter
+                        ? AppColors.accent
+                        : Colors.transparent,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  alignment: Alignment.center,
+                  child: Icon(
+                    active == filter ? activeIcon : icon,
+                    size: 20,
+                    color: active == filter
+                        ? AppColors.background
+                        : AppColors.textTertiary,
+                  ),
+                ),
+              ),
+            ),
+        ],
+      ),
     );
   }
 }
 
-class _EmptyHome extends StatelessWidget {
-  const _EmptyHome();
+// ─── Empty Filter States ─────────────────────────────────────
+
+class _EmptyFilterState extends StatelessWidget {
+  final HomeFilter filter;
+
+  const _EmptyFilterState({required this.filter});
 
   @override
   Widget build(BuildContext context) {
+    final (
+      filterIcon,
+      title,
+      hint,
+      actionLabel,
+      actionIcon,
+      route,
+    ) = switch (filter) {
+      HomeFilter.owned => (
+        Icons.shield_outlined,
+        S.noBoardsCreated,
+        S.createBoardHint,
+        S.create,
+        Icons.add,
+        '/create',
+      ),
+      HomeFilter.joined => (
+        Icons.people_outlined,
+        S.noBoardsJoined,
+        S.joinBoardHint,
+        S.discover,
+        Icons.explore_outlined,
+        '/discover',
+      ),
+      HomeFilter.saved => (
+        Icons.bookmark_border,
+        S.noSavedBoards,
+        S.saveBoardHint,
+        S.discover,
+        Icons.explore_outlined,
+        '/discover',
+      ),
+    };
+
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(40),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.dashboard_outlined,
-                color: AppColors.textTertiary, size: 48),
+            Icon(filterIcon, color: AppColors.textTertiary, size: 48),
             const SizedBox(height: 16),
-            Text(S.noBoardsYet,
-                style: AppTextStyles.sectionHeader
-                    .copyWith(color: AppColors.textSecondary)),
+            Text(
+              title,
+              style: AppTextStyles.sectionHeader.copyWith(
+                color: AppColors.textSecondary,
+              ),
+            ),
             const SizedBox(height: 8),
             Text(
-              S.noBoardsHint,
-              style:
-                  AppTextStyles.badge.copyWith(color: AppColors.textTertiary),
+              hint,
+              style: AppTextStyles.badge.copyWith(
+                color: AppColors.textTertiary,
+              ),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 24),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                OutlinedButton.icon(
-                  onPressed: () => GoRouter.of(context).go('/create'),
-                  icon: const Icon(Icons.add, size: 16),
-                  label: Text(S.create,
-                      style: AppTextStyles.button
-                          .copyWith(color: AppColors.accent)),
-                  style: OutlinedButton.styleFrom(
-                    side: const BorderSide(color: AppColors.accent),
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 16, vertical: 10),
-                  ),
+            OutlinedButton.icon(
+              onPressed: () => GoRouter.of(context).go(route),
+              icon: Icon(actionIcon, size: 16),
+              label: Text(
+                actionLabel,
+                style: AppTextStyles.button.copyWith(color: AppColors.accent),
+              ),
+              style: OutlinedButton.styleFrom(
+                side: const BorderSide(color: AppColors.accent),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 10,
                 ),
-                const SizedBox(width: 12),
-                OutlinedButton.icon(
-                  onPressed: () => GoRouter.of(context).go('/discover'),
-                  icon: const Icon(Icons.explore_outlined, size: 16),
-                  label: Text(S.discover,
-                      style: AppTextStyles.button
-                          .copyWith(color: AppColors.textSecondary)),
-                  style: OutlinedButton.styleFrom(
-                    side: const BorderSide(color: AppColors.border),
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 16, vertical: 10),
-                  ),
-                ),
-              ],
+              ),
             ),
           ],
         ),

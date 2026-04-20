@@ -13,15 +13,11 @@ abstract class AuthRemoteDataSource {
     required String displayName,
   });
 
-  Future<Map<String, dynamic>> signInWithApple({
-    required String identityToken,
-  });
+  Future<Map<String, dynamic>> signInWithApple({required String identityToken});
 
   Future<void> logout();
 
-  Future<Map<String, dynamic>> refreshToken({
-    required String refreshToken,
-  });
+  Future<Map<String, dynamic>> refreshToken({required String refreshToken});
 }
 
 class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
@@ -34,10 +30,10 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     required String email,
     required String password,
   }) async {
-    final response = await _apiClient.dio.post('/auth/login', data: {
-      'email': email,
-      'password': password,
-    });
+    final response = await _apiClient.dio.post<Map<String, dynamic>>(
+      '/auth/login',
+      data: {'email': email, 'password': password},
+    );
     return response.data as Map<String, dynamic>;
   }
 
@@ -47,11 +43,10 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     required String password,
     required String displayName,
   }) async {
-    final response = await _apiClient.dio.post('/auth/register', data: {
-      'email': email,
-      'password': password,
-      'display_name': displayName,
-    });
+    final response = await _apiClient.dio.post<Map<String, dynamic>>(
+      '/auth/register',
+      data: {'email': email, 'password': password, 'display_name': displayName},
+    );
     return response.data as Map<String, dynamic>;
   }
 
@@ -59,24 +54,26 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   Future<Map<String, dynamic>> signInWithApple({
     required String identityToken,
   }) async {
-    final response = await _apiClient.dio.post('/auth/apple', data: {
-      'identity_token': identityToken,
-    });
+    final response = await _apiClient.dio.post<Map<String, dynamic>>(
+      '/auth/apple',
+      data: {'identity_token': identityToken},
+    );
     return response.data as Map<String, dynamic>;
   }
 
   @override
   Future<void> logout() async {
-    await _apiClient.dio.post('/auth/logout');
+    await _apiClient.dio.post<void>('/auth/logout');
   }
 
   @override
   Future<Map<String, dynamic>> refreshToken({
     required String refreshToken,
   }) async {
-    final response = await _apiClient.dio.post('/auth/refresh', data: {
-      'refresh_token': refreshToken,
-    });
+    final response = await _apiClient.dio.post<Map<String, dynamic>>(
+      '/auth/refresh',
+      data: {'refresh_token': refreshToken},
+    );
     return response.data as Map<String, dynamic>;
   }
 }

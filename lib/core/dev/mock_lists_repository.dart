@@ -437,7 +437,7 @@ class MockListsRepository implements ListsRepository {
 
   @override
   Future<Either<ApiError, List<ListSummary>>> getLists() async {
-    await Future.delayed(DevConfig.networkDelay);
+    await Future<void>.delayed(DevConfig.networkDelay);
     final summaries = _lists.entries.map((entry) {
       final list = entry.value.list;
       int? ownRank;
@@ -457,6 +457,7 @@ class MockListsRepository implements ListsRepository {
         ownRank: ownRank,
         currentUserRole: list.currentUserRole,
         category: _categories[list.id],
+        topEntries: list.entries.take(3).toList(),
       );
     }).toList();
     return Right(summaries);
@@ -464,7 +465,7 @@ class MockListsRepository implements ListsRepository {
 
   @override
   Future<Either<ApiError, RankedList>> getListDetail(String listId) async {
-    await Future.delayed(DevConfig.networkDelay);
+    await Future<void>.delayed(DevConfig.networkDelay);
     final data = _lists[listId];
     if (data == null) {
       return const Left(ApiServerError(
@@ -478,7 +479,7 @@ class MockListsRepository implements ListsRepository {
     String? query,
     String? category,
   }) async {
-    await Future.delayed(DevConfig.networkDelay);
+    await Future<void>.delayed(DevConfig.networkDelay);
     final results = <ListSummary>[];
 
     for (final entry in _lists.entries) {
@@ -515,6 +516,7 @@ class MockListsRepository implements ListsRepository {
         ownRank: ownRank,
         currentUserRole: list.currentUserRole,
         category: _categories[list.id],
+        topEntries: list.entries.take(3).toList(),
       ));
     }
 
@@ -535,7 +537,7 @@ class MockListsRepository implements ListsRepository {
     String? whatsappLink,
     String? discordLink,
   }) async {
-    await Future.delayed(DevConfig.networkDelay);
+    await Future<void>.delayed(DevConfig.networkDelay);
     final id = _uuid.v4();
     final newList = RankedList(
       id: id,
@@ -575,7 +577,7 @@ class MockListsRepository implements ListsRepository {
     String? whatsappLink,
     String? discordLink,
   }) async {
-    await Future.delayed(DevConfig.networkDelay);
+    await Future<void>.delayed(DevConfig.networkDelay);
     final data = _lists[listId];
     if (data == null) {
       return const Left(ApiServerError(
@@ -596,7 +598,7 @@ class MockListsRepository implements ListsRepository {
 
   @override
   Future<Either<ApiError, void>> deleteList(String listId) async {
-    await Future.delayed(DevConfig.networkDelay);
+    await Future<void>.delayed(DevConfig.networkDelay);
     _lists.remove(listId);
     _members.remove(listId);
     _categories.remove(listId);
@@ -608,7 +610,7 @@ class MockListsRepository implements ListsRepository {
     required String listId,
     required String entryId,
   }) async {
-    await Future.delayed(DevConfig.networkDelay);
+    await Future<void>.delayed(DevConfig.networkDelay);
     final data = _lists[listId];
     if (data == null) return const Right(null);
     final updatedEntries =
@@ -626,7 +628,7 @@ class MockListsRepository implements ListsRepository {
 
   @override
   Future<Either<ApiError, RankedList>> getInvitePreview(String token) async {
-    await Future.delayed(DevConfig.networkDelay);
+    await Future<void>.delayed(DevConfig.networkDelay);
     for (final data in _lists.values) {
       if (data.list.inviteToken == token) {
         return Right(data.list);
@@ -638,13 +640,13 @@ class MockListsRepository implements ListsRepository {
 
   @override
   Future<Either<ApiError, void>> joinByInvite(String token) async {
-    await Future.delayed(DevConfig.networkDelay);
+    await Future<void>.delayed(DevConfig.networkDelay);
     return const Right(null);
   }
 
   @override
   Future<Either<ApiError, String>> getInviteLink(String listId) async {
-    await Future.delayed(DevConfig.networkDelay);
+    await Future<void>.delayed(DevConfig.networkDelay);
     final data = _lists[listId];
     if (data == null) {
       return const Left(ApiServerError(
@@ -655,7 +657,7 @@ class MockListsRepository implements ListsRepository {
 
   @override
   Future<Either<ApiError, String>> regenerateInvite(String listId) async {
-    await Future.delayed(DevConfig.networkDelay);
+    await Future<void>.delayed(DevConfig.networkDelay);
     final newToken = 'inv-${_uuid.v4().substring(0, 8)}';
     final data = _lists[listId];
     if (data != null) {
@@ -670,7 +672,7 @@ class MockListsRepository implements ListsRepository {
 
   @override
   Future<Either<ApiError, List<ListMember>>> getMembers(String listId) async {
-    await Future.delayed(DevConfig.networkDelay);
+    await Future<void>.delayed(DevConfig.networkDelay);
     return Right(_members[listId] ?? []);
   }
 
@@ -680,7 +682,7 @@ class MockListsRepository implements ListsRepository {
     required String userId,
     required MemberRole role,
   }) async {
-    await Future.delayed(DevConfig.networkDelay);
+    await Future<void>.delayed(DevConfig.networkDelay);
     final members = _members[listId];
     if (members != null) {
       final idx = members.indexWhere((m) => m.userId == userId);
@@ -700,7 +702,7 @@ class MockListsRepository implements ListsRepository {
     required String listId,
     required String userId,
   }) async {
-    await Future.delayed(DevConfig.networkDelay);
+    await Future<void>.delayed(DevConfig.networkDelay);
     _members[listId]?.removeWhere((m) => m.userId == userId);
     final data = _lists[listId];
     if (data != null) {
@@ -716,7 +718,7 @@ class MockListsRepository implements ListsRepository {
 
   @override
   Future<Either<ApiError, UserProfile>> getUserProfile(String userId) async {
-    await Future.delayed(DevConfig.networkDelay);
+    await Future<void>.delayed(DevConfig.networkDelay);
 
     // Find display name from any member list or entry
     String? displayName;
@@ -752,6 +754,7 @@ class MockListsRepository implements ListsRepository {
           ownRank: ownRank,
           currentUserRole: memberMatch.isNotEmpty ? memberMatch.first.role : null,
           category: _categories[listId],
+          topEntries: data.list.entries.take(3).toList(),
         ));
       }
     }

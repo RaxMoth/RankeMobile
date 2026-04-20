@@ -19,7 +19,7 @@ class MockAuthRepository implements AuthRepository {
     required String email,
     required String password,
   }) async {
-    await Future.delayed(DevConfig.networkDelay);
+    await Future<void>.delayed(DevConfig.networkDelay);
     return const Right(_devUser);
   }
 
@@ -29,7 +29,7 @@ class MockAuthRepository implements AuthRepository {
     required String password,
     required String displayName,
   }) async {
-    await Future.delayed(DevConfig.networkDelay);
+    await Future<void>.delayed(DevConfig.networkDelay);
     return Right(User(
       id: 'dev-user-001',
       email: email,
@@ -42,13 +42,13 @@ class MockAuthRepository implements AuthRepository {
     required String identityToken,
     String? fullName,
   }) async {
-    await Future.delayed(DevConfig.networkDelay);
+    await Future<void>.delayed(DevConfig.networkDelay);
     return const Right(_devUser);
   }
 
   @override
   Future<Either<ApiError, void>> logout() async {
-    await Future.delayed(DevConfig.networkDelay);
+    await Future<void>.delayed(DevConfig.networkDelay);
     return const Right(null);
   }
 }

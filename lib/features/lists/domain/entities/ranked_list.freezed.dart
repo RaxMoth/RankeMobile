@@ -859,6 +859,7 @@ mixin _$ListSummary {
   int? get ownRank => throw _privateConstructorUsedError;
   MemberRole? get currentUserRole => throw _privateConstructorUsedError;
   String? get category => throw _privateConstructorUsedError;
+  List<RankedEntry> get topEntries => throw _privateConstructorUsedError;
 
   /// Create a copy of ListSummary
   /// with the given fields replaced by the non-null parameter values.
@@ -884,6 +885,7 @@ abstract class $ListSummaryCopyWith<$Res> {
     int? ownRank,
     MemberRole? currentUserRole,
     String? category,
+    List<RankedEntry> topEntries,
   });
 }
 
@@ -911,6 +913,7 @@ class _$ListSummaryCopyWithImpl<$Res, $Val extends ListSummary>
     Object? ownRank = freezed,
     Object? currentUserRole = freezed,
     Object? category = freezed,
+    Object? topEntries = null,
   }) {
     return _then(
       _value.copyWith(
@@ -950,6 +953,10 @@ class _$ListSummaryCopyWithImpl<$Res, $Val extends ListSummary>
                 ? _value.category
                 : category // ignore: cast_nullable_to_non_nullable
                       as String?,
+            topEntries: null == topEntries
+                ? _value.topEntries
+                : topEntries // ignore: cast_nullable_to_non_nullable
+                      as List<RankedEntry>,
           )
           as $Val,
     );
@@ -975,6 +982,7 @@ abstract class _$$ListSummaryImplCopyWith<$Res>
     int? ownRank,
     MemberRole? currentUserRole,
     String? category,
+    List<RankedEntry> topEntries,
   });
 }
 
@@ -1001,6 +1009,7 @@ class __$$ListSummaryImplCopyWithImpl<$Res>
     Object? ownRank = freezed,
     Object? currentUserRole = freezed,
     Object? category = freezed,
+    Object? topEntries = null,
   }) {
     return _then(
       _$ListSummaryImpl(
@@ -1040,6 +1049,10 @@ class __$$ListSummaryImplCopyWithImpl<$Res>
             ? _value.category
             : category // ignore: cast_nullable_to_non_nullable
                   as String?,
+        topEntries: null == topEntries
+            ? _value._topEntries
+            : topEntries // ignore: cast_nullable_to_non_nullable
+                  as List<RankedEntry>,
       ),
     );
   }
@@ -1058,7 +1071,8 @@ class _$ListSummaryImpl implements _ListSummary {
     this.ownRank,
     this.currentUserRole,
     this.category,
-  });
+    final List<RankedEntry> topEntries = const [],
+  }) : _topEntries = topEntries;
 
   @override
   final String id;
@@ -1078,10 +1092,18 @@ class _$ListSummaryImpl implements _ListSummary {
   final MemberRole? currentUserRole;
   @override
   final String? category;
+  final List<RankedEntry> _topEntries;
+  @override
+  @JsonKey()
+  List<RankedEntry> get topEntries {
+    if (_topEntries is EqualUnmodifiableListView) return _topEntries;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableListView(_topEntries);
+  }
 
   @override
   String toString() {
-    return 'ListSummary(id: $id, title: $title, valueType: $valueType, rankOrder: $rankOrder, isPublic: $isPublic, memberCount: $memberCount, ownRank: $ownRank, currentUserRole: $currentUserRole, category: $category)';
+    return 'ListSummary(id: $id, title: $title, valueType: $valueType, rankOrder: $rankOrder, isPublic: $isPublic, memberCount: $memberCount, ownRank: $ownRank, currentUserRole: $currentUserRole, category: $category, topEntries: $topEntries)';
   }
 
   @override
@@ -1103,7 +1125,11 @@ class _$ListSummaryImpl implements _ListSummary {
             (identical(other.currentUserRole, currentUserRole) ||
                 other.currentUserRole == currentUserRole) &&
             (identical(other.category, category) ||
-                other.category == category));
+                other.category == category) &&
+            const DeepCollectionEquality().equals(
+              other._topEntries,
+              _topEntries,
+            ));
   }
 
   @override
@@ -1118,6 +1144,7 @@ class _$ListSummaryImpl implements _ListSummary {
     ownRank,
     currentUserRole,
     category,
+    const DeepCollectionEquality().hash(_topEntries),
   );
 
   /// Create a copy of ListSummary
@@ -1140,6 +1167,7 @@ abstract class _ListSummary implements ListSummary {
     final int? ownRank,
     final MemberRole? currentUserRole,
     final String? category,
+    final List<RankedEntry> topEntries,
   }) = _$ListSummaryImpl;
 
   @override
@@ -1160,6 +1188,8 @@ abstract class _ListSummary implements ListSummary {
   MemberRole? get currentUserRole;
   @override
   String? get category;
+  @override
+  List<RankedEntry> get topEntries;
 
   /// Create a copy of ListSummary
   /// with the given fields replaced by the non-null parameter values.

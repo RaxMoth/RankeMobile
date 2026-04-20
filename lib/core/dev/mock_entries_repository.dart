@@ -25,7 +25,7 @@ class MockEntriesRepository implements EntriesRepository {
     required String listId,
     required EntryInput input,
   }) async {
-    await Future.delayed(DevConfig.networkDelay);
+    await Future<void>.delayed(DevConfig.networkDelay);
 
     final newEntry = RankedEntry(
       id: _uuid.v4(),
@@ -51,7 +51,7 @@ class MockEntriesRepository implements EntriesRepository {
   @override
   Future<Either<ApiError, List<RankedEntry>>> getPendingEntries(
       String listId) async {
-    await Future.delayed(DevConfig.networkDelay);
+    await Future<void>.delayed(DevConfig.networkDelay);
     return Right(List.unmodifiable(_pendingEntries[listId] ?? []));
   }
 
@@ -60,7 +60,7 @@ class MockEntriesRepository implements EntriesRepository {
     required String listId,
     required String entryId,
   }) async {
-    await Future.delayed(DevConfig.networkDelay);
+    await Future<void>.delayed(DevConfig.networkDelay);
 
     final pending = _pendingEntries[listId];
     if (pending == null) {
@@ -92,7 +92,7 @@ class MockEntriesRepository implements EntriesRepository {
     required String listId,
     required String entryId,
   }) async {
-    await Future.delayed(DevConfig.networkDelay);
+    await Future<void>.delayed(DevConfig.networkDelay);
 
     final pending = _pendingEntries[listId];
     if (pending == null) {

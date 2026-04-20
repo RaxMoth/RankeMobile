@@ -8,6 +8,7 @@ import '../../../core/theme/responsive.dart';
 import '../../../core/theme/text_styles.dart';
 import '../../../shared/widgets/board_tile.dart';
 import '../../lists/domain/entities/ranked_list.dart';
+import '../domain/entities/user_profile.dart';
 import 'providers/profile_provider.dart';
 
 /// Public user profile screen — shows a user's boards and stats.
@@ -31,16 +32,22 @@ class UserProfileScreen extends ConsumerWidget {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(Icons.error_outline,
-                    color: AppColors.error, size: 32),
+                const Icon(
+                  Icons.error_outline,
+                  color: AppColors.error,
+                  size: 32,
+                ),
                 const SizedBox(height: 12),
-                Text('USER NOT FOUND',
-                    style: AppTextStyles.sectionHeader
-                        .copyWith(color: AppColors.error)),
+                Text(
+                  S.userNotFound,
+                  style: AppTextStyles.sectionHeader.copyWith(
+                    color: AppColors.error,
+                  ),
+                ),
                 const SizedBox(height: 16),
                 TextButton(
                   onPressed: () => context.pop(),
-                  child: const Text('GO BACK'),
+                  child: const Text(S.goBack),
                 ),
               ],
             ),
@@ -52,43 +59,39 @@ class UserProfileScreen extends ConsumerWidget {
 }
 
 class _ProfileContent extends StatelessWidget {
-  final dynamic profile;
+  final UserProfile profile;
 
   const _ProfileContent({required this.profile});
 
   @override
   Widget build(BuildContext context) {
     final owned = profile.boards
-        .where((ListSummary b) =>
-            b.currentUserRole == MemberRole.owner)
+        .where((ListSummary b) => b.currentUserRole == MemberRole.owner)
         .toList();
     final participating = profile.boards
-        .where((ListSummary b) =>
-            b.currentUserRole != MemberRole.owner)
+        .where((ListSummary b) => b.currentUserRole != MemberRole.owner)
         .toList();
 
     final items = <Widget>[];
 
     if (owned.isNotEmpty) {
-      items.add(_sectionLabel('OWNED BOARDS', owned.length));
+      items.add(_sectionLabel(S.ownedBoards, owned.length));
       items.add(const SizedBox(height: 8));
       for (final s in owned) {
-        items.add(BoardTile(
-          summary: s,
-          onTap: () => context.push('/lists/${s.id}'),
-        ));
+        items.add(
+          BoardTile(summary: s, onTap: () => context.push('/lists/${s.id}')),
+        );
       }
       items.add(const SizedBox(height: 20));
     }
 
     if (participating.isNotEmpty) {
-      items.add(_sectionLabel('PARTICIPATING', participating.length));
+      items.add(_sectionLabel(S.participating, participating.length));
       items.add(const SizedBox(height: 8));
       for (final s in participating) {
-        items.add(BoardTile(
-          summary: s,
-          onTap: () => context.push('/lists/${s.id}'),
-        ));
+        items.add(
+          BoardTile(summary: s, onTap: () => context.push('/lists/${s.id}')),
+        );
       }
       items.add(const SizedBox(height: 20));
     }
@@ -96,9 +99,7 @@ class _ProfileContent extends StatelessWidget {
     return CustomScrollView(
       slivers: [
         // Header
-        SliverToBoxAdapter(
-          child: _buildHeader(context),
-        ),
+        SliverToBoxAdapter(child: _buildHeader(context)),
         // Stats
         SliverToBoxAdapter(
           child: _buildStats(owned.length, participating.length),
@@ -108,9 +109,7 @@ class _ProfileContent extends StatelessWidget {
           const SliverToBoxAdapter(
             child: Padding(
               padding: EdgeInsets.fromLTRB(20, 40, 20, 0),
-              child: Center(
-                child: Text('NO PUBLIC BOARDS'),
-              ),
+              child: Center(child: Text(S.noPublicBoards)),
             ),
           )
         else
@@ -135,18 +134,14 @@ class _ProfileContent extends StatelessWidget {
             children: [
               IconButton(
                 onPressed: () => context.pop(),
-                icon: const Icon(Icons.chevron_left,
-                    color: AppColors.textPrimary, size: 28),
+                icon: const Icon(
+                  Icons.chevron_left,
+                  color: AppColors.textPrimary,
+                  size: 28,
+                ),
               ),
               Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('OPERATOR', style: AppTextStyles.displayLarge),
-                    const SizedBox(height: 2),
-                    Text('PUBLIC PROFILE', style: AppTextStyles.subtitle),
-                  ],
-                ),
+                child: Text(S.tabProfile, style: AppTextStyles.screenTitle),
               ),
             ],
           ),
@@ -168,8 +163,9 @@ class _ProfileContent extends StatelessWidget {
                     height: Responsive.scale(context, 52),
                     decoration: BoxDecoration(
                       color: AppColors.accent.withAlpha(25),
-                      borderRadius:
-                          BorderRadius.circular(Responsive.scale(context, 26)),
+                      borderRadius: BorderRadius.circular(
+                        Responsive.scale(context, 26),
+                      ),
                       border: Border.all(color: AppColors.accent, width: 1.5),
                     ),
                     child: Center(
@@ -177,8 +173,9 @@ class _ProfileContent extends StatelessWidget {
                         profile.displayName.isNotEmpty
                             ? profile.displayName[0].toUpperCase()
                             : '?',
-                        style: AppTextStyles.valueDisplay
-                            .copyWith(color: AppColors.accent),
+                        style: AppTextStyles.valueDisplay.copyWith(
+                          color: AppColors.accent,
+                        ),
                       ),
                     ),
                   ),
@@ -196,9 +193,10 @@ class _ProfileContent extends StatelessWidget {
                         if (profile.memberSince != null) ...[
                           const SizedBox(height: 4),
                           Text(
-                            'MEMBER SINCE ${_formatDate(profile.memberSince!)}',
-                            style: AppTextStyles.bodySecondary
-                                .copyWith(fontSize: 12),
+                            S.memberSince(_formatDate(profile.memberSince!)),
+                            style: AppTextStyles.bodySecondary.copyWith(
+                              fontSize: 12,
+                            ),
                           ),
                         ],
                       ],
@@ -219,15 +217,18 @@ class _ProfileContent extends StatelessWidget {
       child: Row(
         children: [
           Expanded(
-            child: _StatCard(label: 'BOARDS', value: '${ownedCount + participatingCount}'),
+            child: _StatCard(
+              label: S.boards,
+              value: '${ownedCount + participatingCount}',
+            ),
           ),
           const SizedBox(width: 12),
           Expanded(
-            child: _StatCard(label: 'OWNED', value: '$ownedCount'),
+            child: _StatCard(label: S.owned, value: '$ownedCount'),
           ),
           const SizedBox(width: 12),
           Expanded(
-            child: _StatCard(label: 'JOINED', value: '$participatingCount'),
+            child: _StatCard(label: S.joined, value: '$participatingCount'),
           ),
         ],
       ),
@@ -239,16 +240,28 @@ class _ProfileContent extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text(title, style: AppTextStyles.sectionHeader),
-        Text('$count',
-            style: AppTextStyles.bodySecondary.copyWith(fontSize: 12)),
+        Text(
+          '$count',
+          style: AppTextStyles.bodySecondary.copyWith(fontSize: 12),
+        ),
       ],
     );
   }
 
   String _formatDate(DateTime date) {
     const months = [
-      'JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN',
-      'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC',
+      'JAN',
+      'FEB',
+      'MAR',
+      'APR',
+      'MAY',
+      'JUN',
+      'JUL',
+      'AUG',
+      'SEP',
+      'OCT',
+      'NOV',
+      'DEC',
     ];
     return '${months[date.month - 1]} ${date.year}';
   }
@@ -272,9 +285,10 @@ class _StatCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label,
-              style:
-                  AppTextStyles.badge.copyWith(color: AppColors.textTertiary)),
+          Text(
+            label,
+            style: AppTextStyles.badge.copyWith(color: AppColors.textTertiary),
+          ),
           const SizedBox(height: 6),
           Text(value, style: AppTextStyles.statValue),
         ],

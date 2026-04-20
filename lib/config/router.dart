@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+
 import '../features/auth/presentation/login_screen.dart';
-import '../features/auth/presentation/register_screen.dart';
 import '../features/auth/presentation/providers/auth_provider.dart';
+import '../features/auth/presentation/register_screen.dart';
 import '../features/lists/presentation/home_screen.dart';
-import '../features/lists/presentation/list_detail_screen.dart';
 import '../features/lists/presentation/invite_preview_screen.dart';
+import '../features/lists/presentation/list_detail_screen.dart';
 import '../features/lists/presentation/manage_members_screen.dart';
 import '../features/profile/presentation/profile_screen.dart';
 
@@ -17,7 +18,8 @@ final routerProvider = Provider<GoRouter>((ref) {
     initialLocation: '/',
     redirect: (context, state) {
       final isLoggedIn = authState.hasValue && authState.value != null;
-      final isAuthRoute = state.matchedLocation == '/login' ||
+      final isAuthRoute =
+          state.matchedLocation == '/login' ||
           state.matchedLocation == '/register';
       final isInviteRoute = state.matchedLocation.startsWith('/invite');
 
@@ -28,10 +30,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       return null;
     },
     routes: [
-      GoRoute(
-        path: '/',
-        redirect: (_, __) => '/home',
-      ),
+      GoRoute(path: '/', redirect: (_, _) => '/home'),
       GoRoute(
         path: '/login',
         name: 'login',
@@ -50,23 +49,20 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/lists/:id',
         name: 'listDetail',
-        builder: (context, state) => ListDetailScreen(
-          listId: state.pathParameters['id']!,
-        ),
+        builder: (context, state) =>
+            ListDetailScreen(listId: state.pathParameters['id']!),
       ),
       GoRoute(
         path: '/lists/:id/members',
         name: 'manageMembers',
-        builder: (context, state) => ManageMembersScreen(
-          listId: state.pathParameters['id']!,
-        ),
+        builder: (context, state) =>
+            ManageMembersScreen(listId: state.pathParameters['id']!),
       ),
       GoRoute(
         path: '/invite/:token',
         name: 'invitePreview',
-        builder: (context, state) => InvitePreviewScreen(
-          token: state.pathParameters['token']!,
-        ),
+        builder: (context, state) =>
+            InvitePreviewScreen(token: state.pathParameters['token']!),
       ),
       GoRoute(
         path: '/profile',
@@ -76,9 +72,7 @@ final routerProvider = Provider<GoRouter>((ref) {
     ],
     errorBuilder: (context, state) => Scaffold(
       appBar: AppBar(title: const Text('Not Found')),
-      body: Center(
-        child: Text('Route not found: ${state.matchedLocation}'),
-      ),
+      body: Center(child: Text('Route not found: ${state.matchedLocation}')),
     ),
   );
 });

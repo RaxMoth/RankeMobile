@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'core/config/app_config.dart';
 import 'core/di/injection.dart';
 import 'core/router/router.dart';
 import 'core/theme/app_theme.dart';
@@ -20,12 +21,14 @@ void main() async {
   final prefs = await SharedPreferences.getInstance();
   final onboardingDone = prefs.getBool('onboarding_complete') ?? false;
 
-  runApp(ProviderScope(
-    overrides: [
-      onboardingCompleteProvider.overrideWith((ref) => onboardingDone),
-    ],
-    child: const RankeApp(),
-  ));
+  runApp(
+    ProviderScope(
+      overrides: [
+        onboardingCompleteProvider.overrideWith((ref) => onboardingDone),
+      ],
+      child: const RankeApp(),
+    ),
+  );
 }
 
 class RankeApp extends ConsumerWidget {
@@ -36,7 +39,7 @@ class RankeApp extends ConsumerWidget {
     final router = ref.watch(goRouterProvider);
 
     return MaterialApp.router(
-      title: 'Ranked',
+      title: AppConfig.appDisplayName,
       debugShowCheckedModeBanner: false,
       theme: AppTheme.darkTheme,
       routerConfig: router,

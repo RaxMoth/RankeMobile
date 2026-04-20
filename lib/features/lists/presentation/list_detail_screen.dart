@@ -9,9 +9,9 @@ import '../../../core/theme/colors.dart';
 import '../../../core/theme/responsive.dart';
 import '../../../core/theme/text_styles.dart';
 import '../../auth/presentation/providers/auth_provider.dart';
-import '../domain/entities/ranked_list.dart';
 import '../../entries/presentation/submit_entry_sheet.dart';
 import '../../entries/presentation/widgets/duration_picker.dart';
+import '../domain/entities/ranked_list.dart';
 import 'edit_board_sheet.dart';
 import 'providers/bookmark_provider.dart';
 import 'providers/lists_provider.dart';
@@ -37,18 +37,22 @@ class ListDetailScreen extends ConsumerWidget {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(Icons.error_outline,
-                    color: AppColors.error, size: 32),
+                const Icon(
+                  Icons.error_outline,
+                  color: AppColors.error,
+                  size: 32,
+                ),
                 const SizedBox(height: 12),
                 Text(
-                  'FAILED TO LOAD BOARD',
-                  style: AppTextStyles.sectionHeader
-                      .copyWith(color: AppColors.error),
+                  S.failedToLoadBoard,
+                  style: AppTextStyles.sectionHeader.copyWith(
+                    color: AppColors.error,
+                  ),
                 ),
                 const SizedBox(height: 16),
                 TextButton(
                   onPressed: () => context.pop(),
-                  child: const Text('GO BACK'),
+                  child: const Text(S.goBack),
                 ),
               ],
             ),
@@ -97,15 +101,15 @@ class _DetailContentState extends ConsumerState<_DetailContent>
 
   List<_TabDef> _buildTabs() {
     final tabs = <_TabDef>[
-      const _TabDef('STANDINGS', _TabType.standings),
-      const _TabDef('INFO', _TabType.info),
+      const _TabDef(S.standings, _TabType.standings),
+      const _TabDef(S.info, _TabType.info),
     ];
     if (_hasCommsLinks) {
-      tabs.add(const _TabDef('COMMS', _TabType.comms));
+      tabs.add(const _TabDef(S.comms, _TabType.comms));
     }
-    tabs.add(const _TabDef('STATS', _TabType.stats));
+    tabs.add(const _TabDef(S.stats, _TabType.stats));
     if (_isAdmin) {
-      tabs.add(const _TabDef('ADMIN', _TabType.admin));
+      tabs.add(const _TabDef(S.admin, _TabType.admin));
     }
     return tabs;
   }
@@ -149,7 +153,7 @@ class _DetailContentState extends ConsumerState<_DetailContent>
         _DetailHeader(
           title: widget.list.title.toUpperCase(),
           subtitle:
-              '${widget.list.valueType.name.toUpperCase()}  \u2022  ${widget.list.memberCount} MEMBERS',
+              '${widget.list.valueType.name.toUpperCase()}  \u2022  ${S.membersCount(widget.list.memberCount)}',
           onBack: () => context.pop(),
           trailing: GestureDetector(
             onTap: () =>
@@ -195,10 +199,10 @@ class _DetailContentState extends ConsumerState<_DetailContent>
   Widget _buildTabContent(_TabType type) {
     return switch (type) {
       _TabType.standings => _StandingsTab(
-          list: widget.list,
-          listId: widget.listId,
-          isAdmin: _isAdmin,
-        ),
+        list: widget.list,
+        listId: widget.listId,
+        isAdmin: _isAdmin,
+      ),
       _TabType.info => _InfoTab(list: widget.list),
       _TabType.comms => _CommsTab(list: widget.list, isAdmin: _isAdmin),
       _TabType.stats => _StatsTab(list: widget.list),
@@ -230,8 +234,11 @@ class _DetailHeader extends StatelessWidget {
         children: [
           IconButton(
             onPressed: onBack,
-            icon: const Icon(Icons.chevron_left,
-                color: AppColors.textPrimary, size: 28),
+            icon: const Icon(
+              Icons.chevron_left,
+              color: AppColors.textPrimary,
+              size: 28,
+            ),
           ),
           Expanded(
             child: Column(
@@ -243,7 +250,7 @@ class _DetailHeader extends StatelessWidget {
               ],
             ),
           ),
-          if (trailing != null) trailing!,
+          ?trailing,
         ],
       ),
     );
@@ -265,8 +272,7 @@ class _StandingsTab extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final currentUserId =
-        ref.watch(authProvider).valueOrNull?.id;
+    final currentUserId = ref.watch(authProvider).valueOrNull?.id;
 
     return Column(
       children: [
@@ -278,8 +284,8 @@ class _StandingsTab extends ConsumerWidget {
                 _EmptyStandings()
               else
                 ...list.entries.map((entry) {
-                  final isOwnEntry = currentUserId != null &&
-                      entry.userId == currentUserId;
+                  final isOwnEntry =
+                      currentUserId != null && entry.userId == currentUserId;
                   final canDelete = isAdmin || isOwnEntry;
 
                   return canDelete
@@ -288,7 +294,11 @@ class _StandingsTab extends ConsumerWidget {
                           direction: DismissDirection.endToStart,
                           confirmDismiss: (_) async {
                             _confirmRemoveEntry(
-                                context, ref, entry, isOwnEntry);
+                              context,
+                              ref,
+                              entry,
+                              isOwnEntry,
+                            );
                             return false;
                           },
                           background: Container(
@@ -299,8 +309,11 @@ class _StandingsTab extends ConsumerWidget {
                             ),
                             alignment: Alignment.centerRight,
                             padding: const EdgeInsets.only(right: 20),
-                            child: const Icon(Icons.delete_outline,
-                                color: Colors.white, size: 22),
+                            child: const Icon(
+                              Icons.delete_outline,
+                              color: Colors.white,
+                              size: 22,
+                            ),
                           ),
                           child: _StandingRow(
                             entry: entry,
@@ -308,7 +321,11 @@ class _StandingsTab extends ConsumerWidget {
                             currentUserId: currentUserId,
                             canDelete: true,
                             onRemove: () => _confirmRemoveEntry(
-                                context, ref, entry, isOwnEntry),
+                              context,
+                              ref,
+                              entry,
+                              isOwnEntry,
+                            ),
                           ),
                         )
                       : _StandingRow(
@@ -321,15 +338,13 @@ class _StandingsTab extends ConsumerWidget {
           ),
         ),
         if (!list.locked)
-          _SubmitButton(
-            onPressed: () => _openSubmitSheet(context),
-          ),
+          _SubmitButton(onPressed: () => _openSubmitSheet(context)),
       ],
     );
   }
 
   void _openSubmitSheet(BuildContext context) {
-    showModalBottomSheet(
+    showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
       backgroundColor: AppColors.card,
@@ -347,9 +362,12 @@ class _StandingsTab extends ConsumerWidget {
   }
 
   void _confirmRemoveEntry(
-      BuildContext context, WidgetRef ref, RankedEntry entry,
-      [bool isOwnEntry = false]) {
-    showModalBottomSheet(
+    BuildContext context,
+    WidgetRef ref,
+    RankedEntry entry, [
+    bool isOwnEntry = false,
+  ]) {
+    showModalBottomSheet<void>(
       context: context,
       backgroundColor: AppColors.card,
       shape: const RoundedRectangleBorder(
@@ -360,13 +378,15 @@ class _StandingsTab extends ConsumerWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(isOwnEntry ? 'DELETE MY ENTRY' : 'REMOVE ENTRY',
-                style: AppTextStyles.screenTitle),
+            Text(
+              isOwnEntry ? S.deleteMyEntry : S.removeEntry,
+              style: AppTextStyles.screenTitle,
+            ),
             const SizedBox(height: 12),
             Text(
               isOwnEntry
-                  ? 'Delete your entry from this board? This cannot be undone.'
-                  : 'Remove ${entry.displayName}\'s entry from this board?',
+                  ? S.deleteOwnEntryConfirm
+                  : S.removeEntryConfirm(entry.displayName),
               style: AppTextStyles.bodySecondary,
               textAlign: TextAlign.center,
             ),
@@ -379,9 +399,12 @@ class _StandingsTab extends ConsumerWidget {
                     style: OutlinedButton.styleFrom(
                       side: const BorderSide(color: AppColors.border),
                     ),
-                    child: Text('CANCEL',
-                        style: AppTextStyles.button
-                            .copyWith(color: AppColors.textSecondary)),
+                    child: Text(
+                      S.cancel,
+                      style: AppTextStyles.button.copyWith(
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -396,7 +419,7 @@ class _StandingsTab extends ConsumerWidget {
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.error,
                     ),
-                    child: const Text('REMOVE'),
+                    child: const Text(S.remove),
                   ),
                 ),
               ],
@@ -433,25 +456,25 @@ class _InfoTab extends StatelessWidget {
         _InfoCard(
           children: [
             _InfoRow(
-              label: 'RANK ORDER',
+              label: S.rankOrder,
               value: list.rankOrder == RankOrder.desc
-                  ? 'HIGHEST WINS'
-                  : 'LOWEST WINS',
+                  ? S.highestWinsShort
+                  : S.lowestWinsShort,
               icon: list.rankOrder == RankOrder.desc
                   ? Icons.arrow_upward
                   : Icons.arrow_downward,
             ),
             const SizedBox(height: 12),
             _InfoRow(
-              label: 'VISIBILITY',
-              value: list.isPublic ? 'PUBLIC' : 'PRIVATE',
+              label: S.visibility,
+              value: list.isPublic ? S.publicLabel : S.privateLabel,
               icon: list.isPublic ? Icons.public : Icons.lock_outline,
             ),
             if (list.locked) ...[
               const SizedBox(height: 12),
               _InfoRow(
-                label: 'STATUS',
-                value: 'LOCKED — NO NEW ENTRIES',
+                label: S.status,
+                value: S.lockedNoEntries,
                 icon: Icons.lock,
                 valueColor: AppColors.warning,
               ),
@@ -482,7 +505,7 @@ class _InfoCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('BOARD DETAILS', style: AppTextStyles.label),
+          Text(S.boardDetails, style: AppTextStyles.label),
           const SizedBox(height: 12),
           ...children,
         ],
@@ -510,9 +533,10 @@ class _InfoRow extends StatelessWidget {
       children: [
         Icon(icon, color: AppColors.textTertiary, size: 16),
         const SizedBox(width: 10),
-        Text(label,
-            style:
-                AppTextStyles.badge.copyWith(color: AppColors.textTertiary)),
+        Text(
+          label,
+          style: AppTextStyles.badge.copyWith(color: AppColors.textTertiary),
+        ),
         const Spacer(),
         Text(
           value,
@@ -559,8 +583,9 @@ class _StatsTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final entries = list.entries;
-    final lastSubmission =
-        entries.isNotEmpty ? entries.first.submittedAt : null;
+    final lastSubmission = entries.isNotEmpty
+        ? entries.first.submittedAt
+        : null;
 
     return ListView(
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
@@ -572,9 +597,7 @@ class _StatsTab extends StatelessWidget {
         ),
         const SizedBox(height: 16),
         // Recent activity
-        if (entries.isNotEmpty) ...[
-          _RecentActivitySection(entries: entries),
-        ],
+        if (entries.isNotEmpty) ...[_RecentActivitySection(entries: entries)],
       ],
     );
   }
@@ -601,47 +624,55 @@ class _RecentActivitySection extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('RECENT ACTIVITY', style: AppTextStyles.label),
+          Text(S.recentActivity, style: AppTextStyles.label),
           const SizedBox(height: 12),
-          ...recent.map((entry) => Padding(
-                padding: const EdgeInsets.only(bottom: 10),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 28,
-                      height: 28,
-                      decoration: BoxDecoration(
-                        color: AppColors.surfaceLight,
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      child: Center(
-                        child: Text(
-                          entry.displayName.isNotEmpty
-                              ? entry.displayName[0].toUpperCase()
-                              : '?',
-                          style: AppTextStyles.badge
-                              .copyWith(color: AppColors.textTertiary),
+          ...recent.map(
+            (entry) => Padding(
+              padding: const EdgeInsets.only(bottom: 10),
+              child: Row(
+                children: [
+                  Container(
+                    width: 28,
+                    height: 28,
+                    decoration: BoxDecoration(
+                      color: AppColors.surfaceLight,
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: Center(
+                      child: Text(
+                        entry.displayName.isNotEmpty
+                            ? entry.displayName[0].toUpperCase()
+                            : '?',
+                        style: AppTextStyles.badge.copyWith(
+                          color: AppColors.textTertiary,
                         ),
                       ),
                     ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Text(
-                        '${entry.displayName.toUpperCase()} — RANK ${entry.rank}',
-                        style: AppTextStyles.badge
-                            .copyWith(color: AppColors.textSecondary),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      S.rankActivity(
+                        entry.displayName.toUpperCase(),
+                        entry.rank,
                       ),
+                      style: AppTextStyles.badge.copyWith(
+                        color: AppColors.textSecondary,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
-                    Text(
-                      _relativeTime(entry.submittedAt),
-                      style: AppTextStyles.badge
-                          .copyWith(color: AppColors.textTertiary),
+                  ),
+                  Text(
+                    _relativeTime(entry.submittedAt),
+                    style: AppTextStyles.badge.copyWith(
+                      color: AppColors.textTertiary,
                     ),
-                  ],
-                ),
-              )),
+                  ),
+                ],
+              ),
+            ),
+          ),
         ],
       ),
     );
@@ -649,10 +680,10 @@ class _RecentActivitySection extends StatelessWidget {
 
   String _relativeTime(DateTime dt) {
     final diff = DateTime.now().difference(dt);
-    if (diff.inDays > 0) return '${diff.inDays}D AGO';
-    if (diff.inHours > 0) return '${diff.inHours}H AGO';
-    if (diff.inMinutes > 0) return '${diff.inMinutes}M AGO';
-    return 'JUST NOW';
+    if (diff.inDays > 0) return S.dAgo(diff.inDays);
+    if (diff.inHours > 0) return S.hAgo(diff.inHours);
+    if (diff.inMinutes > 0) return S.mAgo(diff.inMinutes);
+    return S.justNow;
   }
 }
 
@@ -693,26 +724,26 @@ class _AdminTab extends ConsumerWidget {
                 height: 20,
                 width: 20,
                 child: CircularProgressIndicator(
-                    color: AppColors.accent, strokeWidth: 2),
+                  color: AppColors.accent,
+                  strokeWidth: 2,
+                ),
               ),
             ),
           ),
-          error: (_, __) => const SizedBox.shrink(),
+          error: (_, _) => const SizedBox.shrink(),
         ),
         // Admin actions
         _AdminActionCard(
           icon: Icons.edit_outlined,
-          title: 'EDIT BOARD',
-          subtitle: 'MODIFY TITLE, DESCRIPTION, LINKS',
+          title: S.editBoard,
+          subtitle: S.editBoardSubtitle,
           onTap: () => _openEditSheet(context),
         ),
         const SizedBox(height: 8),
         _AdminActionCard(
           icon: list.locked ? Icons.lock_open : Icons.lock_outline,
-          title: list.locked ? 'UNLOCK BOARD' : 'LOCK BOARD',
-          subtitle: list.locked
-              ? 'ALLOW NEW ENTRY SUBMISSIONS'
-              : 'PREVENT NEW ENTRY SUBMISSIONS',
+          title: list.locked ? S.unlockBoard : S.lockBoard,
+          subtitle: list.locked ? S.unlockBoardSubtitle : S.lockBoardSubtitle,
           onTap: () async {
             await ref
                 .read(listDetailProvider(listId).notifier)
@@ -722,15 +753,15 @@ class _AdminTab extends ConsumerWidget {
         const SizedBox(height: 8),
         _AdminActionCard(
           icon: Icons.people_outline,
-          title: 'MANAGE MEMBERS',
-          subtitle: '${list.memberCount} MEMBERS — ROLES & ACCESS',
+          title: S.manageMembers,
+          subtitle: S.manageMembersSubtitle(list.memberCount),
           onTap: () => context.push('/lists/$listId/members'),
         ),
         const SizedBox(height: 8),
         _AdminActionCard(
           icon: Icons.share_outlined,
-          title: 'SHARE INVITE',
-          subtitle: 'GENERATE INVITE LINK',
+          title: S.shareInvite,
+          subtitle: S.shareInviteSubtitle,
           onTap: () => _shareInvite(context, ref),
         ),
       ],
@@ -738,7 +769,7 @@ class _AdminTab extends ConsumerWidget {
   }
 
   void _openEditSheet(BuildContext context) {
-    showModalBottomSheet(
+    showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
       backgroundColor: AppColors.card,
@@ -754,12 +785,12 @@ class _AdminTab extends ConsumerWidget {
       final link = await ref
           .read(listDetailProvider(listId).notifier)
           .getInviteLink();
-      await Share.share('Join my board on Ranked: rankapp://invite/$link');
+      await SharePlus.instance.share(ShareParams(text: S.shareMessage(link)));
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('FAILED TO GET INVITE: $e'),
+            content: Text(S.failedToGetInvite(e)),
             backgroundColor: AppColors.error,
           ),
         );
@@ -810,14 +841,18 @@ class _AdminActionCard extends StatelessWidget {
                   const SizedBox(height: 2),
                   Text(
                     subtitle,
-                    style: AppTextStyles.badge
-                        .copyWith(color: AppColors.textTertiary),
+                    style: AppTextStyles.badge.copyWith(
+                      color: AppColors.textTertiary,
+                    ),
                   ),
                 ],
               ),
             ),
-            const Icon(Icons.chevron_right,
-                color: AppColors.textTertiary, size: 18),
+            const Icon(
+              Icons.chevron_right,
+              color: AppColors.textTertiary,
+              size: 18,
+            ),
           ],
         ),
       ),
@@ -853,22 +888,26 @@ class _PendingSubmissionsSection extends ConsumerWidget {
         children: [
           Row(
             children: [
-              const Icon(Icons.hourglass_top,
-                  color: AppColors.warning, size: 16),
+              const Icon(
+                Icons.hourglass_top,
+                color: AppColors.warning,
+                size: 16,
+              ),
               const SizedBox(width: 8),
               Text(
-                'PENDING SUBMISSIONS (${entries.length})',
-                style:
-                    AppTextStyles.badge.copyWith(color: AppColors.warning),
+                S.pendingSubmissions(entries.length),
+                style: AppTextStyles.badge.copyWith(color: AppColors.warning),
               ),
             ],
           ),
           const SizedBox(height: 12),
-          ...entries.map((entry) => _PendingEntryCard(
-                entry: entry,
-                listId: listId,
-                valueType: valueType,
-              )),
+          ...entries.map(
+            (entry) => _PendingEntryCard(
+              entry: entry,
+              listId: listId,
+              valueType: valueType,
+            ),
+          ),
         ],
       ),
     );
@@ -903,7 +942,7 @@ class _PendingEntryCardState extends ConsumerState<_PendingEntryCard> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('FAILED: $e'),
+            content: Text(S.failed(e)),
             backgroundColor: AppColors.error,
           ),
         );
@@ -923,7 +962,7 @@ class _PendingEntryCardState extends ConsumerState<_PendingEntryCard> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('FAILED: $e'),
+            content: Text(S.failed(e)),
             backgroundColor: AppColors.error,
           ),
         );
@@ -935,26 +974,28 @@ class _PendingEntryCardState extends ConsumerState<_PendingEntryCard> {
 
   String _formatValue() {
     return switch (widget.valueType) {
-      ValueType.number => widget.entry.valueNumber
-              ?.toStringAsFixed(
-                  widget.entry.valueNumber!.truncateToDouble() ==
-                          widget.entry.valueNumber!
-                      ? 0
-                      : 1) ??
-          '—',
-      ValueType.duration => widget.entry.valueDurationMs != null
-          ? formatDuration(widget.entry.valueDurationMs!)
-          : '—',
+      ValueType.number =>
+        widget.entry.valueNumber?.toStringAsFixed(
+              widget.entry.valueNumber!.truncateToDouble() ==
+                      widget.entry.valueNumber!
+                  ? 0
+                  : 1,
+            ) ??
+            '—',
+      ValueType.duration =>
+        widget.entry.valueDurationMs != null
+            ? formatDuration(widget.entry.valueDurationMs!)
+            : '—',
       ValueType.text => widget.entry.valueText ?? '—',
     };
   }
 
   String _relativeTime(DateTime dt) {
     final diff = DateTime.now().difference(dt);
-    if (diff.inDays > 0) return '${diff.inDays}D AGO';
-    if (diff.inHours > 0) return '${diff.inHours}H AGO';
-    if (diff.inMinutes > 0) return '${diff.inMinutes}M AGO';
-    return 'JUST NOW';
+    if (diff.inDays > 0) return S.dAgo(diff.inDays);
+    if (diff.inHours > 0) return S.hAgo(diff.inHours);
+    if (diff.inMinutes > 0) return S.mAgo(diff.inMinutes);
+    return S.justNow;
   }
 
   @override
@@ -998,15 +1039,18 @@ class _PendingEntryCardState extends ConsumerState<_PendingEntryCard> {
                   children: [
                     Text(
                       widget.entry.displayName.toUpperCase(),
-                      style: AppTextStyles.body
-                          .copyWith(fontWeight: FontWeight.w700, fontSize: 13),
+                      style: AppTextStyles.body.copyWith(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 13,
+                      ),
                     ),
                     if (widget.entry.note != null &&
                         widget.entry.note!.isNotEmpty)
                       Text(
                         widget.entry.note!,
-                        style: AppTextStyles.badge
-                            .copyWith(color: AppColors.textTertiary),
+                        style: AppTextStyles.badge.copyWith(
+                          color: AppColors.textTertiary,
+                        ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -1016,13 +1060,17 @@ class _PendingEntryCardState extends ConsumerState<_PendingEntryCard> {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  Text(_formatValue(),
-                      style: AppTextStyles.body
-                          .copyWith(fontWeight: FontWeight.w800)),
+                  Text(
+                    _formatValue(),
+                    style: AppTextStyles.body.copyWith(
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
                   Text(
                     _relativeTime(widget.entry.submittedAt),
-                    style: AppTextStyles.badge
-                        .copyWith(color: AppColors.textTertiary),
+                    style: AppTextStyles.badge.copyWith(
+                      color: AppColors.textTertiary,
+                    ),
                   ),
                 ],
               ),
@@ -1042,9 +1090,10 @@ class _PendingEntryCardState extends ConsumerState<_PendingEntryCard> {
                     ),
                     child: Center(
                       child: Text(
-                        'REJECT',
-                        style: AppTextStyles.badge
-                            .copyWith(color: AppColors.error),
+                        S.reject,
+                        style: AppTextStyles.badge.copyWith(
+                          color: AppColors.error,
+                        ),
                       ),
                     ),
                   ),
@@ -1071,9 +1120,10 @@ class _PendingEntryCardState extends ConsumerState<_PendingEntryCard> {
                               ),
                             )
                           : Text(
-                              'APPROVE',
-                              style: AppTextStyles.badge
-                                  .copyWith(color: AppColors.background),
+                              S.approve,
+                              style: AppTextStyles.badge.copyWith(
+                                color: AppColors.background,
+                              ),
                             ),
                     ),
                   ),
@@ -1108,7 +1158,7 @@ class _ObjectiveSection extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('OBJECTIVE', style: AppTextStyles.label),
+          Text(S.objective, style: AppTextStyles.label),
           const SizedBox(height: 8),
           Text(description, style: AppTextStyles.bodySecondary),
         ],
@@ -1122,11 +1172,7 @@ class _CommsSection extends StatelessWidget {
   final String? whatsappLink;
   final String? discordLink;
 
-  const _CommsSection({
-    this.telegramLink,
-    this.whatsappLink,
-    this.discordLink,
-  });
+  const _CommsSection({this.telegramLink, this.whatsappLink, this.discordLink});
 
   @override
   Widget build(BuildContext context) {
@@ -1142,24 +1188,16 @@ class _CommsSection extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('COMMUNITY', style: AppTextStyles.label),
+          Text(S.community, style: AppTextStyles.label),
           const SizedBox(height: 12),
           if (telegramLink != null)
-            _CommsRow(
-              icon: Icons.send,
-              label: 'TELEGRAM',
-              link: telegramLink!,
-            ),
+            _CommsRow(icon: Icons.send, label: S.telegram, link: telegramLink!),
           if (whatsappLink != null)
-            _CommsRow(
-              icon: Icons.chat,
-              label: 'WHATSAPP',
-              link: whatsappLink!,
-            ),
+            _CommsRow(icon: Icons.chat, label: S.whatsapp, link: whatsappLink!),
           if (discordLink != null)
             _CommsRow(
               icon: Icons.headphones,
-              label: 'DISCORD',
+              label: S.discord,
               link: discordLink!,
             ),
         ],
@@ -1203,16 +1241,20 @@ class _CommsRow extends StatelessWidget {
             Expanded(
               child: Text(
                 link,
-                style: AppTextStyles.badge
-                    .copyWith(color: AppColors.textTertiary),
+                style: AppTextStyles.badge.copyWith(
+                  color: AppColors.textTertiary,
+                ),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 textAlign: TextAlign.right,
               ),
             ),
             const SizedBox(width: 6),
-            const Icon(Icons.open_in_new,
-                color: AppColors.textTertiary, size: 12),
+            const Icon(
+              Icons.open_in_new,
+              color: AppColors.textTertiary,
+              size: 12,
+            ),
           ],
         ),
       ),
@@ -1250,14 +1292,18 @@ class _MetricsBar extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('VALUE TYPE',
-                    style: AppTextStyles.label
-                        .copyWith(color: AppColors.textTertiary)),
+                Text(
+                  S.valueType,
+                  style: AppTextStyles.label.copyWith(
+                    color: AppColors.textTertiary,
+                  ),
+                ),
                 const SizedBox(height: 6),
                 Text(
                   valueType.name.toUpperCase(),
-                  style:
-                      AppTextStyles.body.copyWith(fontWeight: FontWeight.w800),
+                  style: AppTextStyles.body.copyWith(
+                    fontWeight: FontWeight.w800,
+                  ),
                 ),
               ],
             ),
@@ -1265,14 +1311,16 @@ class _MetricsBar extends StatelessWidget {
           Column(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              Text('ENTRIES',
-                  style: AppTextStyles.label
-                      .copyWith(color: AppColors.textTertiary)),
+              Text(
+                S.entries,
+                style: AppTextStyles.label.copyWith(
+                  color: AppColors.textTertiary,
+                ),
+              ),
               const SizedBox(height: 6),
               Text(
                 '$entryCount',
-                style:
-                    AppTextStyles.body.copyWith(fontWeight: FontWeight.w800),
+                style: AppTextStyles.body.copyWith(fontWeight: FontWeight.w800),
               ),
             ],
           ),
@@ -1289,9 +1337,12 @@ class _MetricsBar extends StatelessWidget {
                 children: [
                   const Icon(Icons.lock, color: AppColors.warning, size: 12),
                   const SizedBox(width: 4),
-                  Text('LOCKED',
-                      style: AppTextStyles.badge
-                          .copyWith(color: AppColors.warning)),
+                  Text(
+                    S.locked,
+                    style: AppTextStyles.badge.copyWith(
+                      color: AppColors.warning,
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -1349,9 +1400,7 @@ class _StandingRow extends StatelessWidget {
               child: Text(
                 entry.rank.toString().padLeft(2, '0'),
                 style: AppTextStyles.rankNumber.copyWith(
-                  color: isCurrentUser
-                      ? AppColors.accent
-                      : AppColors.textMuted,
+                  color: isCurrentUser ? AppColors.accent : AppColors.textMuted,
                 ),
               ),
             ),
@@ -1386,16 +1435,18 @@ class _StandingRow extends StatelessWidget {
                 children: [
                   Text(
                     entry.displayName.toUpperCase(),
-                    style: AppTextStyles.body
-                        .copyWith(fontWeight: FontWeight.w700),
+                    style: AppTextStyles.body.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                   if (entry.note != null && entry.note!.isNotEmpty)
                     Padding(
                       padding: const EdgeInsets.only(top: 2),
                       child: Text(
                         entry.note!,
-                        style: AppTextStyles.badge
-                            .copyWith(color: AppColors.textTertiary),
+                        style: AppTextStyles.badge.copyWith(
+                          color: AppColors.textTertiary,
+                        ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -1409,8 +1460,9 @@ class _StandingRow extends StatelessWidget {
               child: Text(
                 _formatValue(entry),
                 style: AppTextStyles.statValue.copyWith(
-                  color:
-                      isCurrentUser ? AppColors.accent : AppColors.textPrimary,
+                  color: isCurrentUser
+                      ? AppColors.accent
+                      : AppColors.textPrimary,
                 ),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
@@ -1425,7 +1477,11 @@ class _StandingRow extends StatelessWidget {
   String _formatValue(RankedEntry entry) {
     return switch (valueType) {
       ValueType.number =>
-        entry.valueNumber?.toStringAsFixed(entry.valueNumber!.truncateToDouble() == entry.valueNumber! ? 0 : 1) ??
+        entry.valueNumber?.toStringAsFixed(
+              entry.valueNumber!.truncateToDouble() == entry.valueNumber!
+                  ? 0
+                  : 1,
+            ) ??
             '—',
       ValueType.duration =>
         entry.valueDurationMs != null
@@ -1437,131 +1493,166 @@ class _StandingRow extends StatelessWidget {
 
   void _showEntryDetail(BuildContext context) {
     HapticFeedback.selectionClick();
-    showModalBottomSheet(
+    showModalBottomSheet<void>(
       context: context,
       backgroundColor: AppColors.card,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
-      builder: (ctx) => Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Handle bar
-            Center(
-              child: Container(
-                width: 40,
-                height: 4,
+      builder: (ctx) => SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Handle bar
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: AppColors.border,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+              // Avatar + name
+              Container(
+                width: 56,
+                height: 56,
                 decoration: BoxDecoration(
-                  color: AppColors.border,
-                  borderRadius: BorderRadius.circular(2),
+                  color: AppColors.accent.withAlpha(25),
+                  borderRadius: BorderRadius.circular(28),
+                  border: Border.all(color: AppColors.accent, width: 1.5),
+                ),
+                child: Center(
+                  child: Text(
+                    entry.displayName.isNotEmpty
+                        ? entry.displayName[0].toUpperCase()
+                        : '?',
+                    style: AppTextStyles.valueDisplay.copyWith(
+                      color: AppColors.accent,
+                    ),
+                  ),
                 ),
               ),
-            ),
-            const SizedBox(height: 20),
-            // Avatar + name
-            Container(
-              width: 56,
-              height: 56,
-              decoration: BoxDecoration(
-                color: AppColors.accent.withAlpha(25),
-                borderRadius: BorderRadius.circular(28),
-                border: Border.all(color: AppColors.accent, width: 1.5),
-              ),
-              child: Center(
-                child: Text(
-                  entry.displayName.isNotEmpty
-                      ? entry.displayName[0].toUpperCase()
-                      : '?',
-                  style: AppTextStyles.valueDisplay
-                      .copyWith(color: AppColors.accent),
-                ),
-              ),
-            ),
-            const SizedBox(height: 12),
-            Text(entry.displayName.toUpperCase(),
-                style: AppTextStyles.screenTitle),
-            const SizedBox(height: 4),
-            Text('RANK #${entry.rank}',
-                style: AppTextStyles.subtitle),
-            const SizedBox(height: 20),
-            // Value
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: AppColors.surface,
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: AppColors.border),
-              ),
-              child: Column(
-                children: [
-                  Text(
-                    _formatValue(entry),
-                    style: AppTextStyles.displayLarge
-                        .copyWith(color: AppColors.accent),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    valueType.name.toUpperCase(),
-                    style: AppTextStyles.badge
-                        .copyWith(color: AppColors.textTertiary),
-                  ),
-                ],
-              ),
-            ),
-            // Note
-            if (entry.note != null && entry.note!.isNotEmpty) ...[
               const SizedBox(height: 12),
+              Text(
+                entry.displayName.toUpperCase(),
+                style: AppTextStyles.screenTitle,
+              ),
+              const SizedBox(height: 4),
+              Text(S.rankLabel(entry.rank), style: AppTextStyles.subtitle),
+              const SizedBox(height: 20),
+              // Value
               Container(
                 width: double.infinity,
-                padding: const EdgeInsets.all(14),
+                padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
                   color: AppColors.surface,
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(color: AppColors.border),
                 ),
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('NOTE',
-                        style: AppTextStyles.badge
-                            .copyWith(color: AppColors.textTertiary)),
-                    const SizedBox(height: 6),
-                    Text(entry.note!,
-                        style: AppTextStyles.bodySecondary),
+                    Text(
+                      _formatValue(entry),
+                      style: AppTextStyles.displayLarge.copyWith(
+                        color: AppColors.accent,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      valueType.name.toUpperCase(),
+                      style: AppTextStyles.badge.copyWith(
+                        color: AppColors.textTertiary,
+                      ),
+                    ),
                   ],
                 ),
               ),
-            ],
-            const SizedBox(height: 8),
-            // Timestamp
-            Text(
-              'SUBMITTED ${_formatTimestamp(entry.submittedAt)}',
-              style:
-                  AppTextStyles.badge.copyWith(color: AppColors.textTertiary),
-            ),
-            const SizedBox(height: 20),
-            // View profile button
-            SizedBox(
-              width: double.infinity,
-              child: OutlinedButton(
-                onPressed: () {
-                  Navigator.pop(ctx);
-                  context.push('/users/${entry.userId}');
-                },
-                style: OutlinedButton.styleFrom(
-                  side: const BorderSide(color: AppColors.accent),
-                  padding: const EdgeInsets.symmetric(vertical: 14),
+              // Note
+              if (entry.note != null && entry.note!.isNotEmpty) ...[
+                const SizedBox(height: 12),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    color: AppColors.surface,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: AppColors.border),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        S.note,
+                        style: AppTextStyles.badge.copyWith(
+                          color: AppColors.textTertiary,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      Text(entry.note!, style: AppTextStyles.bodySecondary),
+                    ],
+                  ),
                 ),
-                child: Text('VIEW PROFILE',
-                    style:
-                        AppTextStyles.button.copyWith(color: AppColors.accent)),
+              ],
+              const SizedBox(height: 8),
+              // Timestamp
+              Text(
+                S.submitted(_formatTimestamp(entry.submittedAt)),
+                style: AppTextStyles.badge.copyWith(
+                  color: AppColors.textTertiary,
+                ),
               ),
-            ),
-            const SizedBox(height: 8),
-          ],
+              const SizedBox(height: 20),
+              // View profile button
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton(
+                  onPressed: () {
+                    Navigator.pop(ctx);
+                    context.push('/users/${entry.userId}');
+                  },
+                  style: OutlinedButton.styleFrom(
+                    side: const BorderSide(color: AppColors.accent),
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                  ),
+                  child: Text(
+                    S.viewProfile,
+                    style: AppTextStyles.button.copyWith(
+                      color: AppColors.accent,
+                    ),
+                  ),
+                ),
+              ),
+              // Delete button (visible when user can delete)
+              if (canDelete && onRemove != null) ...[
+                const SizedBox(height: 10),
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton(
+                    onPressed: () {
+                      Navigator.pop(ctx);
+                      onRemove!();
+                    },
+                    style: OutlinedButton.styleFrom(
+                      side: const BorderSide(color: AppColors.error),
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                    ),
+                    child: Text(
+                      isCurrentUser ? S.deleteMyEntry : S.removeEntry,
+                      style: AppTextStyles.button.copyWith(
+                        color: AppColors.error,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+              const SizedBox(height: 8),
+            ],
+          ),
         ),
       ),
     );
@@ -1570,9 +1661,9 @@ class _StandingRow extends StatelessWidget {
   String _formatTimestamp(DateTime dt) {
     final now = DateTime.now();
     final diff = now.difference(dt);
-    if (diff.inMinutes < 60) return '${diff.inMinutes}M AGO';
-    if (diff.inHours < 24) return '${diff.inHours}H AGO';
-    if (diff.inDays < 7) return '${diff.inDays}D AGO';
+    if (diff.inMinutes < 60) return S.mAgo(diff.inMinutes);
+    if (diff.inHours < 24) return S.hAgo(diff.inHours);
+    if (diff.inDays < 7) return S.dAgo(diff.inDays);
     return '${dt.day}/${dt.month}/${dt.year}';
   }
 }
@@ -1589,16 +1680,23 @@ class _EmptyStandings extends StatelessWidget {
       ),
       child: Column(
         children: [
-          const Icon(Icons.leaderboard_outlined,
-              color: AppColors.textTertiary, size: 32),
+          const Icon(
+            Icons.leaderboard_outlined,
+            color: AppColors.textTertiary,
+            size: 32,
+          ),
           const SizedBox(height: 12),
-          Text('NO ENTRIES YET',
-              style: AppTextStyles.sectionHeader
-                  .copyWith(color: AppColors.textSecondary)),
+          Text(
+            S.noEntriesYet,
+            style: AppTextStyles.sectionHeader.copyWith(
+              color: AppColors.textSecondary,
+            ),
+          ),
           const SizedBox(height: 4),
-          Text('BE THE FIRST TO SUBMIT',
-              style:
-                  AppTextStyles.badge.copyWith(color: AppColors.textTertiary)),
+          Text(
+            S.beFirstToSubmit,
+            style: AppTextStyles.badge.copyWith(color: AppColors.textTertiary),
+          ),
         ],
       ),
     );
@@ -1630,22 +1728,28 @@ class _AnalyticsSection extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('BOARD ANALYTICS', style: AppTextStyles.label),
+          Text(S.boardAnalytics, style: AppTextStyles.label),
           const SizedBox(height: 12),
           Row(
             children: [
               Expanded(
-                  child: _AnalyticItem(
-                      label: 'MEMBERS', value: memberCount.toString())),
-              Expanded(
-                  child: _AnalyticItem(
-                      label: 'ENTRIES', value: entryCount.toString())),
+                child: _AnalyticItem(
+                  label: S.members,
+                  value: memberCount.toString(),
+                ),
+              ),
               Expanded(
                 child: _AnalyticItem(
-                  label: 'LAST ENTRY',
+                  label: S.entries,
+                  value: entryCount.toString(),
+                ),
+              ),
+              Expanded(
+                child: _AnalyticItem(
+                  label: S.lastEntry,
                   value: lastSubmission != null
                       ? _formatRelativeTime(lastSubmission!)
-                      : 'N/A',
+                      : S.na,
                 ),
               ),
             ],
@@ -1657,10 +1761,10 @@ class _AnalyticsSection extends StatelessWidget {
 
   String _formatRelativeTime(DateTime dt) {
     final diff = DateTime.now().difference(dt);
-    if (diff.inDays > 0) return '${diff.inDays}D AGO';
-    if (diff.inHours > 0) return '${diff.inHours}H AGO';
-    if (diff.inMinutes > 0) return '${diff.inMinutes}M AGO';
-    return 'JUST NOW';
+    if (diff.inDays > 0) return S.dAgo(diff.inDays);
+    if (diff.inHours > 0) return S.hAgo(diff.inHours);
+    if (diff.inMinutes > 0) return S.mAgo(diff.inMinutes);
+    return S.justNow;
   }
 }
 
@@ -1674,12 +1778,15 @@ class _AnalyticItem extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        Text(label,
-            style:
-                AppTextStyles.badge.copyWith(color: AppColors.textTertiary)),
+        Text(
+          label,
+          style: AppTextStyles.badge.copyWith(color: AppColors.textTertiary),
+        ),
         const SizedBox(height: 4),
-        Text(value,
-            style: AppTextStyles.body.copyWith(fontWeight: FontWeight.w800)),
+        Text(
+          value,
+          style: AppTextStyles.body.copyWith(fontWeight: FontWeight.w800),
+        ),
       ],
     );
   }
@@ -1702,7 +1809,7 @@ class _SubmitButton extends StatelessWidget {
         style: ElevatedButton.styleFrom(
           padding: const EdgeInsets.symmetric(vertical: 18),
         ),
-        child: const Text('SUBMIT NEW ENTRY'),
+        child: const Text(S.submitNewEntry),
       ),
     );
   }

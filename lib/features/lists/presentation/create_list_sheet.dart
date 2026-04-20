@@ -55,7 +55,9 @@ class _CreateListScreenState extends ConsumerState<CreateListScreen> {
     });
 
     try {
-      await ref.read(listsProvider.notifier).createList(
+      await ref
+          .read(listsProvider.notifier)
+          .createList(
             title: title,
             description: _scopeController.text.trim().isEmpty
                 ? null
@@ -74,8 +76,8 @@ class _CreateListScreenState extends ConsumerState<CreateListScreen> {
                 ? null
                 : _discordController.text.trim(),
           );
-      HapticFeedback.mediumImpact();
-      if (mounted) context.go('/home');
+      await HapticFeedback.mediumImpact();
+      if (mounted) context.pop();
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -103,7 +105,7 @@ class _CreateListScreenState extends ConsumerState<CreateListScreen> {
                 children: [
                   Text(S.createBoard, style: AppTextStyles.screenTitle),
                   TextButton(
-                    onPressed: () => context.go('/home'),
+                    onPressed: () => context.pop(),
                     child: Text(
                       S.cancel,
                       style: AppTextStyles.badge.copyWith(
@@ -204,8 +206,10 @@ class _CreateListScreenState extends ConsumerState<CreateListScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(S.valueType,
-            style: AppTextStyles.sectionHeader.copyWith(fontSize: 11)),
+        Text(
+          S.valueType,
+          style: AppTextStyles.sectionHeader.copyWith(fontSize: 11),
+        ),
         const SizedBox(height: 10),
         Row(
           children: ValueType.values.map((type) {
@@ -249,8 +253,9 @@ class _CreateListScreenState extends ConsumerState<CreateListScreen> {
                           color: isSelected
                               ? AppColors.accent
                               : AppColors.textSecondary,
-                          fontWeight:
-                              isSelected ? FontWeight.w800 : FontWeight.w600,
+                          fontWeight: isSelected
+                              ? FontWeight.w800
+                              : FontWeight.w600,
                         ),
                       ),
                     ],
@@ -297,10 +302,11 @@ class _CreateListScreenState extends ConsumerState<CreateListScreen> {
                 isText
                     ? S.manualRankingText
                     : _rankOrder == RankOrder.desc
-                        ? S.highestWins
-                        : S.lowestWins,
-                style:
-                    AppTextStyles.badge.copyWith(color: AppColors.textTertiary),
+                    ? S.highestWins
+                    : S.lowestWins,
+                style: AppTextStyles.badge.copyWith(
+                  color: AppColors.textTertiary,
+                ),
               ),
             ],
           ),
@@ -357,14 +363,17 @@ class _CreateListScreenState extends ConsumerState<CreateListScreen> {
             children: [
               Text(
                 S.publicRegistry,
-                style: AppTextStyles.body
-                    .copyWith(fontWeight: FontWeight.w700, fontSize: 13),
+                style: AppTextStyles.body.copyWith(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 13,
+                ),
               ),
               const SizedBox(height: 2),
               Text(
                 S.visibleToAll,
-                style:
-                    AppTextStyles.badge.copyWith(color: AppColors.textTertiary),
+                style: AppTextStyles.badge.copyWith(
+                  color: AppColors.textTertiary,
+                ),
               ),
             ],
           ),
@@ -381,8 +390,10 @@ class _CreateListScreenState extends ConsumerState<CreateListScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(S.category,
-            style: AppTextStyles.sectionHeader.copyWith(fontSize: 11)),
+        Text(
+          S.category,
+          style: AppTextStyles.sectionHeader.copyWith(fontSize: 11),
+        ),
         const SizedBox(height: 10),
         Wrap(
           spacing: 8,
@@ -390,11 +401,12 @@ class _CreateListScreenState extends ConsumerState<CreateListScreen> {
           children: BoardCategory.all.map((cat) {
             final isSelected = _category == cat;
             return GestureDetector(
-              onTap: () =>
-                  setState(() => _category = isSelected ? null : cat),
+              onTap: () => setState(() => _category = isSelected ? null : cat),
               child: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 10,
+                ),
                 decoration: BoxDecoration(
                   color: isSelected
                       ? AppColors.accent.withAlpha(25)
@@ -431,8 +443,10 @@ class _CreateListScreenState extends ConsumerState<CreateListScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(S.executionRules,
-            style: AppTextStyles.sectionHeader.copyWith(fontSize: 11)),
+        Text(
+          S.executionRules,
+          style: AppTextStyles.sectionHeader.copyWith(fontSize: 11),
+        ),
         const SizedBox(height: 10),
         Container(
           decoration: BoxDecoration(
@@ -495,13 +509,18 @@ class _CreateListScreenState extends ConsumerState<CreateListScreen> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(S.commsChannels,
-                    style: AppTextStyles.sectionHeader.copyWith(fontSize: 11)),
+                Text(
+                  S.commsChannels,
+                  style: AppTextStyles.sectionHeader.copyWith(fontSize: 11),
+                ),
                 Row(
                   children: [
-                    Text(S.optional,
-                        style: AppTextStyles.badge
-                            .copyWith(color: AppColors.textTertiary)),
+                    Text(
+                      S.optional,
+                      style: AppTextStyles.badge.copyWith(
+                        color: AppColors.textTertiary,
+                      ),
+                    ),
                     const SizedBox(width: 8),
                     Icon(
                       _showCommsFields
@@ -523,26 +542,34 @@ class _CreateListScreenState extends ConsumerState<CreateListScreen> {
           _commsField(_whatsappController, 'https://wa.me/...', Icons.chat),
           const SizedBox(height: 10),
           _commsField(
-              _discordController, 'https://discord.gg/...', Icons.headphones),
+            _discordController,
+            'https://discord.gg/...',
+            Icons.headphones,
+          ),
         ],
       ],
     );
   }
 
   Widget _commsField(
-      TextEditingController controller, String hint, IconData icon) {
+    TextEditingController controller,
+    String hint,
+    IconData icon,
+  ) {
     return TextField(
       controller: controller,
       style: AppTextStyles.body.copyWith(fontSize: 13),
       decoration: InputDecoration(
         hintText: hint,
-        hintStyle:
-            AppTextStyles.bodySecondary.copyWith(color: AppColors.textTertiary),
+        hintStyle: AppTextStyles.bodySecondary.copyWith(
+          color: AppColors.textTertiary,
+        ),
         prefixIcon: Icon(icon, color: AppColors.textTertiary, size: 18),
-        prefixIconConstraints:
-            const BoxConstraints(minWidth: 40, minHeight: 0),
-        contentPadding:
-            const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+        prefixIconConstraints: const BoxConstraints(minWidth: 40, minHeight: 0),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 12,
+          vertical: 12,
+        ),
       ),
     );
   }
@@ -578,7 +605,7 @@ class _CreateListScreenState extends ConsumerState<CreateListScreen> {
     setState(() => _titleError = null);
 
     HapticFeedback.selectionClick();
-    showModalBottomSheet(
+    showModalBottomSheet<void>(
       context: context,
       backgroundColor: AppColors.card,
       isScrollControlled: true,
@@ -587,7 +614,11 @@ class _CreateListScreenState extends ConsumerState<CreateListScreen> {
       ),
       builder: (ctx) => Padding(
         padding: EdgeInsets.fromLTRB(
-            20, 20, 20, 20 + MediaQuery.of(ctx).viewInsets.bottom),
+          20,
+          20,
+          20,
+          20 + MediaQuery.of(ctx).viewInsets.bottom,
+        ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -631,7 +662,9 @@ class _CreateListScreenState extends ConsumerState<CreateListScreen> {
                     runSpacing: 6,
                     children: [
                       _previewChip(
-                          _valueType.name.toUpperCase(), AppColors.accent),
+                        _valueType.name.toUpperCase(),
+                        AppColors.accent,
+                      ),
                       _previewChip(
                         _rankOrder == RankOrder.desc
                             ? S.highestWinsShort
@@ -659,9 +692,12 @@ class _CreateListScreenState extends ConsumerState<CreateListScreen> {
                       side: const BorderSide(color: AppColors.border),
                       padding: const EdgeInsets.symmetric(vertical: 14),
                     ),
-                    child: Text(S.edit,
-                        style: AppTextStyles.button
-                            .copyWith(color: AppColors.textSecondary)),
+                    child: Text(
+                      S.edit,
+                      style: AppTextStyles.button.copyWith(
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -675,9 +711,12 @@ class _CreateListScreenState extends ConsumerState<CreateListScreen> {
                       backgroundColor: AppColors.accent,
                       padding: const EdgeInsets.symmetric(vertical: 14),
                     ),
-                    child: Text(S.create,
-                        style: AppTextStyles.button
-                            .copyWith(color: AppColors.background)),
+                    child: Text(
+                      S.create,
+                      style: AppTextStyles.button.copyWith(
+                        color: AppColors.background,
+                      ),
+                    ),
                   ),
                 ),
               ],

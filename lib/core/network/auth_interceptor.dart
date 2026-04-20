@@ -4,9 +4,6 @@ import 'package:mutex/mutex.dart';
 
 import '../constants/app_constants.dart';
 
-const kAccessTokenKey = 'access_token';
-const kRefreshTokenKey = 'refresh_token';
-
 /// JWT attach + 401 → refresh + retry
 class AuthInterceptor extends Interceptor {
   final FlutterSecureStorage _storage;
@@ -16,12 +13,14 @@ class AuthInterceptor extends Interceptor {
   late final Dio _refreshDio;
 
   AuthInterceptor({FlutterSecureStorage? storage})
-      : _storage = storage ?? const FlutterSecureStorage() {
-    _refreshDio = Dio(BaseOptions(
-      baseUrl: AppConstants.apiBaseUrl,
-      connectTimeout: const Duration(seconds: 10),
-      receiveTimeout: const Duration(seconds: 30),
-    ));
+    : _storage = storage ?? const FlutterSecureStorage() {
+    _refreshDio = Dio(
+      BaseOptions(
+        baseUrl: AppConstants.apiBaseUrl,
+        connectTimeout: const Duration(seconds: 10),
+        receiveTimeout: const Duration(seconds: 30),
+      ),
+    );
   }
 
   @override
@@ -29,7 +28,7 @@ class AuthInterceptor extends Interceptor {
     RequestOptions options,
     RequestInterceptorHandler handler,
   ) async {
-    final token = await _storage.read(key: kAccessTokenKey);
+    final token = await _storage.read(key: AppConstants.accessTokenKey);
     if (token != null) {
       options.headers['Authorization'] = 'Bearer $token';
     }
@@ -49,9 +48,11 @@ class AuthInterceptor extends Interceptor {
           final refreshed = await _attemptTokenRefresh();
           if (refreshed) {
             // Retry the original request with the new token
-            final token = await _storage.read(key: kAccessTokenKey);
+            final token = await _storage.read(key: AppConstants.accessTokenKey);
             err.requestOptions.headers['Authorization'] = 'Bearer $token';
-            final response = await _refreshDio.fetch(err.requestOptions);
+            final response = await _refreshDio.fetch<dynamic>(
+              err.requestOptions,
+            );
             return handler.resolve(response);
           }
         } finally {
@@ -67,11 +68,11 @@ class AuthInterceptor extends Interceptor {
   }
 
   Future<bool> _attemptTokenRefresh() async {
-    final refreshToken = await _storage.read(key: kRefreshTokenKey);
+    final refreshToken = await _storage.read(key: AppConstants.refreshTokenKey);
     if (refreshToken == null) return false;
 
     try {
-      final response = await _refreshDio.post(
+      final response = await _refreshDio.post<Map<String, dynamic>>(
         '/auth/refresh',
         data: {'refresh_token': refreshToken},
       );
@@ -79,11 +80,11 @@ class AuthInterceptor extends Interceptor {
       if (response.statusCode == 200) {
         final data = response.data as Map<String, dynamic>;
         await _storage.write(
-          key: kAccessTokenKey,
+          key: AppConstants.accessTokenKey,
           value: data['access_token'] as String,
         );
         await _storage.write(
-          key: kRefreshTokenKey,
+          key: AppConstants.refreshTokenKey,
           value: data['refresh_token'] as String,
         );
         return true;
@@ -95,7 +96,7 @@ class AuthInterceptor extends Interceptor {
   }
 
   Future<void> _clearTokens() async {
-    await _storage.delete(key: kAccessTokenKey);
-    await _storage.delete(key: kRefreshTokenKey);
+    await _storage.delete(key: AppConstants.accessTokenKey);
+    await _storage.delete(key: AppConstants.refreshTokenKey);
   }
 }

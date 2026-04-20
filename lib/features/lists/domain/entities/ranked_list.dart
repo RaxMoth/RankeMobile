@@ -56,6 +56,7 @@ class ListSummary with _$ListSummary {
     int? ownRank,
     MemberRole? currentUserRole,
     String? category,
+    @Default([]) List<RankedEntry> topEntries,
   }) = _ListSummary;
 }
 

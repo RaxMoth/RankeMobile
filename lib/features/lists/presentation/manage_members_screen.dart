@@ -26,18 +26,17 @@ class ManageMembersScreen extends ConsumerWidget {
             _buildHeader(context, ref),
             Expanded(
               child: membersAsync.when(
-                data: (members) => _MembersList(
-                  members: members,
-                  listId: listId,
-                ),
+                data: (members) =>
+                    _MembersList(members: members, listId: listId),
                 loading: () => const Center(
                   child: CircularProgressIndicator(color: AppColors.accent),
                 ),
                 error: (e, _) => Center(
                   child: Text(
                     S.failedToLoadMembers,
-                    style: AppTextStyles.sectionHeader
-                        .copyWith(color: AppColors.error),
+                    style: AppTextStyles.sectionHeader.copyWith(
+                      color: AppColors.error,
+                    ),
                   ),
                 ),
               ),
@@ -55,16 +54,22 @@ class ManageMembersScreen extends ConsumerWidget {
         children: [
           IconButton(
             onPressed: () => context.pop(),
-            icon: const Icon(Icons.chevron_left,
-                color: AppColors.textPrimary, size: 28),
+            icon: const Icon(
+              Icons.chevron_left,
+              color: AppColors.textPrimary,
+              size: 28,
+            ),
           ),
           Expanded(
             child: Text(S.manageMembers, style: AppTextStyles.screenTitle),
           ),
           IconButton(
             onPressed: () => _shareInvite(context, ref),
-            icon: const Icon(Icons.person_add_outlined,
-                color: AppColors.accent, size: 22),
+            icon: const Icon(
+              Icons.person_add_outlined,
+              color: AppColors.accent,
+              size: 22,
+            ),
           ),
         ],
       ),
@@ -76,7 +81,7 @@ class ManageMembersScreen extends ConsumerWidget {
       final link = await ref
           .read(listDetailProvider(listId).notifier)
           .getInviteLink();
-      await Share.share(S.shareMessage(link));
+      await SharePlus.instance.share(ShareParams(text: S.shareMessage(link)));
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -102,8 +107,9 @@ class _MembersList extends ConsumerWidget {
       return Center(
         child: Text(
           S.noMembers,
-          style: AppTextStyles.bodySecondary
-              .copyWith(color: AppColors.textTertiary),
+          style: AppTextStyles.bodySecondary.copyWith(
+            color: AppColors.textTertiary,
+          ),
         ),
       );
     }
@@ -113,10 +119,7 @@ class _MembersList extends ConsumerWidget {
       itemCount: members.length,
       itemBuilder: (context, index) {
         final member = members[index];
-        return _MemberRow(
-          member: member,
-          listId: listId,
-        );
+        return _MemberRow(member: member, listId: listId);
       },
     );
   }
@@ -194,7 +197,9 @@ class _MemberRow extends ConsumerWidget {
               Expanded(
                 child: Text(
                   member.displayName.toUpperCase(),
-                  style: AppTextStyles.body.copyWith(fontWeight: FontWeight.w700),
+                  style: AppTextStyles.body.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
               ),
               // Role badge (tappable for non-owners)
@@ -203,17 +208,22 @@ class _MemberRow extends ConsumerWidget {
                     ? () => _showRolePicker(context, ref)
                     : null,
                 child: Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: _roleColor(member.role).withAlpha(20),
                     borderRadius: BorderRadius.circular(4),
-                    border: Border.all(color: _roleColor(member.role).withAlpha(60)),
+                    border: Border.all(
+                      color: _roleColor(member.role).withAlpha(60),
+                    ),
                   ),
                   child: Text(
                     member.role.name.toUpperCase(),
-                    style: AppTextStyles.badge
-                        .copyWith(color: _roleColor(member.role)),
+                    style: AppTextStyles.badge.copyWith(
+                      color: _roleColor(member.role),
+                    ),
                   ),
                 ),
               ),
@@ -237,8 +247,10 @@ class _MemberRow extends ConsumerWidget {
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: AppColors.card,
-        title: Text(S.removeMember,
-            style: AppTextStyles.screenTitle.copyWith(fontSize: 16)),
+        title: Text(
+          S.removeMember,
+          style: AppTextStyles.screenTitle.copyWith(fontSize: 16),
+        ),
         content: Text(
           S.removeMemberConfirm(member.displayName),
           style: AppTextStyles.bodySecondary,
@@ -246,14 +258,19 @@ class _MemberRow extends ConsumerWidget {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: Text(S.cancel,
-                style: AppTextStyles.button
-                    .copyWith(color: AppColors.textSecondary)),
+            child: Text(
+              S.cancel,
+              style: AppTextStyles.button.copyWith(
+                color: AppColors.textSecondary,
+              ),
+            ),
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: Text(S.remove,
-                style: AppTextStyles.button.copyWith(color: AppColors.error)),
+            child: Text(
+              S.remove,
+              style: AppTextStyles.button.copyWith(color: AppColors.error),
+            ),
           ),
         ],
       ),
@@ -263,7 +280,7 @@ class _MemberRow extends ConsumerWidget {
 
   void _showRolePicker(BuildContext context, WidgetRef ref) {
     final availableRoles = [MemberRole.admin, MemberRole.member];
-    showModalBottomSheet(
+    showModalBottomSheet<void>(
       context: context,
       backgroundColor: AppColors.card,
       shape: const RoundedRectangleBorder(
@@ -277,8 +294,10 @@ class _MemberRow extends ConsumerWidget {
           children: [
             Text(S.setRole, style: AppTextStyles.screenTitle),
             const SizedBox(height: 4),
-            Text(member.displayName.toUpperCase(),
-                style: AppTextStyles.subtitle),
+            Text(
+              member.displayName.toUpperCase(),
+              style: AppTextStyles.subtitle,
+            ),
             const SizedBox(height: 16),
             ...availableRoles.map(
               (role) => ListTile(
@@ -288,9 +307,12 @@ class _MemberRow extends ConsumerWidget {
                       : Icons.person_outline,
                   color: _roleColor(role),
                 ),
-                title: Text(role.name.toUpperCase(),
-                    style: AppTextStyles.body
-                        .copyWith(fontWeight: FontWeight.w700)),
+                title: Text(
+                  role.name.toUpperCase(),
+                  style: AppTextStyles.body.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
                 trailing: member.role == role
                     ? const Icon(Icons.check, color: AppColors.accent, size: 18)
                     : null,

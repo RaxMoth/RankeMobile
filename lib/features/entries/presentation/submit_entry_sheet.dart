@@ -61,7 +61,7 @@ class _SubmitEntrySheetState extends ConsumerState<SubmitEntrySheet> {
       case ValueType.number:
         final value = double.tryParse(_numberController.text.trim());
         if (value == null) {
-          setState(() => _valueError = 'ENTER A VALID NUMBER');
+          setState(() => _valueError = S.enterValidNumber);
           return;
         }
         input = EntryInput(
@@ -72,7 +72,7 @@ class _SubmitEntrySheetState extends ConsumerState<SubmitEntrySheet> {
         );
       case ValueType.duration:
         if (_durationMs <= 0) {
-          setState(() => _valueError = 'ENTER A VALID DURATION');
+          setState(() => _valueError = S.enterValidDuration);
           return;
         }
         input = EntryInput(
@@ -84,7 +84,7 @@ class _SubmitEntrySheetState extends ConsumerState<SubmitEntrySheet> {
       case ValueType.text:
         final value = _textController.text.trim();
         if (value.isEmpty) {
-          setState(() => _valueError = 'ENTER A VALUE');
+          setState(() => _valueError = S.enterValue);
           return;
         }
         input = EntryInput(
@@ -104,13 +104,13 @@ class _SubmitEntrySheetState extends ConsumerState<SubmitEntrySheet> {
       await ref
           .read(listDetailProvider(widget.listId).notifier)
           .submitEntry(input);
-      HapticFeedback.mediumImpact();
+      await HapticFeedback.mediumImpact();
       if (mounted) setState(() => _submitted = true);
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('SUBMISSION FAILED: $e'),
+            content: Text(S.submissionFailed(e)),
             backgroundColor: AppColors.error,
           ),
         );
@@ -151,15 +151,15 @@ class _SubmitEntrySheetState extends ConsumerState<SubmitEntrySheet> {
         const SizedBox(height: 32),
         const _AnimatedCheckmark(),
         const SizedBox(height: 20),
-        Text('SUBMISSION RECEIVED', style: AppTextStyles.screenTitle),
+        Text(S.submissionReceived, style: AppTextStyles.screenTitle),
         const SizedBox(height: 8),
         Text(
-          'PENDING ADMIN APPROVAL',
+          S.pendingApproval,
           style: AppTextStyles.subtitle.copyWith(letterSpacing: 2.0),
         ),
         const SizedBox(height: 8),
         Text(
-          'Your entry will appear in standings\nonce approved by a moderator.',
+          S.submissionApprovalHint,
           style: AppTextStyles.bodySecondary,
           textAlign: TextAlign.center,
         ),
@@ -175,7 +175,7 @@ class _SubmitEntrySheetState extends ConsumerState<SubmitEntrySheet> {
             style: ElevatedButton.styleFrom(
               padding: const EdgeInsets.symmetric(vertical: 16),
             ),
-            child: const Text('DONE'),
+            child: const Text(S.done),
           ),
         ),
         const SizedBox(height: 8),
@@ -201,10 +201,10 @@ class _SubmitEntrySheetState extends ConsumerState<SubmitEntrySheet> {
         ),
         const SizedBox(height: 20),
         // Header
-        Text('SUBMIT ENTRY', style: AppTextStyles.screenTitle),
+        Text(S.submitEntry, style: AppTextStyles.screenTitle),
         const SizedBox(height: 4),
         Text(
-          'VALUE TYPE: ${widget.valueType.name.toUpperCase()}',
+          S.valueTypeSubtitle(widget.valueType.name.toUpperCase()),
           style: AppTextStyles.subtitle,
         ),
         const SizedBox(height: 24),
@@ -219,8 +219,10 @@ class _SubmitEntrySheetState extends ConsumerState<SubmitEntrySheet> {
         ],
         const SizedBox(height: 20),
         // Note field
-        Text('NOTE (OPTIONAL)',
-            style: AppTextStyles.sectionHeader.copyWith(fontSize: 11)),
+        Text(
+          S.noteOptional,
+          style: AppTextStyles.sectionHeader.copyWith(fontSize: 11),
+        ),
         const SizedBox(height: 8),
         TextField(
           controller: _noteController,
@@ -228,12 +230,13 @@ class _SubmitEntrySheetState extends ConsumerState<SubmitEntrySheet> {
           maxLength: 200,
           style: AppTextStyles.body,
           decoration: InputDecoration(
-            hintText: 'ADD CONTEXT TO YOUR ENTRY...',
+            hintText: S.noteHint,
             hintStyle: AppTextStyles.bodySecondary.copyWith(
               color: AppColors.textTertiary,
             ),
-            counterStyle:
-                AppTextStyles.badge.copyWith(color: AppColors.textTertiary),
+            counterStyle: AppTextStyles.badge.copyWith(
+              color: AppColors.textTertiary,
+            ),
           ),
         ),
         // Proof prompt
@@ -259,7 +262,7 @@ class _SubmitEntrySheetState extends ConsumerState<SubmitEntrySheet> {
                       color: AppColors.background,
                     ),
                   )
-                : const Text('CONFIRM SUBMISSION'),
+                : const Text(S.confirmSubmission),
           ),
         ),
         const SizedBox(height: 8),
@@ -281,25 +284,30 @@ class _SubmitEntrySheetState extends ConsumerState<SubmitEntrySheet> {
         children: [
           Row(
             children: [
-              const Icon(Icons.verified_outlined,
-                  color: AppColors.accent, size: 16),
+              const Icon(
+                Icons.verified_outlined,
+                color: AppColors.accent,
+                size: 16,
+              ),
               const SizedBox(width: 8),
-              Text('SHARE PROOF IN COMMUNITY',
-                  style: AppTextStyles.badge.copyWith(color: AppColors.accent)),
+              Text(
+                S.shareProof,
+                style: AppTextStyles.badge.copyWith(color: AppColors.accent),
+              ),
             ],
           ),
           const SizedBox(height: 8),
           Text(
-            'Send evidence (photos, videos) in the group chat to help admins verify your entry.',
+            S.shareProofHint,
             style: AppTextStyles.badge.copyWith(color: AppColors.textSecondary),
           ),
           const SizedBox(height: 10),
           if (widget.telegramLink != null)
-            _proofLink(Icons.send, 'TELEGRAM', widget.telegramLink!),
+            _proofLink(Icons.send, S.telegram, widget.telegramLink!),
           if (widget.whatsappLink != null)
-            _proofLink(Icons.chat, 'WHATSAPP', widget.whatsappLink!),
+            _proofLink(Icons.chat, S.whatsapp, widget.whatsappLink!),
           if (widget.discordLink != null)
-            _proofLink(Icons.headphones, 'DISCORD', widget.discordLink!),
+            _proofLink(Icons.headphones, S.discord, widget.discordLink!),
         ],
       ),
     );
@@ -322,12 +330,18 @@ class _SubmitEntrySheetState extends ConsumerState<SubmitEntrySheet> {
           children: [
             Icon(icon, color: AppColors.textSecondary, size: 14),
             const SizedBox(width: 8),
-            Text(label,
-                style: AppTextStyles.badge
-                    .copyWith(color: AppColors.textSecondary)),
+            Text(
+              label,
+              style: AppTextStyles.badge.copyWith(
+                color: AppColors.textSecondary,
+              ),
+            ),
             const Spacer(),
-            const Icon(Icons.open_in_new,
-                color: AppColors.textTertiary, size: 11),
+            const Icon(
+              Icons.open_in_new,
+              color: AppColors.textTertiary,
+              size: 11,
+            ),
           ],
         ),
       ),
@@ -336,7 +350,6 @@ class _SubmitEntrySheetState extends ConsumerState<SubmitEntrySheet> {
 
   Widget _buildValueInput() {
     return switch (widget.valueType) {
-
       ValueType.number => _buildNumberInput(),
       ValueType.duration => _buildDurationInput(),
       ValueType.text => _buildTextInput(),
@@ -347,8 +360,10 @@ class _SubmitEntrySheetState extends ConsumerState<SubmitEntrySheet> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('VALUE',
-            style: AppTextStyles.sectionHeader.copyWith(fontSize: 11)),
+        Text(
+          S.value,
+          style: AppTextStyles.sectionHeader.copyWith(fontSize: 11),
+        ),
         const SizedBox(height: 8),
         TextField(
           controller: _numberController,
@@ -375,8 +390,10 @@ class _SubmitEntrySheetState extends ConsumerState<SubmitEntrySheet> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('DURATION',
-            style: AppTextStyles.sectionHeader.copyWith(fontSize: 11)),
+        Text(
+          S.duration,
+          style: AppTextStyles.sectionHeader.copyWith(fontSize: 11),
+        ),
         const SizedBox(height: 8),
         DurationPickerWidget(
           onChanged: (ms) {
@@ -392,8 +409,10 @@ class _SubmitEntrySheetState extends ConsumerState<SubmitEntrySheet> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('VALUE',
-            style: AppTextStyles.sectionHeader.copyWith(fontSize: 11)),
+        Text(
+          S.value,
+          style: AppTextStyles.sectionHeader.copyWith(fontSize: 11),
+        ),
         const SizedBox(height: 8),
         TextField(
           controller: _textController,
@@ -402,7 +421,7 @@ class _SubmitEntrySheetState extends ConsumerState<SubmitEntrySheet> {
             if (_valueError != null) setState(() => _valueError = null);
           },
           decoration: InputDecoration(
-            hintText: 'ENTER YOUR VALUE...',
+            hintText: S.enterValueHint,
             hintStyle: AppTextStyles.bodySecondary.copyWith(
               color: AppColors.textTertiary,
             ),
@@ -471,8 +490,9 @@ class _AnimatedCheckmarkState extends State<_AnimatedCheckmark>
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     border: Border.all(
-                      color: AppColors.accent
-                          .withAlpha((100 * (1 - _ringAnim.value)).round()),
+                      color: AppColors.accent.withAlpha(
+                        (100 * (1 - _ringAnim.value)).round(),
+                      ),
                       width: 2,
                     ),
                   ),
@@ -490,7 +510,10 @@ class _AnimatedCheckmarkState extends State<_AnimatedCheckmark>
                     border: Border.all(color: AppColors.accent, width: 2),
                   ),
                   child: const Icon(
-                      Icons.check, color: AppColors.accent, size: 28),
+                    Icons.check,
+                    color: AppColors.accent,
+                    size: 28,
+                  ),
                 ),
               ),
             ],

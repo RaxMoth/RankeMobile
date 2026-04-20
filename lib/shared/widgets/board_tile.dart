@@ -50,12 +50,20 @@ class BoardTile extends ConsumerWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    summary.title.toUpperCase(),
-                    style: AppTextStyles.body
-                        .copyWith(fontWeight: FontWeight.w700, fontSize: 13),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          summary.title.toUpperCase(),
+                          style: AppTextStyles.body.copyWith(
+                              fontWeight: FontWeight.w700, fontSize: 13),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      _buildTrailing(ref),
+                    ],
                   ),
                   const SizedBox(height: 4),
                   Row(
@@ -77,10 +85,27 @@ class BoardTile extends ConsumerWidget {
                       ],
                     ],
                   ),
+                  if (summary.topEntries.isNotEmpty) ...[
+                    const SizedBox(height: 10),
+                    Container(
+                      height: 1,
+                      color: AppColors.border,
+                    ),
+                    const SizedBox(height: 8),
+                    for (int i = 0; i < summary.topEntries.length; i++) ...[
+                      _EntryPreviewRow(
+                        entry: summary.topEntries[i],
+                        valueType: summary.valueType,
+                        isOwn: summary.ownRank != null &&
+                            summary.topEntries[i].rank == summary.ownRank,
+                      ),
+                      if (i < summary.topEntries.length - 1)
+                        const SizedBox(height: 4),
+                    ],
+                  ],
                 ],
               ),
             ),
-            _buildTrailing(ref),
           ],
         ),
       ),
@@ -134,5 +159,92 @@ class BoardTile extends ConsumerWidget {
   static String _formatCount(int count) {
     if (count >= 1000) return '${(count / 1000).toStringAsFixed(1)}K';
     return count.toString();
+  }
+}
+
+/// Compact single-row preview of a ranked entry: rank + name + value.
+/// Shown inline under board metadata on Home tiles.
+class _EntryPreviewRow extends StatelessWidget {
+  final RankedEntry entry;
+  final ValueType valueType;
+  final bool isOwn;
+
+  const _EntryPreviewRow({
+    required this.entry,
+    required this.valueType,
+    required this.isOwn,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final rankColor = entry.rank == 1
+        ? AppColors.accent
+        : (isOwn ? AppColors.accent : AppColors.textTertiary);
+    final nameColor = isOwn ? AppColors.textPrimary : AppColors.textSecondary;
+
+    return Row(
+      children: [
+        SizedBox(
+          width: 22,
+          child: Text(
+            '#${entry.rank}',
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w800,
+              color: rankColor,
+              letterSpacing: 0.3,
+            ),
+          ),
+        ),
+        const SizedBox(width: 6),
+        Expanded(
+          child: Text(
+            isOwn ? 'You' : entry.displayName,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: isOwn ? FontWeight.w700 : FontWeight.w500,
+              color: nameColor,
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+        const SizedBox(width: 8),
+        Text(
+          _formatValue(entry, valueType),
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w700,
+            color: entry.rank == 1
+                ? AppColors.accent
+                : AppColors.textSecondary,
+            fontFeatures: const [FontFeature.tabularFigures()],
+          ),
+        ),
+      ],
+    );
+  }
+
+  static String _formatValue(RankedEntry entry, ValueType type) {
+    switch (type) {
+      case ValueType.number:
+        final v = entry.valueNumber;
+        if (v == null) return '—';
+        if (v == v.roundToDouble()) return v.toStringAsFixed(0);
+        return v.toStringAsFixed(1);
+      case ValueType.duration:
+        final ms = entry.valueDurationMs;
+        if (ms == null) return '—';
+        final totalSec = ms ~/ 1000;
+        final h = totalSec ~/ 3600;
+        final m = (totalSec % 3600) ~/ 60;
+        final s = totalSec % 60;
+        if (h > 0) {
+          return '$h:${m.toString().padLeft(2, '0')}:${s.toString().padLeft(2, '0')}';
+        }
+        return '${m.toString().padLeft(2, '0')}:${s.toString().padLeft(2, '0')}';
+      case ValueType.text:
+        return entry.valueText ?? '—';
+    }
   }
 }
