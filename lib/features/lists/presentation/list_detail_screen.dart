@@ -273,71 +273,91 @@ class _StandingsTab extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final currentUserId = ref.watch(authProvider).valueOrNull?.id;
+    final canSubmit = !list.locked;
+
+    Widget listView = ListView(
+      padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
+      physics: const AlwaysScrollableScrollPhysics(),
+      children: [
+        if (canSubmit)
+          const Padding(
+            padding: EdgeInsets.only(bottom: 12),
+            child: _PullToSubmitHint(),
+          ),
+        if (list.entries.isEmpty)
+          _EmptyStandings()
+        else
+          ...list.entries.map((entry) {
+            final isOwnEntry =
+                currentUserId != null && entry.userId == currentUserId;
+            final canDelete = isAdmin || isOwnEntry;
+
+            return canDelete
+                ? Dismissible(
+                    key: ValueKey(entry.id),
+                    direction: DismissDirection.endToStart,
+                    confirmDismiss: (_) async {
+                      _confirmRemoveEntry(
+                        context,
+                        ref,
+                        entry,
+                        isOwnEntry,
+                      );
+                      return false;
+                    },
+                    background: Container(
+                      margin: const EdgeInsets.only(bottom: 8),
+                      decoration: BoxDecoration(
+                        color: AppColors.error,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      alignment: Alignment.centerRight,
+                      padding: const EdgeInsets.only(right: 20),
+                      child: const Icon(
+                        Icons.delete_outline,
+                        color: Colors.white,
+                        size: 22,
+                      ),
+                    ),
+                    child: _StandingRow(
+                      entry: entry,
+                      valueType: list.valueType,
+                      currentUserId: currentUserId,
+                      canDelete: true,
+                      onRemove: () => _confirmRemoveEntry(
+                        context,
+                        ref,
+                        entry,
+                        isOwnEntry,
+                      ),
+                    ),
+                  )
+                : _StandingRow(
+                    entry: entry,
+                    valueType: list.valueType,
+                    currentUserId: currentUserId,
+                  );
+          }),
+      ],
+    );
+
+    if (canSubmit) {
+      listView = RefreshIndicator(
+        color: AppColors.accent,
+        backgroundColor: AppColors.surface,
+        onRefresh: () async {
+          await HapticFeedback.mediumImpact();
+          if (!context.mounted) return;
+          _openSubmitSheet(context);
+        },
+        child: listView,
+      );
+    }
 
     return Column(
       children: [
-        Expanded(
-          child: ListView(
-            padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
-            children: [
-              if (list.entries.isEmpty)
-                _EmptyStandings()
-              else
-                ...list.entries.map((entry) {
-                  final isOwnEntry =
-                      currentUserId != null && entry.userId == currentUserId;
-                  final canDelete = isAdmin || isOwnEntry;
-
-                  return canDelete
-                      ? Dismissible(
-                          key: ValueKey(entry.id),
-                          direction: DismissDirection.endToStart,
-                          confirmDismiss: (_) async {
-                            _confirmRemoveEntry(
-                              context,
-                              ref,
-                              entry,
-                              isOwnEntry,
-                            );
-                            return false;
-                          },
-                          background: Container(
-                            margin: const EdgeInsets.only(bottom: 8),
-                            decoration: BoxDecoration(
-                              color: AppColors.error,
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            alignment: Alignment.centerRight,
-                            padding: const EdgeInsets.only(right: 20),
-                            child: const Icon(
-                              Icons.delete_outline,
-                              color: Colors.white,
-                              size: 22,
-                            ),
-                          ),
-                          child: _StandingRow(
-                            entry: entry,
-                            valueType: list.valueType,
-                            currentUserId: currentUserId,
-                            canDelete: true,
-                            onRemove: () => _confirmRemoveEntry(
-                              context,
-                              ref,
-                              entry,
-                              isOwnEntry,
-                            ),
-                          ),
-                        )
-                      : _StandingRow(
-                          entry: entry,
-                          valueType: list.valueType,
-                          currentUserId: currentUserId,
-                        );
-                }),
-            ],
-          ),
-        ),
-        if (!list.locked)
+        Expanded(child: listView),
+        if (canSubmit)
           _SubmitButton(onPressed: () => _openSubmitSheet(context)),
       ],
     );
@@ -1786,6 +1806,28 @@ class _AnalyticItem extends StatelessWidget {
         Text(
           value,
           style: AppTextStyles.body.copyWith(fontWeight: FontWeight.w800),
+        ),
+      ],
+    );
+  }
+}
+
+// ─── Pull-to-submit Hint ──────────────────────────────────────
+
+class _PullToSubmitHint extends StatelessWidget {
+  const _PullToSubmitHint();
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        const Icon(Icons.keyboard_arrow_down,
+            size: 14, color: AppColors.textTertiary),
+        const SizedBox(width: 4),
+        Text(
+          S.pullToSubmit,
+          style: AppTextStyles.badge.copyWith(color: AppColors.textTertiary),
         ),
       ],
     );

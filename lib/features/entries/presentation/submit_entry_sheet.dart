@@ -104,8 +104,13 @@ class _SubmitEntrySheetState extends ConsumerState<SubmitEntrySheet> {
       await ref
           .read(listDetailProvider(widget.listId).notifier)
           .submitEntry(input);
+      // Two-stage "reveal" haptic: a quick tap followed by a heavier
+      // thud ~220ms later, timed with the checkmark bounce.
       await HapticFeedback.mediumImpact();
       if (mounted) setState(() => _submitted = true);
+      Future<void>.delayed(const Duration(milliseconds: 220), () {
+        HapticFeedback.heavyImpact();
+      });
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

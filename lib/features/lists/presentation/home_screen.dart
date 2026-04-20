@@ -9,8 +9,10 @@ import '../../../core/theme/text_styles.dart';
 import '../../../shared/widgets/board_tile.dart';
 import '../../../shared/widgets/create_fab.dart';
 import '../../../shared/widgets/shimmer_loading.dart';
+import '../../../shared/widgets/user_avatar_menu.dart';
 import '../domain/entities/ranked_list.dart';
 import 'providers/bookmark_provider.dart';
+import 'providers/discover_provider.dart';
 import 'providers/home_filter_provider.dart';
 import 'providers/lists_provider.dart';
 
@@ -71,104 +73,114 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       backgroundColor: Colors.transparent,
       floatingActionButton: const CreateFab(),
       body: SafeArea(
-      child: RefreshIndicator(
-        color: AppColors.accent,
-        backgroundColor: AppColors.surface,
-        onRefresh: () => ref.read(listsProvider.notifier).refresh(),
-        child: GestureDetector(
-          behavior: HitTestBehavior.translucent,
-          onHorizontalDragStart: _onHorizontalDragStart,
-          onHorizontalDragUpdate: _onHorizontalDragUpdate,
-          onHorizontalDragEnd: _onHorizontalDragEnd,
-          child: CustomScrollView(
-            slivers: [
-              // Filter bar — full width, no title
-              const SliverToBoxAdapter(
-                child: Padding(
-                  padding: EdgeInsets.fromLTRB(20, 16, 20, 8),
-                  child: _FilterBar(),
-                ),
-              ),
-              // Content
-              listsAsync.when(
-                data: (lists) {
-                  final owned = lists
-                      .where((l) => l.currentUserRole == MemberRole.owner)
-                      .toList();
-                  final participating = lists
-                      .where(
-                        (l) =>
-                            l.currentUserRole == MemberRole.admin ||
-                            l.currentUserRole == MemberRole.member,
-                      )
-                      .toList();
-                  final shownIds = {
-                    ...owned.map((l) => l.id),
-                    ...participating.map((l) => l.id),
-                  };
-                  final saved = lists
-                      .where(
-                        (l) =>
-                            bookmarks.contains(l.id) &&
-                            !shownIds.contains(l.id),
-                      )
-                      .toList();
-
-                  final filtered = switch (filter) {
-                    HomeFilter.owned => owned,
-                    HomeFilter.joined => participating,
-                    HomeFilter.saved => saved,
-                  };
-
-                  if (filtered.isEmpty) {
-                    return SliverFillRemaining(
-                      child: _EmptyFilterState(filter: filter),
-                    );
-                  }
-
-                  return SliverPadding(
-                    padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
-                    sliver: SliverList.builder(
-                      itemCount: filtered.length,
-                      itemBuilder: (context, index) {
-                        final item = filtered[index];
-                        return BoardTile(
-                          summary: item,
-                          showRankBadge: true,
-                          showBookmark: filter == HomeFilter.saved,
-                          onTap: () => context.push('/lists/${item.id}'),
-                        );
-                      },
-                    ),
-                  );
-                },
-                loading: () => const BoardListSkeleton(count: 5),
-                error: (e, _) => SliverFillRemaining(
-                  child: Center(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(
-                          Icons.error_outline,
-                          color: AppColors.error,
-                          size: 32,
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          S.failedToLoad,
-                          style: AppTextStyles.sectionHeader.copyWith(
-                            color: AppColors.error,
-                          ),
-                        ),
-                      ],
+        child: RefreshIndicator(
+          color: AppColors.accent,
+          backgroundColor: AppColors.surface,
+          onRefresh: () => ref.read(listsProvider.notifier).refresh(),
+          child: GestureDetector(
+            behavior: HitTestBehavior.translucent,
+            onHorizontalDragStart: _onHorizontalDragStart,
+            onHorizontalDragUpdate: _onHorizontalDragUpdate,
+            onHorizontalDragEnd: _onHorizontalDragEnd,
+            child: CustomScrollView(
+              slivers: [
+                // Top row: avatar menu only (no title)
+                const SliverToBoxAdapter(
+                  child: Padding(
+                    padding: EdgeInsets.fromLTRB(20, 8, 20, 0),
+                    child: Align(
+                      alignment: Alignment.centerRight,
+                      child: UserAvatarMenu(),
                     ),
                   ),
                 ),
-              ),
-            ],
+                // Filter bar — full width, no title
+                const SliverToBoxAdapter(
+                  child: Padding(
+                    padding: EdgeInsets.fromLTRB(20, 12, 20, 8),
+                    child: _FilterBar(),
+                  ),
+                ),
+                // Content
+                listsAsync.when(
+                  data: (lists) {
+                    final owned = lists
+                        .where((l) => l.currentUserRole == MemberRole.owner)
+                        .toList();
+                    final participating = lists
+                        .where(
+                          (l) =>
+                              l.currentUserRole == MemberRole.admin ||
+                              l.currentUserRole == MemberRole.member,
+                        )
+                        .toList();
+                    final shownIds = {
+                      ...owned.map((l) => l.id),
+                      ...participating.map((l) => l.id),
+                    };
+                    final saved = lists
+                        .where(
+                          (l) =>
+                              bookmarks.contains(l.id) &&
+                              !shownIds.contains(l.id),
+                        )
+                        .toList();
+
+                    final filtered = switch (filter) {
+                      HomeFilter.owned => owned,
+                      HomeFilter.joined => participating,
+                      HomeFilter.saved => saved,
+                    };
+
+                    if (filtered.isEmpty) {
+                      return SliverFillRemaining(
+                        child: _EmptyFilterState(filter: filter),
+                      );
+                    }
+
+                    return SliverPadding(
+                      padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
+                      sliver: SliverList.builder(
+                        itemCount: filtered.length,
+                        itemBuilder: (context, index) {
+                          final item = filtered[index];
+                          return BoardTile(
+                            summary: item,
+                            showRankBadge: true,
+                            showBookmark: filter == HomeFilter.saved,
+                            onTap: () => context.push('/lists/${item.id}'),
+                          );
+                        },
+                      ),
+                    );
+                  },
+                  loading: () => const BoardListSkeleton(count: 5),
+                  error: (e, _) => SliverFillRemaining(
+                    child: Center(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(
+                            Icons.error_outline,
+                            color: AppColors.error,
+                            size: 32,
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            S.failedToLoad,
+                            style: AppTextStyles.sectionHeader.copyWith(
+                              color: AppColors.error,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
-      ),
       ),
     );
   }
@@ -234,13 +246,13 @@ class _FilterBar extends ConsumerWidget {
 
 // ─── Empty Filter States ─────────────────────────────────────
 
-class _EmptyFilterState extends StatelessWidget {
+class _EmptyFilterState extends ConsumerWidget {
   final HomeFilter filter;
 
   const _EmptyFilterState({required this.filter});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final (
       filterIcon,
       title,
@@ -275,47 +287,89 @@ class _EmptyFilterState extends StatelessWidget {
       ),
     };
 
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(40),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(filterIcon, color: AppColors.textTertiary, size: 48),
-            const SizedBox(height: 16),
-            Text(
-              title,
-              style: AppTextStyles.sectionHeader.copyWith(
-                color: AppColors.textSecondary,
+    final showRecommendations = filter == HomeFilter.joined;
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.fromLTRB(20, 32, 20, 24),
+      child: Column(
+        children: [
+          Icon(filterIcon, color: AppColors.textTertiary, size: 48),
+          const SizedBox(height: 16),
+          Text(
+            title,
+            style: AppTextStyles.sectionHeader.copyWith(
+              color: AppColors.textSecondary,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            hint,
+            style: AppTextStyles.badge.copyWith(
+              color: AppColors.textTertiary,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 20),
+          OutlinedButton.icon(
+            onPressed: () => GoRouter.of(context).go(route),
+            icon: Icon(actionIcon, size: 16),
+            label: Text(
+              actionLabel,
+              style: AppTextStyles.button.copyWith(color: AppColors.accent),
+            ),
+            style: OutlinedButton.styleFrom(
+              side: const BorderSide(color: AppColors.accent),
+              padding: const EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 10,
               ),
             ),
-            const SizedBox(height: 8),
-            Text(
-              hint,
-              style: AppTextStyles.badge.copyWith(
-                color: AppColors.textTertiary,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 24),
-            OutlinedButton.icon(
-              onPressed: () => GoRouter.of(context).go(route),
-              icon: Icon(actionIcon, size: 16),
-              label: Text(
-                actionLabel,
-                style: AppTextStyles.button.copyWith(color: AppColors.accent),
-              ),
-              style: OutlinedButton.styleFrom(
-                side: const BorderSide(color: AppColors.accent),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 10,
-                ),
-              ),
-            ),
+          ),
+          if (showRecommendations) ...[
+            const SizedBox(height: 32),
+            const _RecommendedSection(),
           ],
-        ),
+        ],
       ),
+    );
+  }
+}
+
+class _RecommendedSection extends ConsumerWidget {
+  const _RecommendedSection();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final async = ref.watch(recommendedBoardsProvider);
+    return async.when(
+      loading: () => const SizedBox.shrink(),
+      error: (_, _) => const SizedBox.shrink(),
+      data: (lists) {
+        if (lists.isEmpty) return const SizedBox.shrink();
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                const Icon(Icons.trending_up,
+                    size: 14, color: AppColors.textTertiary),
+                const SizedBox(width: 6),
+                Text(
+                  S.popularThisWeek,
+                  style: AppTextStyles.label
+                      .copyWith(color: AppColors.textTertiary),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            for (final summary in lists)
+              BoardTile(
+                summary: summary,
+                onTap: () => context.push('/lists/${summary.id}'),
+              ),
+          ],
+        );
+      },
     );
   }
 }

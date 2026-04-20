@@ -31,15 +31,21 @@ class ProfileScreen extends ConsumerWidget {
         },
         child: CustomScrollView(
           slivers: [
-            // Header — gear icon only, right-aligned
+            // Header — back button only, left-aligned
             SliverToBoxAdapter(
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(20, 8, 12, 0),
+                padding: const EdgeInsets.fromLTRB(12, 8, 20, 0),
                 child: Align(
-                  alignment: Alignment.centerRight,
+                  alignment: Alignment.centerLeft,
                   child: IconButton(
-                    onPressed: () => context.push('/settings'),
-                    icon: const Icon(Icons.settings_outlined,
+                    onPressed: () {
+                      if (context.canPop()) {
+                        context.pop();
+                      } else {
+                        context.go('/home');
+                      }
+                    },
+                    icon: const Icon(Icons.arrow_back,
                         color: AppColors.textSecondary, size: 22),
                   ),
                 ),

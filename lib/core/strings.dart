@@ -34,6 +34,27 @@ abstract class S {
   static const displayName = 'Display Name';
   static const nameRequired = 'Name is required';
 
+  // ── Quick actions ──────────────────────────────────────────────
+  static const bookmark = 'Bookmark';
+  static const share = 'Share';
+  static const openDetails = 'Open details';
+  static const popularThisWeek = 'POPULAR THIS WEEK';
+  static const pullToSubmit = 'Pull down to submit new entry';
+  static const noActivityYet = 'NO ACTIVITY YET';
+  static const noActivityHint = 'Join or create a board to see updates here';
+  static const viewStats = 'View my stats';
+  static const viewPublicProfileMenu = 'View public profile';
+  static const settingsMenu = 'Settings';
+  static const logoutAction = 'Log out';
+
+  // Create-list step titles
+  static const stepTypeTitle = 'What are you ranking?';
+  static const stepIdentityTitle = 'Name your board';
+  static const stepRulesTitle = 'Set the rules';
+  static const stepShareTitle = 'Review & invite';
+  static String shareBoardMessage(String title) =>
+      'Check out this leaderboard: $title';
+
   // ── Home ───────────────────────────────────────────────────────
   static const myBoards = 'MY BOARDS';
   static const participating = 'PARTICIPATING';
@@ -226,6 +247,7 @@ abstract class S {
   static const skip = 'SKIP';
   static const getStarted = 'GET STARTED';
   static const next = 'NEXT';
+  static const back = 'BACK';
 
   // ── Duration picker ────────────────────────────────────────────
   static const hh = 'HH';

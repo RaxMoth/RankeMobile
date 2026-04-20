@@ -5,11 +5,19 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/dev/mock_lists_repository.dart';
 import '../../../core/strings.dart';
+import '../../../core/theme/animations.dart';
 import '../../../core/theme/colors.dart';
 import '../../../core/theme/text_styles.dart';
 import '../domain/entities/ranked_list.dart';
 import 'providers/lists_provider.dart';
 
+/// Multi-step board creation flow.
+///
+/// Steps:
+///   1. Type — pick ValueType (tap auto-advances)
+///   2. Identity — title, description, category
+///   3. Rules — rank order, public/private, execution rules
+///   4. Share — optional comms channels, then preview + create
 class CreateListScreen extends ConsumerStatefulWidget {
   const CreateListScreen({super.key});
 
@@ -18,14 +26,18 @@ class CreateListScreen extends ConsumerStatefulWidget {
 }
 
 class _CreateListScreenState extends ConsumerState<CreateListScreen> {
+  static const _stepCount = 4;
+
+  final _pageController = PageController();
   final _titleController = TextEditingController();
   final _scopeController = TextEditingController();
   final _rulesController = TextEditingController();
   final _telegramController = TextEditingController();
   final _whatsappController = TextEditingController();
   final _discordController = TextEditingController();
+
+  int _step = 0;
   bool _isPublic = true;
-  bool _showCommsFields = false;
   ValueType _valueType = ValueType.number;
   RankOrder _rankOrder = RankOrder.desc;
   String? _category;
@@ -34,6 +46,7 @@ class _CreateListScreenState extends ConsumerState<CreateListScreen> {
 
   @override
   void dispose() {
+    _pageController.dispose();
     _titleController.dispose();
     _scopeController.dispose();
     _rulesController.dispose();
@@ -43,9 +56,35 @@ class _CreateListScreenState extends ConsumerState<CreateListScreen> {
     super.dispose();
   }
 
+  // ── Step navigation ────────────────────────────────────────
+
+  void _goTo(int step) {
+    if (step < 0 || step >= _stepCount) return;
+    HapticFeedback.lightImpact();
+    setState(() => _step = step);
+    _pageController.animateToPage(
+      step,
+      duration: AppAnimations.standard,
+      curve: AppAnimations.curve,
+    );
+  }
+
+  void _next() {
+    if (_step == 1 && _titleController.text.trim().isEmpty) {
+      setState(() => _titleError = S.boardIdentifierRequired);
+      return;
+    }
+    if (_step < _stepCount - 1) {
+      _goTo(_step + 1);
+    }
+  }
+
+  // ── Submit ────────────────────────────────────────────────
+
   Future<void> _submit() async {
     final title = _titleController.text.trim();
     if (title.isEmpty) {
+      _goTo(1);
       setState(() => _titleError = S.boardIdentifierRequired);
       return;
     }
@@ -55,9 +94,7 @@ class _CreateListScreenState extends ConsumerState<CreateListScreen> {
     });
 
     try {
-      await ref
-          .read(listsProvider.notifier)
-          .createList(
+      await ref.read(listsProvider.notifier).createList(
             title: title,
             description: _scopeController.text.trim().isEmpty
                 ? null
@@ -92,20 +129,31 @@ class _CreateListScreenState extends ConsumerState<CreateListScreen> {
     }
   }
 
+  // ── Build ─────────────────────────────────────────────────
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: SafeArea(
         child: Column(
           children: [
+            // Top bar: back / cancel + progress dots
             Padding(
-              padding: const EdgeInsets.fromLTRB(20, 12, 8, 0),
+              padding: const EdgeInsets.fromLTRB(8, 8, 8, 0),
               child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(S.createBoard, style: AppTextStyles.screenTitle),
+                  IconButton(
+                    onPressed: _step == 0 ? () => context.pop() : () => _goTo(_step - 1),
+                    icon: Icon(
+                      _step == 0 ? Icons.close : Icons.chevron_left,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                  Expanded(
+                    child: Center(child: _ProgressDots(step: _step, total: _stepCount)),
+                  ),
                   TextButton(
-                    onPressed: () => context.pop(),
+                    onPressed: _isSubmitting ? null : () => context.pop(),
                     child: Text(
                       S.cancel,
                       style: AppTextStyles.badge.copyWith(
@@ -118,47 +166,105 @@ class _CreateListScreenState extends ConsumerState<CreateListScreen> {
               ),
             ),
             Expanded(
-              child: ListView(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: PageView(
+                controller: _pageController,
+                physics: const NeverScrollableScrollPhysics(),
+                onPageChanged: (i) => setState(() => _step = i),
                 children: [
-                  const SizedBox(height: 24),
-                  _buildField(
-                    label: S.boardIdentifier,
-                    controller: _titleController,
-                    hint: S.boardIdentifierHint,
-                    errorText: _titleError,
+                  _TypeStep(
+                    value: _valueType,
+                    onSelected: (t) {
+                      setState(() {
+                        _valueType = t;
+                        if (t == ValueType.text) _rankOrder = RankOrder.asc;
+                      });
+                      // Auto-advance after a short beat so the selection can be seen
+                      Future<void>.delayed(AppAnimations.short, () {
+                        if (mounted) _goTo(1);
+                      });
+                    },
                   ),
-                  const SizedBox(height: 24),
-                  _buildField(
-                    label: S.scopeObjective,
-                    controller: _scopeController,
-                    hint: S.scopeHint,
-                    maxLines: 3,
+                  _IdentityStep(
+                    titleController: _titleController,
+                    scopeController: _scopeController,
+                    category: _category,
+                    onCategoryChanged: (c) => setState(() => _category = c),
+                    titleError: _titleError,
+                    onTitleChanged: () {
+                      if (_titleError != null) setState(() => _titleError = null);
+                    },
                   ),
-                  const SizedBox(height: 24),
-                  _buildValueTypePicker(),
-                  const SizedBox(height: 24),
-                  _buildRankOrderToggle(),
-                  const SizedBox(height: 24),
-                  _buildPublicToggle(),
-                  const SizedBox(height: 24),
-                  _buildCategoryPicker(),
-                  const SizedBox(height: 24),
-                  _buildRulesField(),
-                  const SizedBox(height: 24),
-                  _buildCommsSection(),
-                  const SizedBox(height: 16),
-                  Text(
-                    S.termsAgreement,
-                    style: AppTextStyles.badge.copyWith(
-                      color: AppColors.textTertiary,
-                      letterSpacing: 1.5,
+                  _RulesStep(
+                    valueType: _valueType,
+                    rankOrder: _rankOrder,
+                    onRankOrderChanged: (o) => setState(() => _rankOrder = o),
+                    isPublic: _isPublic,
+                    onPublicChanged: (v) => setState(() => _isPublic = v),
+                    rulesController: _rulesController,
+                  ),
+                  _ShareStep(
+                    telegramController: _telegramController,
+                    whatsappController: _whatsappController,
+                    discordController: _discordController,
+                    title: _titleController.text.trim(),
+                    valueType: _valueType,
+                    rankOrder: _rankOrder,
+                    isPublic: _isPublic,
+                    category: _category,
+                    scope: _scopeController.text.trim(),
+                  ),
+                ],
+              ),
+            ),
+            // Bottom nav
+            Padding(
+              padding: EdgeInsets.fromLTRB(
+                20, 8, 20, 16 + MediaQuery.of(context).viewInsets.bottom,
+              ),
+              child: Row(
+                children: [
+                  if (_step > 0)
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: _isSubmitting ? null : () => _goTo(_step - 1),
+                        style: OutlinedButton.styleFrom(
+                          side: const BorderSide(color: AppColors.border),
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                        ),
+                        child: Text(
+                          S.back,
+                          style: AppTextStyles.button
+                              .copyWith(color: AppColors.textSecondary),
+                        ),
+                      ),
                     ),
-                    textAlign: TextAlign.center,
+                  if (_step > 0) const SizedBox(width: 12),
+                  Expanded(
+                    flex: 2,
+                    child: ElevatedButton(
+                      onPressed: _isSubmitting
+                          ? null
+                          : (_step == _stepCount - 1 ? _submit : _next),
+                      style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                      ),
+                      child: _isSubmitting
+                          ? const SizedBox(
+                              height: 20,
+                              width: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: AppColors.background,
+                              ),
+                            )
+                          : Text(
+                              _step == _stepCount - 1 ? S.create : S.next,
+                              style: AppTextStyles.button.copyWith(
+                                color: AppColors.background,
+                              ),
+                            ),
+                    ),
                   ),
-                  const SizedBox(height: 16),
-                  _buildCreateButton(),
-                  const SizedBox(height: 32),
                 ],
               ),
             ),
@@ -167,246 +273,227 @@ class _CreateListScreenState extends ConsumerState<CreateListScreen> {
       ),
     );
   }
+}
 
-  Widget _buildField({
-    required String label,
-    required TextEditingController controller,
-    required String hint,
-    int maxLines = 1,
-    String? errorText,
-  }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+// ═══ Shared step widgets ══════════════════════════════════════════
+
+class _ProgressDots extends StatelessWidget {
+  final int step;
+  final int total;
+  const _ProgressDots({required this.step, required this.total});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
       children: [
-        Text(label, style: AppTextStyles.sectionHeader.copyWith(fontSize: 11)),
-        const SizedBox(height: 10),
-        TextField(
-          controller: controller,
-          maxLines: maxLines,
-          style: AppTextStyles.body,
-          onChanged: (_) {
-            if (_titleError != null && controller == _titleController) {
-              setState(() => _titleError = null);
-            }
-          },
-          decoration: InputDecoration(
-            hintText: hint,
-            hintStyle: AppTextStyles.bodySecondary.copyWith(
-              color: AppColors.textTertiary,
-              letterSpacing: 0.5,
+        for (int i = 0; i < total; i++) ...[
+          AnimatedContainer(
+            duration: AppAnimations.short,
+            width: i == step ? 24 : 8,
+            height: 6,
+            decoration: BoxDecoration(
+              color: i <= step ? AppColors.accent : AppColors.border,
+              borderRadius: BorderRadius.circular(3),
             ),
-            errorText: errorText,
           ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildValueTypePicker() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          S.valueType,
-          style: AppTextStyles.sectionHeader.copyWith(fontSize: 11),
-        ),
-        const SizedBox(height: 10),
-        Row(
-          children: ValueType.values.map((type) {
-            final isSelected = type == _valueType;
-            return Expanded(
-              child: GestureDetector(
-                onTap: () {
-                  setState(() {
-                    _valueType = type;
-                    if (type == ValueType.text) _rankOrder = RankOrder.asc;
-                  });
-                },
-                child: Container(
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  margin: EdgeInsets.only(
-                    right: type != ValueType.text ? 8 : 0,
-                  ),
-                  decoration: BoxDecoration(
-                    color: isSelected
-                        ? AppColors.accent.withAlpha(25)
-                        : AppColors.surface,
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(
-                      color: isSelected ? AppColors.accent : AppColors.border,
-                      width: isSelected ? 1.5 : 1,
-                    ),
-                  ),
-                  child: Column(
-                    children: [
-                      Icon(
-                        _iconForType(type),
-                        color: isSelected
-                            ? AppColors.accent
-                            : AppColors.textTertiary,
-                        size: 20,
-                      ),
-                      const SizedBox(height: 6),
-                      Text(
-                        type.name.toUpperCase(),
-                        style: AppTextStyles.badge.copyWith(
-                          color: isSelected
-                              ? AppColors.accent
-                              : AppColors.textSecondary,
-                          fontWeight: isSelected
-                              ? FontWeight.w800
-                              : FontWeight.w600,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            );
-          }).toList(),
-        ),
-        const SizedBox(height: 6),
-        Text(
-          _descriptionForType(_valueType),
-          style: AppTextStyles.badge.copyWith(color: AppColors.textTertiary),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildRankOrderToggle() {
-    final isText = _valueType == ValueType.text;
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: isText ? AppColors.surface.withAlpha(100) : AppColors.surface,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: AppColors.border),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                S.rankOrder,
-                style: AppTextStyles.body.copyWith(
-                  fontWeight: FontWeight.w700,
-                  fontSize: 13,
-                  color: isText ? AppColors.textTertiary : null,
-                ),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                isText
-                    ? S.manualRankingText
-                    : _rankOrder == RankOrder.desc
-                    ? S.highestWins
-                    : S.lowestWins,
-                style: AppTextStyles.badge.copyWith(
-                  color: AppColors.textTertiary,
-                ),
-              ),
-            ],
-          ),
-          if (!isText)
-            Row(
-              children: [
-                _orderChip(S.highToLow, RankOrder.desc),
-                const SizedBox(width: 8),
-                _orderChip(S.lowToHigh, RankOrder.asc),
-              ],
-            ),
+          if (i < total - 1) const SizedBox(width: 6),
         ],
-      ),
+      ],
     );
   }
+}
 
-  Widget _orderChip(String label, RankOrder order) {
-    final isSelected = _rankOrder == order;
+class _StepHeader extends StatelessWidget {
+  final String title;
+  final String subtitle;
+  const _StepHeader({required this.title, required this.subtitle});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(title, style: AppTextStyles.screenTitle),
+        const SizedBox(height: 6),
+        Text(subtitle, style: AppTextStyles.bodySecondary),
+        const SizedBox(height: 20),
+      ],
+    );
+  }
+}
+
+// ═══ Step 1 — Type ════════════════════════════════════════════════
+
+class _TypeStep extends StatelessWidget {
+  final ValueType value;
+  final ValueChanged<ValueType> onSelected;
+  const _TypeStep({required this.value, required this.onSelected});
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(20, 8, 20, 8),
+      children: [
+        const _StepHeader(
+          title: S.stepTypeTitle,
+          subtitle: 'Pick how entries will be measured.',
+        ),
+        for (final t in ValueType.values) ...[
+          _TypeCard(
+            type: t,
+            isSelected: value == t,
+            onTap: () => onSelected(t),
+          ),
+          const SizedBox(height: 12),
+        ],
+      ],
+    );
+  }
+}
+
+class _TypeCard extends StatelessWidget {
+  final ValueType type;
+  final bool isSelected;
+  final VoidCallback onTap;
+  const _TypeCard({
+    required this.type,
+    required this.isSelected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final (icon, title, desc) = switch (type) {
+      ValueType.number => (Icons.tag, 'Number', 'Scores, revenue, counts — e.g. 48.2, 156'),
+      ValueType.duration => (Icons.timer_outlined, 'Duration', 'Time — e.g. 15:23, 1:02:45'),
+      ValueType.text => (Icons.short_text, 'Text', 'Manual ranking — e.g. "Completed Q4"'),
+    };
     return GestureDetector(
-      onTap: () => setState(() => _rankOrder = order),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        padding: const EdgeInsets.all(18),
         decoration: BoxDecoration(
-          color: isSelected ? AppColors.accent : AppColors.card,
-          borderRadius: BorderRadius.circular(4),
+          color: isSelected ? AppColors.accent.withAlpha(25) : AppColors.surface,
+          borderRadius: BorderRadius.circular(10),
           border: Border.all(
             color: isSelected ? AppColors.accent : AppColors.border,
+            width: isSelected ? 1.5 : 1,
           ),
         ),
-        child: Text(
-          label,
-          style: AppTextStyles.badge.copyWith(
-            color: isSelected ? AppColors.background : AppColors.textSecondary,
-            fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
-          ),
+        child: Row(
+          children: [
+            Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                color: AppColors.accent.withAlpha(isSelected ? 50 : 20),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              alignment: Alignment.center,
+              child: Icon(icon, color: AppColors.accent, size: 22),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: AppTextStyles.body.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    desc,
+                    style: AppTextStyles.badge
+                        .copyWith(color: AppColors.textTertiary),
+                  ),
+                ],
+              ),
+            ),
+            if (isSelected)
+              const Icon(Icons.check_circle, color: AppColors.accent, size: 20),
+          ],
         ),
       ),
     );
   }
+}
 
-  Widget _buildPublicToggle() {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: AppColors.border),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                S.publicRegistry,
-                style: AppTextStyles.body.copyWith(
-                  fontWeight: FontWeight.w700,
-                  fontSize: 13,
-                ),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                S.visibleToAll,
-                style: AppTextStyles.badge.copyWith(
-                  color: AppColors.textTertiary,
-                ),
-              ),
-            ],
-          ),
-          Switch(
-            value: _isPublic,
-            onChanged: (v) => setState(() => _isPublic = v),
-          ),
-        ],
-      ),
-    );
-  }
+// ═══ Step 2 — Identity ════════════════════════════════════════════
 
-  Widget _buildCategoryPicker() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+class _IdentityStep extends StatelessWidget {
+  final TextEditingController titleController;
+  final TextEditingController scopeController;
+  final String? category;
+  final ValueChanged<String?> onCategoryChanged;
+  final String? titleError;
+  final VoidCallback onTitleChanged;
+
+  const _IdentityStep({
+    required this.titleController,
+    required this.scopeController,
+    required this.category,
+    required this.onCategoryChanged,
+    required this.titleError,
+    required this.onTitleChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(20, 8, 20, 8),
       children: [
-        Text(
-          S.category,
-          style: AppTextStyles.sectionHeader.copyWith(fontSize: 11),
+        const _StepHeader(
+          title: S.stepIdentityTitle,
+          subtitle: 'Give it a clear title and pick a category.',
         ),
+        Text(S.boardIdentifier,
+            style: AppTextStyles.sectionHeader.copyWith(fontSize: 11)),
+        const SizedBox(height: 10),
+        TextField(
+          controller: titleController,
+          style: AppTextStyles.body,
+          autofocus: true,
+          onChanged: (_) => onTitleChanged(),
+          decoration: InputDecoration(
+            hintText: S.boardIdentifierHint,
+            hintStyle: AppTextStyles.bodySecondary
+                .copyWith(color: AppColors.textTertiary),
+            errorText: titleError,
+          ),
+        ),
+        const SizedBox(height: 24),
+        Text(S.scopeObjective,
+            style: AppTextStyles.sectionHeader.copyWith(fontSize: 11)),
+        const SizedBox(height: 10),
+        TextField(
+          controller: scopeController,
+          maxLines: 3,
+          style: AppTextStyles.body,
+          decoration: InputDecoration(
+            hintText: S.scopeHint,
+            hintStyle: AppTextStyles.bodySecondary
+                .copyWith(color: AppColors.textTertiary),
+          ),
+        ),
+        const SizedBox(height: 24),
+        Text(S.category,
+            style: AppTextStyles.sectionHeader.copyWith(fontSize: 11)),
         const SizedBox(height: 10),
         Wrap(
           spacing: 8,
           runSpacing: 8,
           children: BoardCategory.all.map((cat) {
-            final isSelected = _category == cat;
+            final isSelected = category == cat;
             return GestureDetector(
-              onTap: () => setState(() => _category = isSelected ? null : cat),
+              onTap: () => onCategoryChanged(isSelected ? null : cat),
               child: Container(
                 padding: const EdgeInsets.symmetric(
-                  horizontal: 14,
-                  vertical: 10,
-                ),
+                    horizontal: 14, vertical: 10),
                 decoration: BoxDecoration(
                   color: isSelected
                       ? AppColors.accent.withAlpha(25)
@@ -432,303 +519,318 @@ class _CreateListScreenState extends ConsumerState<CreateListScreen> {
         ),
         const SizedBox(height: 6),
         Text(
-          _category != null ? S.categoryDeselectHint : S.categoryHelp,
+          category != null ? S.categoryDeselectHint : S.categoryHelp,
           style: AppTextStyles.badge.copyWith(color: AppColors.textTertiary),
         ),
       ],
     );
   }
+}
 
-  Widget _buildRulesField() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+// ═══ Step 3 — Rules ═══════════════════════════════════════════════
+
+class _RulesStep extends StatelessWidget {
+  final ValueType valueType;
+  final RankOrder rankOrder;
+  final ValueChanged<RankOrder> onRankOrderChanged;
+  final bool isPublic;
+  final ValueChanged<bool> onPublicChanged;
+  final TextEditingController rulesController;
+
+  const _RulesStep({
+    required this.valueType,
+    required this.rankOrder,
+    required this.onRankOrderChanged,
+    required this.isPublic,
+    required this.onPublicChanged,
+    required this.rulesController,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final isText = valueType == ValueType.text;
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(20, 8, 20, 8),
       children: [
-        Text(
-          S.executionRules,
-          style: AppTextStyles.sectionHeader.copyWith(fontSize: 11),
+        const _StepHeader(
+          title: S.stepRulesTitle,
+          subtitle: 'How do entries rank, and who can see the board?',
         ),
-        const SizedBox(height: 10),
+        // Rank order
         Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: AppColors.surface,
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: AppColors.border),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(S.rankOrder,
+                  style: AppTextStyles.body
+                      .copyWith(fontWeight: FontWeight.w700, fontSize: 13)),
+              const SizedBox(height: 4),
+              Text(
+                isText
+                    ? S.manualRankingText
+                    : rankOrder == RankOrder.desc
+                        ? S.highestWins
+                        : S.lowestWins,
+                style: AppTextStyles.badge
+                    .copyWith(color: AppColors.textTertiary),
+              ),
+              if (!isText) ...[
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    _OrderChip(
+                      label: S.highToLow,
+                      isSelected: rankOrder == RankOrder.desc,
+                      onTap: () => onRankOrderChanged(RankOrder.desc),
+                    ),
+                    const SizedBox(width: 8),
+                    _OrderChip(
+                      label: S.lowToHigh,
+                      isSelected: rankOrder == RankOrder.asc,
+                      onTap: () => onRankOrderChanged(RankOrder.asc),
+                    ),
+                  ],
+                ),
+              ],
+            ],
+          ),
+        ),
+        const SizedBox(height: 16),
+        // Public toggle
+        Container(
+          padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
             color: AppColors.surface,
             borderRadius: BorderRadius.circular(8),
             border: Border.all(color: AppColors.border),
           ),
           child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
-                width: 3,
-                height: 60,
-                margin: const EdgeInsets.only(left: 12, top: 12),
-                decoration: BoxDecoration(
-                  color: AppColors.accent,
-                  borderRadius: BorderRadius.circular(2),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      S.publicRegistry,
+                      style: AppTextStyles.body.copyWith(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 13,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      S.visibleToAll,
+                      style: AppTextStyles.badge
+                          .copyWith(color: AppColors.textTertiary),
+                    ),
+                  ],
                 ),
               ),
-              Expanded(
-                child: TextField(
-                  controller: _rulesController,
+              Switch(value: isPublic, onChanged: onPublicChanged),
+            ],
+          ),
+        ),
+        const SizedBox(height: 24),
+        // Rules
+        Text(S.executionRules,
+            style: AppTextStyles.sectionHeader.copyWith(fontSize: 11)),
+        const SizedBox(height: 10),
+        TextField(
+          controller: rulesController,
+          maxLines: 3,
+          style: AppTextStyles.body,
+          decoration: InputDecoration(
+            hintText: S.rulesHint,
+            hintStyle: AppTextStyles.bodySecondary
+                .copyWith(color: AppColors.textTertiary),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _OrderChip extends StatelessWidget {
+  final String label;
+  final bool isSelected;
+  final VoidCallback onTap;
+  const _OrderChip({
+    required this.label,
+    required this.isSelected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        decoration: BoxDecoration(
+          color: isSelected ? AppColors.accent : AppColors.card,
+          borderRadius: BorderRadius.circular(4),
+          border: Border.all(
+            color: isSelected ? AppColors.accent : AppColors.border,
+          ),
+        ),
+        child: Text(
+          label,
+          style: AppTextStyles.badge.copyWith(
+            color: isSelected ? AppColors.background : AppColors.textSecondary,
+            fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ═══ Step 4 — Share (preview + comms) ═════════════════════════════
+
+class _ShareStep extends StatelessWidget {
+  final TextEditingController telegramController;
+  final TextEditingController whatsappController;
+  final TextEditingController discordController;
+  final String title;
+  final ValueType valueType;
+  final RankOrder rankOrder;
+  final bool isPublic;
+  final String? category;
+  final String scope;
+
+  const _ShareStep({
+    required this.telegramController,
+    required this.whatsappController,
+    required this.discordController,
+    required this.title,
+    required this.valueType,
+    required this.rankOrder,
+    required this.isPublic,
+    required this.category,
+    required this.scope,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(20, 8, 20, 8),
+      children: [
+        const _StepHeader(
+          title: S.stepShareTitle,
+          subtitle: 'Optionally add chat channels, then create.',
+        ),
+        // Preview
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: AppColors.surface,
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: AppColors.accent.withAlpha(60)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title.isEmpty ? '—' : title.toUpperCase(),
+                style: AppTextStyles.boardTitle,
+              ),
+              if (scope.isNotEmpty) ...[
+                const SizedBox(height: 8),
+                Text(
+                  scope,
+                  style: AppTextStyles.bodySecondary,
                   maxLines: 2,
-                  style: AppTextStyles.body,
-                  decoration: InputDecoration(
-                    hintText: S.rulesHint,
-                    hintStyle: AppTextStyles.bodySecondary.copyWith(
-                      color: AppColors.accentDim,
-                      letterSpacing: 0.5,
-                    ),
-                    border: InputBorder.none,
-                    enabledBorder: InputBorder.none,
-                    focusedBorder: InputBorder.none,
-                    fillColor: AppColors.transparent,
-                    filled: false,
-                    contentPadding: const EdgeInsets.fromLTRB(12, 14, 16, 14),
-                  ),
+                  overflow: TextOverflow.ellipsis,
                 ),
+              ],
+              const SizedBox(height: 12),
+              Wrap(
+                spacing: 8,
+                runSpacing: 6,
+                children: [
+                  _PreviewChip(
+                    label: valueType.name.toUpperCase(),
+                    color: AppColors.accent,
+                  ),
+                  _PreviewChip(
+                    label: rankOrder == RankOrder.desc
+                        ? S.highestWinsShort
+                        : S.lowestWinsShort,
+                    color: AppColors.textSecondary,
+                  ),
+                  _PreviewChip(
+                    label: isPublic ? S.publicLabel : S.privateLabel,
+                    color: isPublic ? AppColors.success : AppColors.warning,
+                  ),
+                  if (category != null)
+                    _PreviewChip(
+                      label: category!,
+                      color: AppColors.textSecondary,
+                    ),
+                ],
               ),
             ],
           ),
         ),
-      ],
-    );
-  }
-
-  Widget _buildCommsSection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        GestureDetector(
-          onTap: () => setState(() => _showCommsFields = !_showCommsFields),
-          child: Container(
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              color: AppColors.surface,
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: AppColors.border),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  S.commsChannels,
-                  style: AppTextStyles.sectionHeader.copyWith(fontSize: 11),
-                ),
-                Row(
-                  children: [
-                    Text(
-                      S.optional,
-                      style: AppTextStyles.badge.copyWith(
-                        color: AppColors.textTertiary,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Icon(
-                      _showCommsFields
-                          ? Icons.keyboard_arrow_up
-                          : Icons.keyboard_arrow_down,
-                      color: AppColors.textTertiary,
-                      size: 18,
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ),
-        if (_showCommsFields) ...[
-          const SizedBox(height: 10),
-          _commsField(_telegramController, 'https://t.me/...', Icons.send),
-          const SizedBox(height: 10),
-          _commsField(_whatsappController, 'https://wa.me/...', Icons.chat),
-          const SizedBox(height: 10),
-          _commsField(
-            _discordController,
-            'https://discord.gg/...',
-            Icons.headphones,
-          ),
-        ],
-      ],
-    );
-  }
-
-  Widget _commsField(
-    TextEditingController controller,
-    String hint,
-    IconData icon,
-  ) {
-    return TextField(
-      controller: controller,
-      style: AppTextStyles.body.copyWith(fontSize: 13),
-      decoration: InputDecoration(
-        hintText: hint,
-        hintStyle: AppTextStyles.bodySecondary.copyWith(
-          color: AppColors.textTertiary,
-        ),
-        prefixIcon: Icon(icon, color: AppColors.textTertiary, size: 18),
-        prefixIconConstraints: const BoxConstraints(minWidth: 40, minHeight: 0),
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: 12,
-          vertical: 12,
-        ),
-      ),
-    );
-  }
-
-  Widget _buildCreateButton() {
-    return SizedBox(
-      width: double.infinity,
-      child: ElevatedButton(
-        onPressed: _isSubmitting ? null : _showPreview,
-        style: ElevatedButton.styleFrom(
-          padding: const EdgeInsets.symmetric(vertical: 18),
-        ),
-        child: _isSubmitting
-            ? const SizedBox(
-                height: 20,
-                width: 20,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  color: AppColors.background,
-                ),
-              )
-            : const Text(S.previewCreate),
-      ),
-    );
-  }
-
-  void _showPreview() {
-    final title = _titleController.text.trim();
-    if (title.isEmpty) {
-      setState(() => _titleError = S.boardIdentifierRequired);
-      return;
-    }
-    setState(() => _titleError = null);
-
-    HapticFeedback.selectionClick();
-    showModalBottomSheet<void>(
-      context: context,
-      backgroundColor: AppColors.card,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
-      builder: (ctx) => Padding(
-        padding: EdgeInsets.fromLTRB(
-          20,
-          20,
-          20,
-          20 + MediaQuery.of(ctx).viewInsets.bottom,
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
+        const SizedBox(height: 24),
+        Row(
           children: [
-            Center(
-              child: Container(
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: AppColors.border,
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
+            Text(S.commsChannels,
+                style: AppTextStyles.sectionHeader.copyWith(fontSize: 11)),
+            const SizedBox(width: 6),
+            Text(
+              '— ${S.optional}',
+              style: AppTextStyles.badge
+                  .copyWith(color: AppColors.textTertiary),
             ),
-            const SizedBox(height: 20),
-            Text(S.boardPreview, style: AppTextStyles.screenTitle),
-            const SizedBox(height: 20),
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: AppColors.surface,
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: AppColors.accent.withAlpha(60)),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(title.toUpperCase(), style: AppTextStyles.boardTitle),
-                  if (_scopeController.text.trim().isNotEmpty) ...[
-                    const SizedBox(height: 8),
-                    Text(
-                      _scopeController.text.trim(),
-                      style: AppTextStyles.bodySecondary,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
-                  const SizedBox(height: 12),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 6,
-                    children: [
-                      _previewChip(
-                        _valueType.name.toUpperCase(),
-                        AppColors.accent,
-                      ),
-                      _previewChip(
-                        _rankOrder == RankOrder.desc
-                            ? S.highestWinsShort
-                            : S.lowestWinsShort,
-                        AppColors.textSecondary,
-                      ),
-                      _previewChip(
-                        _isPublic ? S.publicLabel : S.privateLabel,
-                        _isPublic ? AppColors.success : AppColors.warning,
-                      ),
-                      if (_category != null)
-                        _previewChip(_category!, AppColors.textSecondary),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 24),
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton(
-                    onPressed: () => Navigator.pop(ctx),
-                    style: OutlinedButton.styleFrom(
-                      side: const BorderSide(color: AppColors.border),
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                    ),
-                    child: Text(
-                      S.edit,
-                      style: AppTextStyles.button.copyWith(
-                        color: AppColors.textSecondary,
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: () {
-                      Navigator.pop(ctx);
-                      _submit();
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.accent,
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                    ),
-                    child: Text(
-                      S.create,
-                      style: AppTextStyles.button.copyWith(
-                        color: AppColors.background,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
           ],
         ),
-      ),
+        const SizedBox(height: 10),
+        _CommsField(
+          controller: telegramController,
+          hint: 'https://t.me/...',
+          icon: Icons.send,
+        ),
+        const SizedBox(height: 10),
+        _CommsField(
+          controller: whatsappController,
+          hint: 'https://wa.me/...',
+          icon: Icons.chat,
+        ),
+        const SizedBox(height: 10),
+        _CommsField(
+          controller: discordController,
+          hint: 'https://discord.gg/...',
+          icon: Icons.headphones,
+        ),
+        const SizedBox(height: 16),
+        Text(
+          S.termsAgreement,
+          style: AppTextStyles.badge.copyWith(
+            color: AppColors.textTertiary,
+            letterSpacing: 1.2,
+          ),
+          textAlign: TextAlign.center,
+        ),
+      ],
     );
   }
+}
 
-  Widget _previewChip(String label, Color color) {
+class _PreviewChip extends StatelessWidget {
+  final String label;
+  final Color color;
+  const _PreviewChip({required this.label, required this.color});
+
+  @override
+  Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
@@ -739,20 +841,31 @@ class _CreateListScreenState extends ConsumerState<CreateListScreen> {
       child: Text(label, style: AppTextStyles.badge.copyWith(color: color)),
     );
   }
+}
 
-  IconData _iconForType(ValueType type) {
-    return switch (type) {
-      ValueType.number => Icons.tag,
-      ValueType.duration => Icons.timer_outlined,
-      ValueType.text => Icons.text_fields,
-    };
-  }
+class _CommsField extends StatelessWidget {
+  final TextEditingController controller;
+  final String hint;
+  final IconData icon;
+  const _CommsField({
+    required this.controller,
+    required this.hint,
+    required this.icon,
+  });
 
-  String _descriptionForType(ValueType type) {
-    return switch (type) {
-      ValueType.number => S.valueTypeNumber,
-      ValueType.duration => S.valueTypeDuration,
-      ValueType.text => S.valueTypeText,
-    };
+  @override
+  Widget build(BuildContext context) {
+    return TextField(
+      controller: controller,
+      style: AppTextStyles.body.copyWith(fontSize: 13),
+      decoration: InputDecoration(
+        hintText: hint,
+        hintStyle: AppTextStyles.bodySecondary
+            .copyWith(color: AppColors.textTertiary),
+        prefixIcon: Icon(icon, color: AppColors.textTertiary, size: 18),
+        prefixIconConstraints: const BoxConstraints(minWidth: 40, minHeight: 0),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+      ),
+    );
   }
 }

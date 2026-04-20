@@ -1,11 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:share_plus/share_plus.dart';
 
+import '../../core/strings.dart';
 import '../../core/theme/colors.dart';
 import '../../core/theme/responsive.dart';
 import '../../core/theme/text_styles.dart';
 import '../../features/lists/domain/entities/ranked_list.dart';
 import '../../features/lists/presentation/providers/bookmark_provider.dart';
+import 'bottom_sheet_handle.dart';
+import 'sheet_action_row.dart';
 
 /// Reusable board list tile used on Home and Profile screens.
 ///
@@ -29,6 +34,10 @@ class BoardTile extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     return GestureDetector(
       onTap: onTap,
+      onLongPress: () {
+        HapticFeedback.mediumImpact();
+        _showQuickActions(context, ref);
+      },
       child: Container(
         margin: const EdgeInsets.only(bottom: 8),
         padding: const EdgeInsets.all(14),
@@ -52,6 +61,8 @@ class BoardTile extends ConsumerWidget {
                 children: [
                   Row(
                     children: [
+                      _ValueTypeGlyph(type: summary.valueType),
+                      const SizedBox(width: 8),
                       Expanded(
                         child: Text(
                           summary.title.toUpperCase(),
@@ -68,8 +79,6 @@ class BoardTile extends ConsumerWidget {
                   const SizedBox(height: 4),
                   Row(
                     children: [
-                      _typeBadge(summary.valueType),
-                      const SizedBox(width: 8),
                       const Icon(Icons.people_outline,
                           size: 13, color: AppColors.textTertiary),
                       const SizedBox(width: 4),
@@ -142,16 +151,67 @@ class BoardTile extends ConsumerWidget {
         color: AppColors.textTertiary, size: 18);
   }
 
-  static Widget _typeBadge(ValueType type) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
-      decoration: BoxDecoration(
-        color: AppColors.accent.withAlpha(25),
-        borderRadius: BorderRadius.circular(3),
+  void _showQuickActions(BuildContext context, WidgetRef ref) {
+    final isBookmarked =
+        ref.read(bookmarkProvider.notifier).isBookmarked(summary.id);
+    showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: AppColors.card,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
-      child: Text(
-        type.name.toUpperCase(),
-        style: AppTextStyles.badge.copyWith(color: AppColors.accent),
+      builder: (ctx) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const BottomSheetHandle(),
+              // Title preview
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Text(
+                  summary.title.toUpperCase(),
+                  style: AppTextStyles.label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              const SizedBox(height: 12),
+              SheetActionRow(
+                icon: isBookmarked ? Icons.bookmark : Icons.bookmark_border,
+                label: isBookmarked ? S.bookmarked : S.bookmark,
+                iconColor: isBookmarked
+                    ? AppColors.accent
+                    : AppColors.textSecondary,
+                onTap: () {
+                  ref.read(bookmarkProvider.notifier).toggle(summary.id);
+                  Navigator.pop(ctx);
+                },
+              ),
+              SheetActionRow(
+                icon: Icons.share_outlined,
+                label: S.share,
+                iconColor: AppColors.textSecondary,
+                onTap: () async {
+                  Navigator.pop(ctx);
+                  await SharePlus.instance.share(
+                    ShareParams(text: S.shareBoardMessage(summary.title)),
+                  );
+                },
+              ),
+              SheetActionRow(
+                icon: Icons.open_in_new,
+                label: S.openDetails,
+                iconColor: AppColors.textSecondary,
+                onTap: () {
+                  Navigator.pop(ctx);
+                  onTap();
+                },
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -159,6 +219,31 @@ class BoardTile extends ConsumerWidget {
   static String _formatCount(int count) {
     if (count >= 1000) return '${(count / 1000).toStringAsFixed(1)}K';
     return count.toString();
+  }
+}
+
+/// Single-glyph icon representing the board's value type.
+class _ValueTypeGlyph extends StatelessWidget {
+  final ValueType type;
+  const _ValueTypeGlyph({required this.type});
+
+  @override
+  Widget build(BuildContext context) {
+    final icon = switch (type) {
+      ValueType.number => Icons.tag,
+      ValueType.duration => Icons.timer_outlined,
+      ValueType.text => Icons.short_text,
+    };
+    return Container(
+      width: 20,
+      height: 20,
+      decoration: BoxDecoration(
+        color: AppColors.accent.withAlpha(25),
+        borderRadius: BorderRadius.circular(4),
+      ),
+      alignment: Alignment.center,
+      child: Icon(icon, size: 13, color: AppColors.accent),
+    );
   }
 }
 
@@ -196,7 +281,9 @@ class _EntryPreviewRow extends StatelessWidget {
             ),
           ),
         ),
-        const SizedBox(width: 6),
+        const SizedBox(width: 4),
+        _RankDelta(previousRank: entry.previousRank, currentRank: entry.rank),
+        const SizedBox(width: 4),
         Expanded(
           child: Text(
             isOwn ? 'You' : entry.displayName,
@@ -246,5 +333,53 @@ class _EntryPreviewRow extends StatelessWidget {
       case ValueType.text:
         return entry.valueText ?? '—';
     }
+  }
+}
+
+/// Small up/down/flat indicator showing how an entry's rank has changed
+/// since the last snapshot. A lower rank number is better, so a lower
+/// current rank than previous is a "rise" (▲).
+class _RankDelta extends StatelessWidget {
+  final int? previousRank;
+  final int currentRank;
+
+  const _RankDelta({required this.previousRank, required this.currentRank});
+
+  @override
+  Widget build(BuildContext context) {
+    final prev = previousRank;
+    if (prev == null) {
+      return const SizedBox(width: 18);
+    }
+    final diff = prev - currentRank; // positive = moved up
+    if (diff == 0) {
+      return const SizedBox(
+        width: 18,
+        child: Text(
+          '—',
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            fontSize: 10,
+            color: AppColors.textTertiary,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+      );
+    }
+    final isUp = diff > 0;
+    final color = isUp ? AppColors.success : AppColors.error;
+    final arrow = isUp ? '▲' : '▼';
+    return SizedBox(
+      width: 18,
+      child: Text(
+        '$arrow${diff.abs()}',
+        style: TextStyle(
+          fontSize: 9,
+          fontWeight: FontWeight.w800,
+          color: color,
+          letterSpacing: -0.3,
+        ),
+      ),
+    );
   }
 }

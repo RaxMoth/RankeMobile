@@ -34,6 +34,7 @@ class RankedEntry with _$RankedEntry {
     required String userId,
     required String displayName,
     required int rank,
+    int? previousRank,
     double? valueNumber,
     int? valueDurationMs,
     String? valueText,

@@ -103,7 +103,7 @@ class _AppShellState extends ConsumerState<AppShell> {
               label: '',
             ),
             const BottomNavigationBarItem(
-              icon: Icon(Icons.person_outline, size: 24),
+              icon: Icon(Icons.bolt_outlined, size: 24),
               label: '',
             ),
           ],

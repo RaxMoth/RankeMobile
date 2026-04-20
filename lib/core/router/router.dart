@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../features/activity/presentation/activity_screen.dart';
 import '../../features/auth/presentation/login_screen.dart';
 import '../../features/auth/presentation/providers/auth_provider.dart';
 import '../../features/auth/presentation/register_screen.dart';
@@ -35,7 +36,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
     navigatorKey: _rootNavigatorKey,
     initialLocation: '/home',
     routes: [
-      // Shell with bottom nav: HOME / DISCOVER / PROFILE
+      // Shell with bottom nav: HOME / DISCOVER / ACTIVITY
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) =>
             AppShell(navigationShell: navigationShell),
@@ -61,9 +62,9 @@ final goRouterProvider = Provider<GoRouter>((ref) {
           StatefulShellBranch(
             routes: [
               GoRoute(
-                path: '/profile',
-                name: 'profile',
-                builder: (context, state) => const ProfileScreen(),
+                path: '/activity',
+                name: 'activity',
+                builder: (context, state) => const ActivityScreen(),
               ),
             ],
           ),
@@ -122,6 +123,12 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         name: 'settings',
         parentNavigatorKey: _rootNavigatorKey,
         builder: (context, state) => const SettingsScreen(),
+      ),
+      GoRoute(
+        path: '/profile',
+        name: 'profile',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => const ProfileScreen(),
       ),
       GoRoute(
         path: '/create',

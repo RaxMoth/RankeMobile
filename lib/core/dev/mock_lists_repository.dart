@@ -10,6 +10,29 @@ import 'dev_config.dart';
 const _uuid = Uuid();
 const _currentUserId = 'dev-user-001';
 
+/// Attaches a deterministic mock previousRank to each entry so BoardTile can
+/// show rank-change deltas in dev. Delta is derived from a hash of the
+/// entry id so it stays stable across rebuilds. ~25% of entries keep their
+/// rank (no change), the rest move ±1 to ±3.
+List<RankedEntry> _withMockDeltas(List<RankedEntry> entries) {
+  return entries.map((e) {
+    final h = e.id.hashCode;
+    final bucket = (h & 0x7fffffff) % 10; // 0..9
+    int delta;
+    if (bucket < 3) {
+      delta = 0; // unchanged
+    } else if (bucket < 6) {
+      delta = 1 + ((h >> 4) & 0x1); // +1 or +2
+    } else if (bucket < 9) {
+      delta = -(1 + ((h >> 5) & 0x1)); // -1 or -2
+    } else {
+      delta = ((h >> 6) & 0x1) == 0 ? 3 : -3;
+    }
+    final prev = e.rank + delta;
+    return e.copyWith(previousRank: prev < 1 ? null : prev);
+  }).toList();
+}
+
 /// Category constants used for seed data and Discover filtering.
 class BoardCategory {
   static const finance = 'FINANCE';
@@ -457,7 +480,7 @@ class MockListsRepository implements ListsRepository {
         ownRank: ownRank,
         currentUserRole: list.currentUserRole,
         category: _categories[list.id],
-        topEntries: list.entries.take(3).toList(),
+        topEntries: _withMockDeltas(list.entries.take(3).toList()),
       );
     }).toList();
     return Right(summaries);
@@ -516,7 +539,7 @@ class MockListsRepository implements ListsRepository {
         ownRank: ownRank,
         currentUserRole: list.currentUserRole,
         category: _categories[list.id],
-        topEntries: list.entries.take(3).toList(),
+        topEntries: _withMockDeltas(list.entries.take(3).toList()),
       ));
     }
 
@@ -754,7 +777,7 @@ class MockListsRepository implements ListsRepository {
           ownRank: ownRank,
           currentUserRole: memberMatch.isNotEmpty ? memberMatch.first.role : null,
           category: _categories[listId],
-          topEntries: data.list.entries.take(3).toList(),
+          topEntries: _withMockDeltas(data.list.entries.take(3).toList()),
         ));
       }
     }

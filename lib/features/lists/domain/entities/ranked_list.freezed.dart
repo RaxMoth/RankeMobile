@@ -490,6 +490,7 @@ mixin _$RankedEntry {
   String get userId => throw _privateConstructorUsedError;
   String get displayName => throw _privateConstructorUsedError;
   int get rank => throw _privateConstructorUsedError;
+  int? get previousRank => throw _privateConstructorUsedError;
   double? get valueNumber => throw _privateConstructorUsedError;
   int? get valueDurationMs => throw _privateConstructorUsedError;
   String? get valueText => throw _privateConstructorUsedError;
@@ -517,6 +518,7 @@ abstract class $RankedEntryCopyWith<$Res> {
     String userId,
     String displayName,
     int rank,
+    int? previousRank,
     double? valueNumber,
     int? valueDurationMs,
     String? valueText,
@@ -546,6 +548,7 @@ class _$RankedEntryCopyWithImpl<$Res, $Val extends RankedEntry>
     Object? userId = null,
     Object? displayName = null,
     Object? rank = null,
+    Object? previousRank = freezed,
     Object? valueNumber = freezed,
     Object? valueDurationMs = freezed,
     Object? valueText = freezed,
@@ -572,6 +575,10 @@ class _$RankedEntryCopyWithImpl<$Res, $Val extends RankedEntry>
                 ? _value.rank
                 : rank // ignore: cast_nullable_to_non_nullable
                       as int,
+            previousRank: freezed == previousRank
+                ? _value.previousRank
+                : previousRank // ignore: cast_nullable_to_non_nullable
+                      as int?,
             valueNumber: freezed == valueNumber
                 ? _value.valueNumber
                 : valueNumber // ignore: cast_nullable_to_non_nullable
@@ -620,6 +627,7 @@ abstract class _$$RankedEntryImplCopyWith<$Res>
     String userId,
     String displayName,
     int rank,
+    int? previousRank,
     double? valueNumber,
     int? valueDurationMs,
     String? valueText,
@@ -648,6 +656,7 @@ class __$$RankedEntryImplCopyWithImpl<$Res>
     Object? userId = null,
     Object? displayName = null,
     Object? rank = null,
+    Object? previousRank = freezed,
     Object? valueNumber = freezed,
     Object? valueDurationMs = freezed,
     Object? valueText = freezed,
@@ -674,6 +683,10 @@ class __$$RankedEntryImplCopyWithImpl<$Res>
             ? _value.rank
             : rank // ignore: cast_nullable_to_non_nullable
                   as int,
+        previousRank: freezed == previousRank
+            ? _value.previousRank
+            : previousRank // ignore: cast_nullable_to_non_nullable
+                  as int?,
         valueNumber: freezed == valueNumber
             ? _value.valueNumber
             : valueNumber // ignore: cast_nullable_to_non_nullable
@@ -715,6 +728,7 @@ class _$RankedEntryImpl implements _RankedEntry {
     required this.userId,
     required this.displayName,
     required this.rank,
+    this.previousRank,
     this.valueNumber,
     this.valueDurationMs,
     this.valueText,
@@ -733,6 +747,8 @@ class _$RankedEntryImpl implements _RankedEntry {
   @override
   final int rank;
   @override
+  final int? previousRank;
+  @override
   final double? valueNumber;
   @override
   final int? valueDurationMs;
@@ -750,7 +766,7 @@ class _$RankedEntryImpl implements _RankedEntry {
 
   @override
   String toString() {
-    return 'RankedEntry(id: $id, userId: $userId, displayName: $displayName, rank: $rank, valueNumber: $valueNumber, valueDurationMs: $valueDurationMs, valueText: $valueText, manualRank: $manualRank, note: $note, submittedAt: $submittedAt, status: $status)';
+    return 'RankedEntry(id: $id, userId: $userId, displayName: $displayName, rank: $rank, previousRank: $previousRank, valueNumber: $valueNumber, valueDurationMs: $valueDurationMs, valueText: $valueText, manualRank: $manualRank, note: $note, submittedAt: $submittedAt, status: $status)';
   }
 
   @override
@@ -763,6 +779,8 @@ class _$RankedEntryImpl implements _RankedEntry {
             (identical(other.displayName, displayName) ||
                 other.displayName == displayName) &&
             (identical(other.rank, rank) || other.rank == rank) &&
+            (identical(other.previousRank, previousRank) ||
+                other.previousRank == previousRank) &&
             (identical(other.valueNumber, valueNumber) ||
                 other.valueNumber == valueNumber) &&
             (identical(other.valueDurationMs, valueDurationMs) ||
@@ -784,6 +802,7 @@ class _$RankedEntryImpl implements _RankedEntry {
     userId,
     displayName,
     rank,
+    previousRank,
     valueNumber,
     valueDurationMs,
     valueText,
@@ -808,6 +827,7 @@ abstract class _RankedEntry implements RankedEntry {
     required final String userId,
     required final String displayName,
     required final int rank,
+    final int? previousRank,
     final double? valueNumber,
     final int? valueDurationMs,
     final String? valueText,
@@ -825,6 +845,8 @@ abstract class _RankedEntry implements RankedEntry {
   String get displayName;
   @override
   int get rank;
+  @override
+  int? get previousRank;
   @override
   double? get valueNumber;
   @override
