@@ -3,6 +3,8 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:mutex/mutex.dart';
 
 import '../constants/app_constants.dart';
+import 'api_helpers.dart';
+import 'api_paths.dart';
 
 /// JWT attach + 401 → refresh + retry
 class AuthInterceptor extends Interceptor {
@@ -73,19 +75,21 @@ class AuthInterceptor extends Interceptor {
 
     try {
       final response = await _refreshDio.post<Map<String, dynamic>>(
-        '/auth/refresh',
-        data: {'refresh_token': refreshToken},
+        ApiPaths.authRefresh,
+        data: {'refreshToken': refreshToken},
       );
 
       if (response.statusCode == 200) {
-        final data = response.data as Map<String, dynamic>;
+        // Unwrap `{ "data": { "accessToken": ..., "refreshToken": ... } }`
+        final payload =
+            unwrapEnvelope<Map<String, dynamic>>(response.data);
         await _storage.write(
           key: AppConstants.accessTokenKey,
-          value: data['access_token'] as String,
+          value: payload['accessToken'] as String,
         );
         await _storage.write(
           key: AppConstants.refreshTokenKey,
-          value: data['refresh_token'] as String,
+          value: payload['refreshToken'] as String,
         );
         return true;
       }

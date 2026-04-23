@@ -1,6 +1,11 @@
 import '../../../core/network/api_client.dart';
+import '../../../core/network/api_helpers.dart';
+import '../../../core/network/api_paths.dart';
 
-/// Remote data source for lists API calls
+/// Remote data source for lists API calls.
+///
+/// Every method returns the **unwrapped** `data` payload from the backend's
+/// response envelope. See [unwrapEnvelope].
 abstract class ListsRemoteDataSource {
   Future<List<dynamic>> getLists();
   Future<Map<String, dynamic>> getListDetail(String listId);
@@ -29,67 +34,69 @@ class ListsRemoteDataSourceImpl implements ListsRemoteDataSource {
 
   @override
   Future<List<dynamic>> getLists() async {
-    final response = await _apiClient.dio.get<List<dynamic>>('/lists');
-    return response.data as List<dynamic>;
+    final response = await _apiClient.dio.get<Map<String, dynamic>>(
+      ApiPaths.lists,
+    );
+    return unwrapEnvelope<List<dynamic>>(response.data);
   }
 
   @override
   Future<Map<String, dynamic>> getListDetail(String listId) async {
     final response = await _apiClient.dio.get<Map<String, dynamic>>(
-      '/lists/$listId',
+      ApiPaths.listById(listId),
     );
-    return response.data as Map<String, dynamic>;
+    return unwrapEnvelope<Map<String, dynamic>>(response.data);
   }
 
   @override
   Future<Map<String, dynamic>> createList(Map<String, dynamic> data) async {
     final response = await _apiClient.dio.post<Map<String, dynamic>>(
-      '/lists',
+      ApiPaths.lists,
       data: data,
     );
-    return response.data as Map<String, dynamic>;
+    return unwrapEnvelope<Map<String, dynamic>>(response.data);
   }
 
   @override
   Future<void> deleteList(String listId) async {
-    await _apiClient.dio.delete<void>('/lists/$listId');
+    await _apiClient.dio.delete<void>(ApiPaths.listById(listId));
   }
 
   @override
   Future<Map<String, dynamic>> getInvitePreview(String token) async {
     final response = await _apiClient.dio.get<Map<String, dynamic>>(
-      '/lists/invite/$token',
+      ApiPaths.inviteByToken(token),
     );
-    return response.data as Map<String, dynamic>;
+    return unwrapEnvelope<Map<String, dynamic>>(response.data);
   }
 
   @override
   Future<Map<String, dynamic>> joinByInvite(String token) async {
     final response = await _apiClient.dio.post<Map<String, dynamic>>(
-      '/lists/invite/$token/join',
+      ApiPaths.inviteJoin(token),
     );
-    return response.data as Map<String, dynamic>;
+    return unwrapEnvelope<Map<String, dynamic>>(response.data);
   }
 
   @override
   Future<Map<String, dynamic>> getInviteLink(String listId) async {
     final response = await _apiClient.dio.get<Map<String, dynamic>>(
-      '/lists/$listId/invite',
+      ApiPaths.listInvite(listId),
     );
-    return response.data as Map<String, dynamic>;
+    return unwrapEnvelope<Map<String, dynamic>>(response.data);
   }
 
   @override
   Future<List<dynamic>> getMembers(String listId) async {
-    final response = await _apiClient.dio.get<List<dynamic>>(
-      '/lists/$listId/members',
+    final response = await _apiClient.dio.get<Map<String, dynamic>>(
+      ApiPaths.listMembers(listId),
     );
-    return response.data as List<dynamic>;
+    return unwrapEnvelope<List<dynamic>>(response.data);
   }
 
   @override
   Future<void> removeMember(String listId, String userId) async {
-    await _apiClient.dio.delete<void>('/lists/$listId/members/$userId');
+    await _apiClient.dio.delete<void>(ApiPaths.listMember(listId, userId));
   }
 
   @override
@@ -99,7 +106,7 @@ class ListsRemoteDataSourceImpl implements ListsRemoteDataSource {
     String role,
   ) async {
     await _apiClient.dio.patch<void>(
-      '/lists/$listId/members/$userId',
+      ApiPaths.listMember(listId, userId),
       data: {'role': role},
     );
   }
@@ -110,23 +117,23 @@ class ListsRemoteDataSourceImpl implements ListsRemoteDataSource {
     Map<String, dynamic> data,
   ) async {
     final response = await _apiClient.dio.patch<Map<String, dynamic>>(
-      '/lists/$listId',
+      ApiPaths.listById(listId),
       data: data,
     );
-    return response.data as Map<String, dynamic>;
+    return unwrapEnvelope<Map<String, dynamic>>(response.data);
   }
 
   @override
   Future<void> deleteEntry(String listId, String entryId) async {
-    await _apiClient.dio.delete<void>('/lists/$listId/entries/$entryId');
+    await _apiClient.dio.delete<void>(ApiPaths.entryById(listId, entryId));
   }
 
   @override
   Future<Map<String, dynamic>> regenerateInvite(String listId) async {
     final response = await _apiClient.dio.post<Map<String, dynamic>>(
-      '/lists/$listId/invite/regenerate',
+      ApiPaths.listInviteRegenerate(listId),
     );
-    return response.data as Map<String, dynamic>;
+    return unwrapEnvelope<Map<String, dynamic>>(response.data);
   }
 
   @override
@@ -134,18 +141,24 @@ class ListsRemoteDataSourceImpl implements ListsRemoteDataSource {
     String? query,
     String? category,
   }) async {
-    final response = await _apiClient.dio.get<List<dynamic>>(
-      '/lists/public',
-      queryParameters: {'q': ?query, 'category': ?category},
+    // Build a clean query-param map with only non-null entries.
+    // (`?query` as a map value is not valid Dart.)
+    final params = <String, dynamic>{
+      if (query != null && query.isNotEmpty) 'q': query,
+      if (category != null && category.isNotEmpty) 'category': category,
+    };
+    final response = await _apiClient.dio.get<Map<String, dynamic>>(
+      ApiPaths.listsPublic,
+      queryParameters: params.isEmpty ? null : params,
     );
-    return response.data as List<dynamic>;
+    return unwrapEnvelope<List<dynamic>>(response.data);
   }
 
   @override
   Future<Map<String, dynamic>> getUserProfile(String userId) async {
     final response = await _apiClient.dio.get<Map<String, dynamic>>(
-      '/users/$userId/profile',
+      ApiPaths.userProfile(userId),
     );
-    return response.data as Map<String, dynamic>;
+    return unwrapEnvelope<Map<String, dynamic>>(response.data);
   }
 }

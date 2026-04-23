@@ -37,7 +37,7 @@ Future<void> setupDI() async {
   // or debug sessions reinitialize the graph.
   await getIt.reset();
 
-  if (DevConfig.useDevMode) {
+  if (DevConfig.useMocks) {
     _registerDevMode();
   } else {
     _registerProductionMode();

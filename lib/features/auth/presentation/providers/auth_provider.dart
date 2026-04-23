@@ -16,7 +16,7 @@ class AuthNotifier extends AsyncNotifier<User?> {
   @override
   Future<User?> build() async {
     // In dev mode, auto-login with mock user
-    if (DevConfig.useDevMode) {
+    if (DevConfig.useMocks) {
       return const User(
         id: 'dev-user-001',
         email: 'max@ranked.app',

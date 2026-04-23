@@ -1,6 +1,11 @@
 import '../../../core/network/api_client.dart';
+import '../../../core/network/api_helpers.dart';
+import '../../../core/network/api_paths.dart';
 
-/// Remote data source for entries API calls
+/// Remote data source for entries API calls.
+///
+/// Every method returns the **unwrapped** `data` payload from the backend's
+/// response envelope. See [unwrapEnvelope].
 abstract class EntriesRemoteDataSource {
   Future<Map<String, dynamic>> submitEntry(
     String listId,
@@ -25,27 +30,27 @@ class EntriesRemoteDataSourceImpl implements EntriesRemoteDataSource {
     Map<String, dynamic> data,
   ) async {
     final response = await _apiClient.dio.put<Map<String, dynamic>>(
-      '/lists/$listId/entries/me',
+      ApiPaths.entryMine(listId),
       data: data,
     );
-    return response.data as Map<String, dynamic>;
+    return unwrapEnvelope<Map<String, dynamic>>(response.data);
   }
 
   @override
   Future<List<dynamic>> getPendingEntries(String listId) async {
-    final response = await _apiClient.dio.get<List<dynamic>>(
-      '/lists/$listId/entries/pending',
+    final response = await _apiClient.dio.get<Map<String, dynamic>>(
+      ApiPaths.entriesPending(listId),
     );
-    return response.data as List<dynamic>;
+    return unwrapEnvelope<List<dynamic>>(response.data);
   }
 
   @override
   Future<void> approveEntry(String listId, String entryId) async {
-    await _apiClient.dio.post<void>('/lists/$listId/entries/$entryId/approve');
+    await _apiClient.dio.post<void>(ApiPaths.entryApprove(listId, entryId));
   }
 
   @override
   Future<void> rejectEntry(String listId, String entryId) async {
-    await _apiClient.dio.post<void>('/lists/$listId/entries/$entryId/reject');
+    await _apiClient.dio.post<void>(ApiPaths.entryReject(listId, entryId));
   }
 }

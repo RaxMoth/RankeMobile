@@ -1,6 +1,13 @@
 import '../../../core/network/api_client.dart';
+import '../../../core/network/api_helpers.dart';
+import '../../../core/network/api_paths.dart';
 
-/// Remote data source for authentication API calls
+/// Remote data source for authentication API calls.
+///
+/// Every method returns the **unwrapped** `data` payload from the backend's
+/// response envelope (`{ "data": ... }`). Callers should never see the
+/// envelope — it's stripped here so repo/use-case layers can treat responses
+/// as plain domain JSON.
 abstract class AuthRemoteDataSource {
   Future<Map<String, dynamic>> login({
     required String email,
@@ -13,9 +20,12 @@ abstract class AuthRemoteDataSource {
     required String displayName,
   });
 
-  Future<Map<String, dynamic>> signInWithApple({required String identityToken});
+  Future<Map<String, dynamic>> signInWithApple({
+    required String identityToken,
+    String? fullName,
+  });
 
-  Future<void> logout();
+  Future<void> logout({String? refreshToken});
 
   Future<Map<String, dynamic>> refreshToken({required String refreshToken});
 }
@@ -31,10 +41,10 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     required String password,
   }) async {
     final response = await _apiClient.dio.post<Map<String, dynamic>>(
-      '/auth/login',
+      ApiPaths.authLogin,
       data: {'email': email, 'password': password},
     );
-    return response.data as Map<String, dynamic>;
+    return unwrapEnvelope<Map<String, dynamic>>(response.data);
   }
 
   @override
@@ -44,26 +54,37 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     required String displayName,
   }) async {
     final response = await _apiClient.dio.post<Map<String, dynamic>>(
-      '/auth/register',
-      data: {'email': email, 'password': password, 'display_name': displayName},
+      ApiPaths.authRegister,
+      data: {
+        'email': email,
+        'password': password,
+        'displayName': displayName,
+      },
     );
-    return response.data as Map<String, dynamic>;
+    return unwrapEnvelope<Map<String, dynamic>>(response.data);
   }
 
   @override
   Future<Map<String, dynamic>> signInWithApple({
     required String identityToken,
+    String? fullName,
   }) async {
     final response = await _apiClient.dio.post<Map<String, dynamic>>(
-      '/auth/apple',
-      data: {'identity_token': identityToken},
+      ApiPaths.authApple,
+      data: {
+        'identityToken': identityToken,
+        'fullName': ?fullName,
+      },
     );
-    return response.data as Map<String, dynamic>;
+    return unwrapEnvelope<Map<String, dynamic>>(response.data);
   }
 
   @override
-  Future<void> logout() async {
-    await _apiClient.dio.post<void>('/auth/logout');
+  Future<void> logout({String? refreshToken}) async {
+    await _apiClient.dio.post<void>(
+      ApiPaths.authLogout,
+      data: refreshToken == null ? null : {'refreshToken': refreshToken},
+    );
   }
 
   @override
@@ -71,9 +92,9 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     required String refreshToken,
   }) async {
     final response = await _apiClient.dio.post<Map<String, dynamic>>(
-      '/auth/refresh',
-      data: {'refresh_token': refreshToken},
+      ApiPaths.authRefresh,
+      data: {'refreshToken': refreshToken},
     );
-    return response.data as Map<String, dynamic>;
+    return unwrapEnvelope<Map<String, dynamic>>(response.data);
   }
 }
