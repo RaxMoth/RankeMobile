@@ -17,7 +17,7 @@ abstract class DevConfig {
   /// Defaults to `false` so omitting the flag in a release build is safe.
   static const bool useMocks = bool.fromEnvironment(
     'USE_MOCK',
-    defaultValue: false,
+    defaultValue: true,
   );
 
   /// Simulated network delay to make mock interactions feel realistic.
