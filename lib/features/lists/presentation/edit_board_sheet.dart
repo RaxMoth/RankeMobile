@@ -100,7 +100,8 @@ class _EditBoardSheetState extends ConsumerState<EditBoardSheet> {
     return SafeArea(
       child: Padding(
         padding: EdgeInsets.fromLTRB(
-          20, 20, 20, 20 + MediaQuery.of(context).viewInsets.bottom,
+          // viewInsetsOf scopes the rebuild to keyboard-only changes.
+          20, 20, 20, 20 + MediaQuery.viewInsetsOf(context).bottom,
         ),
         child: SingleChildScrollView(
         child: Column(

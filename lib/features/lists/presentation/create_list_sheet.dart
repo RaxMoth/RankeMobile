@@ -219,7 +219,8 @@ class _CreateListScreenState extends ConsumerState<CreateListScreen> {
             // Bottom nav
             Padding(
               padding: EdgeInsets.fromLTRB(
-                20, 8, 20, 16 + MediaQuery.of(context).viewInsets.bottom,
+                // viewInsetsOf scopes the rebuild to keyboard-only changes.
+                20, 8, 20, 16 + MediaQuery.viewInsetsOf(context).bottom,
               ),
               child: Row(
                 children: [

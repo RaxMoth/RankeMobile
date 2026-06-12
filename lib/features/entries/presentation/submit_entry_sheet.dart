@@ -132,7 +132,10 @@ class _SubmitEntrySheetState extends ConsumerState<SubmitEntrySheet> {
         20,
         20,
         20,
-        20 + MediaQuery.of(context).viewInsets.bottom,
+        // viewInsetsOf (Flutter 3.10+) only triggers a rebuild when the
+        // keyboard insets actually change — much cheaper than .of() which
+        // rebuilds on every MediaQueryData mutation.
+        20 + MediaQuery.viewInsetsOf(context).bottom,
       ),
       child: _submitted ? _buildSuccessState() : _buildForm(),
     );
