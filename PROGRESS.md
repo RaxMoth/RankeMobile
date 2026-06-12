@@ -1,6 +1,6 @@
 # Progress Tracker
 
-Last loop run: 2026-06-12T14:44:15+0200
+Last loop run: 2026-06-12T15:01:27+0200
 Stack: flutter
 
 This file is **owned by `/loop`**. It is reconciled against the codebase on
@@ -62,12 +62,12 @@ until a human moves them to Backlog or marks them approved.
 
 Audit findings from this iteration. The loop addresses one item per pass.
 
-- [x] `MediaQuery.of(context).viewInsets` in three sheets → migrate to `MediaQuery.viewInsetsOf(context)` for granular rebuild subscription (Flutter 3.10+ native feature). _Done this iteration._
+- [x] `MediaQuery.of(context).viewInsets` in three sheets → migrate to `MediaQuery.viewInsetsOf(context)` for granular rebuild subscription (Flutter 3.10+ native feature). _Done this iteration — commit `9384ca1`._
 - [ ] **Hand-rolled providers everywhere.** 8+ files declare `Provider(...)` / `AsyncNotifierProvider(...)` / `FamilyAsyncNotifierProvider(...)`. Spec specifies `riverpod_annotation` codegen flavor. Migration would eliminate the typing boilerplate around families. _Not actioned (see Proposed)._
 - [ ] **Low `dispose()` coverage.** Only ~10 files call `dispose()` while ~9 use `TextEditingController`/`ScrollController`/`AnimationController`. Audit each controller-owning widget to confirm correct lifecycle and prevent leaks. **Effort: S.** _Open._
 - [ ] **`flutter pub outdated` not run in CI.** Detect packages with newer compatible versions on every loop pass. **Effort: XS.** _Open._
 - [ ] **No `flutter test` coverage at all.** Zero unit / widget tests. Even one smoke test per feature would catch the most disruptive regressions. _Open (see Proposed for integration test harness)._
-- [ ] **Hardcoded animation durations.** `Duration(milliseconds: 180)` is duplicated across screens though `lib/core/theme/animations.dart` already exists with `AppAnimations.short`. Sweep + replace. **Effort: S.** _Open._
+- [x] **Hardcoded animation durations (tap-state transitions).** Two `AnimatedContainer`s — the value-type picker in `create_list_sheet.dart:376` and the segmented filter in `home_screen.dart:222` — still hardcoded `Duration(milliseconds: 180)` while `AppAnimations.short` exists. Both migrated + given `AppAnimations.curve`; `home_screen` now imports the constants module. _Done this iteration._ Remaining hardcoded `ms` values (`220` success delay, `300` debounce/page, `250` swipe cooldown, `600`/`1200` shimmer) are intentional one-offs, not tap-state UI motion — left as-is.
 
 ---
 

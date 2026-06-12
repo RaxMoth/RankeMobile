@@ -373,7 +373,11 @@ class _TypeCard extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 180),
+        // Last stray hardcoded ms in this file — file already uses
+        // AppAnimations.short/standard elsewhere for the same kind of
+        // tap-state transition. Match curve too.
+        duration: AppAnimations.short,
+        curve: AppAnimations.curve,
         padding: const EdgeInsets.all(18),
         decoration: BoxDecoration(
           color: isSelected ? AppColors.accent.withAlpha(25) : AppColors.surface,

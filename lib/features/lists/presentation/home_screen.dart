@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/strings.dart';
+import '../../../core/theme/animations.dart';
 import '../../../core/theme/colors.dart';
 import '../../../core/theme/text_styles.dart';
 import '../../../shared/widgets/board_tile.dart';
@@ -219,7 +220,8 @@ class _FilterBar extends ConsumerWidget {
                 },
                 behavior: HitTestBehavior.opaque,
                 child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 180),
+                  duration: AppAnimations.short,
+                  curve: AppAnimations.curve,
                   margin: const EdgeInsets.all(3),
                   decoration: BoxDecoration(
                     color: active == filter
