@@ -3,12 +3,14 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/network/api_error.dart';
 import '../../../core/strings.dart';
 import '../../../core/theme/animations.dart';
 import '../../../core/theme/colors.dart';
 import '../../../core/theme/text_styles.dart';
 import '../../../shared/widgets/board_tile.dart';
 import '../../../shared/widgets/create_fab.dart';
+import '../../../shared/widgets/error_view.dart';
 import '../../../shared/widgets/shimmer_loading.dart';
 import '../../../shared/widgets/user_avatar_menu.dart';
 import '../domain/entities/ranked_list.dart';
@@ -157,24 +159,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   },
                   loading: () => const BoardListSkeleton(count: 5),
                   error: (e, _) => SliverFillRemaining(
-                    child: Center(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(
-                            Icons.error_outline,
-                            color: AppColors.error,
-                            size: 32,
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            S.failedToLoad,
-                            style: AppTextStyles.sectionHeader.copyWith(
-                              color: AppColors.error,
-                            ),
-                          ),
-                        ],
-                      ),
+                    // Give failed loads a retry affordance via the shared
+                    // ErrorView instead of a dead-end error message.
+                    child: ErrorView(
+                      error: e is ApiError ? e : ApiUnknownError(error: e),
+                      onRetry: () =>
+                          ref.read(listsProvider.notifier).refresh(),
                     ),
                   ),
                 ),

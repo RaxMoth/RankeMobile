@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -57,6 +58,9 @@ class _AppShellState extends ConsumerState<AppShell> {
     }
 
     _lastSwipeAt = now;
+    // Subtle iOS-native feedback on a swipe-driven tab change (matches the
+    // tap path below and the home filter pill).
+    HapticFeedback.selectionClick();
     widget.navigationShell.goBranch(target);
   }
 
@@ -81,10 +85,13 @@ class _AppShellState extends ConsumerState<AppShell> {
           showSelectedLabels: false,
           showUnselectedLabels: false,
           currentIndex: widget.navigationShell.currentIndex,
-          onTap: (index) => widget.navigationShell.goBranch(
-            index,
-            initialLocation: index == widget.navigationShell.currentIndex,
-          ),
+          onTap: (index) {
+            HapticFeedback.selectionClick();
+            widget.navigationShell.goBranch(
+              index,
+              initialLocation: index == widget.navigationShell.currentIndex,
+            );
+          },
           items: [
             BottomNavigationBarItem(
               icon: Badge(

@@ -271,6 +271,40 @@ abstract class S {
   static String rankActivity(String name, int rank) => '$name — RANK $rank';
   static String membersCount(int count) => '$count MEMBERS';
 
+  /// VoiceOver announcement for a leaderboard standing row. Composes the
+  /// visually-fragmented pieces (rank digits, avatar initial, name, value,
+  /// note) into one natural-language label so the row reads as a single unit.
+  static String standingSemantic({
+    required int rank,
+    required String name,
+    required String value,
+    String? note,
+    required bool isCurrentUser,
+  }) {
+    final you = isCurrentUser ? ', your entry' : '';
+    final noteStr = (note != null && note.isNotEmpty) ? ', note: $note' : '';
+    return 'Rank $rank$you, $name, $value$noteStr';
+  }
+
+  /// VoiceOver announcement for a board tile. Composes the visually-fragmented
+  /// pieces (title, member count, own rank/role) into one natural-language
+  /// label so the tile reads as a single unit instead of disconnected nodes.
+  static String boardTileSemantic({
+    required String title,
+    required int memberCount,
+    int? ownRank,
+    String? role,
+  }) {
+    final members = memberCount == 1 ? '1 member' : '$memberCount members';
+    final standing = ownRank != null
+        ? ', your rank $ownRank'
+        : (role != null ? ', you are $role' : '');
+    return '$title board, $members$standing';
+  }
+
+  /// VoiceOver label for the bookmark toggle on a saved board tile.
+  static const removeBookmarkAction = 'Remove bookmark';
+
   // ── Settings ────────────────────────────────────────────────────
   static const settings = 'SETTINGS';
   static const account = 'ACCOUNT';

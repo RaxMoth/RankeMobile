@@ -1,79 +1,69 @@
-# Progress Tracker
+# PROGRESS
 
-Last loop run: 2026-06-12T15:01:27+0200
-Stack: flutter
-
-This file is **owned by `/loop`**. It is reconciled against the codebase on
-every iteration. Don't hand-edit "Done" — move items between sections instead.
-
-The source spec is [`Instructor.md`](./Instructor.md).
+Auto-maintained dashboard for the hourly codebase-improvement loop across both
+Ranke repos (RankeMobile Flutter app + RankeBE Go backend). Feature state lives
+in [`FEATURES.md`](./FEATURES.md); release notes in [`CHANGELOG.md`](./CHANGELOG.md).
 
 ---
 
-## Done
+## Status
 
-All v1 spec items shipped per `Instructor.md`:
+- **Last run:** 2026-07-14T21:05:00+0200
+- **Branch:** main (both repos)
+- **Mobile build:** `flutter analyze` → ✅ No issues found (after this run's change)
+- **Backend build:** untouched this run; working tree **clean** (human committed prior backend edits). Last known: `go build ./...` ✅ / `go vet ./...` ✅.
+- **Working tree (mobile):** dirty — this run's changes (`board_tile.dart`, `strings.dart`, `api_error.dart`, `error_view.dart`, `login_screen.dart`, `register_screen.dart`) + prior runs' still-uncommitted mobile changes (`app_shell.dart`, `home_screen.dart`, `discover_screen.dart`, `list_detail_screen.dart`) + tracking docs. All awaiting human review.
+- **Awaiting direction — no planned features queued.** `FEATURES.md` § In progress and § Planned are both empty. This run executed the top standing proposal (BoardTile semantics — proposal #1 for two consecutive runs) as an in-pass Step-2 fix rather than promoting an Idea. Suggested next steps to promote Ideas → Planned:
+  1. **Activity-feed row semantics** — the composed-label pattern is now proven on both `_StandingRow` and `BoardTile`. `_ActivityRow` is the last fragmented composed row. Straightforward, no sub-button complication. Effort: S.
+  2. **First integration test** — `integration_test` happy path (login → create list → submit entry → view leaderboard) to establish the zero → one test baseline both repos lack. Effort: M.
+  3. **Backend index migration + handler tests** — add the two hot-path indexes (see Open suggestions) and the first `internal/handler` table-driven tests. Needs a migration + `sqlc generate` check. Effort: M.
 
-- [x] Clean architecture per feature (`domain/` → `data/` → `presentation/`) — every feature module respects the layer boundary
-- [x] DI: GetIt for infrastructure, Riverpod for UI state — `lib/core/di/injection.dart`
-- [x] Dio + AuthInterceptor with mutex-protected refresh — `lib/core/network/auth_interceptor.dart`
-- [x] `ApiError` sealed class + `Either<ApiError, T>` via fpdart — `lib/core/network/api_error.dart`
-- [x] GoRouter with auth-guard redirect + `StatefulShellRoute` — `lib/core/router/router.dart`
-- [x] Deep link `rankapp://invite/<token>` → `/invite/:token`
-- [x] `flutter_secure_storage` for tokens, keys via `AppConstants`
-- [x] Sign in with Apple (login + register screens)
-- [x] Auth screens (`login_screen.dart`, `register_screen.dart`)
-- [x] Home screen with filter bar (compact segmented pill) + bottom-nav (icon-only)
-- [x] Discover screen for public board search
-- [x] List detail with ranked leaderboard + own-row highlight
-- [x] Create / edit list bottom sheets
-- [x] Submit entry sheet with type-aware input (number / `DurationPicker` / text)
-- [x] Invite preview screen
-- [x] Manage members screen
-- [x] Profile screen + public user profile screen + settings screen
-- [x] Activity feed feature (extra polish beyond spec)
-- [x] Onboarding flow (extra polish beyond spec)
-- [x] Shared widgets: `app_button`, `app_text_field`, `value_type_badge`, `error_view`, `board_tile`, `create_fab`, `bottom_sheet_handle`, `sheet_action_row`, `shimmer_loading`, `user_avatar_menu`
-- [x] freezed entities for `RankedList`, `RankedEntry`, `User`, `EntryInput`
-- [x] Mock dev mode (`lib/core/dev/dev_config.dart`) toggled via `--dart-define=USE_MOCK=true`
-- [x] **Backend alignment (Phase 2A/2B)** — central `ApiPaths`, envelope helpers, camelCase contract, moderation endpoints, server-side `previous_rank`
-- [x] **Backend production hardening (Phase 2C)** — request ID + slog, IP rate limit on `/auth/*`, body-size cap, HTTP timeouts, refresh-token reuse detection, JWT secret strength check, Apple S2S notification handler, account deletion (App Store 5.1.1(v))
+## Last run summary
 
-## In Progress
+Accessibility fix (Step-2 audit, top standing proposal) + tracker update. `flutter analyze` green after the change; backend untouched (working tree already clean).
 
-_(none)_
+**Changed this run (verified, uncommitted — mobile):**
+- **Board tile VoiceOver labels [accessibility].** [`board_tile.dart`](lib/shared/widgets/board_tile.dart) — wrapped `BoardTile` in `Semantics(button: true, label: …)` with a new composed [`S.boardTileSemantic(...)`](lib/core/strings.dart) label ("MOVIE NIGHT board, 12 members, your rank 3"). The fragmented visual `Text` nodes (title, member count, own-rank, and each `_EntryPreviewRow`) are individually wrapped in `ExcludeSemantics` so VoiceOver stops reading them as disconnected pieces. **Solved the case that blocked this in two prior passes:** the nested bookmark toggle in `_buildTrailing` is deliberately left un-excluded and given its own `Semantics(button, label: S.removeBookmarkAction)`, so it remains an independently focusable sub-button inside the tile-button. The decorative chevron (non-bookmark trailing) is `ExcludeSemantics`-wrapped. Chose per-node exclusion over a single blanket `ExcludeSemantics` specifically to keep the sub-button accessible **and** preserve the exact visual layout (a structural pull-out of the toggle would have shifted the value column / narrowed the preview rows). `dart format` applied. `BoardTile` is the app's single most-repeated interactive element (Home list, Discover results, Profile, bookmarks), so this closes the highest-fanout item in the "0 Semantics app-wide" audit thread.
 
-## Backlog (from spec, not started)
+**Audit findings this run:**
+- **BoardTile semantics (proposal #1, deferred twice)** — **fixed** (above). The prior blocker ("blanket `ExcludeSemantics` would break the nested bookmark toggle") is resolved via per-node exclusion + a dedicated toggle `Semantics` node.
+- **Semantics coverage** — after this run, `Semantics` is used in `list_detail_screen.dart` (leaderboard rows) and `board_tile.dart` (tiles). Remaining fragmented composed row: activity-feed `_ActivityRow` (now proposal #1 in Status / Idea in FEATURES).
+- A broader read-only string/accessibility/magic-number audit (background agent) was in flight at run end; any concrete new items it surfaced should be triaged into Open suggestions next run.
 
-_(none — full v1 spec is shipped)_
+**Audited but deliberately not changed:**
+- **Layout-preserving vs. structural refactor of `BoardTile`** — considered pulling the trailing toggle out to a top-level Row sibling for a single-`ExcludeSemantics` solution; rejected because it would reposition the value column / narrow preview rows on tiles with entry previews. Per-node exclusion keeps pixels identical.
+- **Dependency upgrades** — unchanged; still gated on a test suite existing before autonomously bumping the lockfile.
+- **Backend** — no new mobile-adjacent quick wins; `gin.H` ad-hoc responses + missing indexes remain in Open suggestions.
 
-## Proposed (NOT approved — do not implement)
+## Open suggestions
 
-Add ideas here only with the `(NOT approved)` marker. The loop never builds these
-until a human moves them to Backlog or marks them approved.
+Improvements found but not actioned (need design, or larger than a single safe pass).
 
-- [ ] Riverpod codegen migration — every provider in `lib/features/` is hand-rolled (`Provider(...)`, `AsyncNotifierProvider(...)`). Spec calls for `riverpod_annotation`. Migration would consolidate over `@riverpod` annotations, give us free `keepAlive`/`autoDispose` ergonomics, and eliminate the family-key boilerplate in `lists_provider.dart`. **Effort: M.** **Native features:** `riverpod_generator`, `@Riverpod(keepAlive:...)`. Status: _awaiting review_.
-- [ ] `RestorableProperty` for filter/tab state — Home filter, bottom-nav index and create-list sheet step are all `Provider`/local state. Wiring them through `RestorableProperty` would preserve them across iOS process suspension/restoration. **Effort: S.** **Native features:** `RestorationMixin`, `RestorableInt`. Status: _awaiting review_.
-- [ ] `Sliver*` migration for List Detail leaderboard — currently a `ListView`; with hundreds of entries the `SliverList.builder` + `SliverPersistentHeader` for the rank-1 podium would deliver visibly smoother scrolling on iPhone 12-class devices. **Effort: M.** **Native features:** `SliverList`, `SliverPersistentHeader`, `CustomScrollView`. Status: _awaiting review_.
-- [ ] `SelectableText` for entry notes — entry rows currently use `Text` for the optional note. `SelectableText` lets users copy a note without long-press menus we'd have to build ourselves. **Effort: S.** **Native features:** `SelectableText.rich`. Status: _awaiting review_.
-- [ ] Integration test harness via `integration_test` package — there are no widget or integration tests today. A single happy-path test (login → create list → submit entry → view leaderboard) would catch most regressions. **Effort: M.** **Native features:** `integration_test`, `WidgetTester`, `find.bySemanticsLabel`. Status: _awaiting review_.
+**Backend (owner: BE)**
+- **[MED] Missing indexes.** Add `idx_refresh_tokens_user_revoked (user_id, revoked)` for bulk revocation on reuse detection, and confirm/`idx_entries_list_user (list_id, user_id)` for the upsert lookup path. New migration file. Effort: S — needs a migration + `sqlc generate` check.
+- **[LOW] `gin.H` ad-hoc responses** in ~11 spots vs. the typed `dto` package used elsewhere. Add a `dto.SimpleMessage{Message}` and route the `{"message": …}` responses through it. Effort: S.
+- **[LOW] Test coverage.** Only `internal/server/server_test.go` exists. No unit tests for handlers, middleware, the entries value-type sentinels, or the Apple verifier. Effort: M.
 
-## Tech Debt / Improvements
+**Mobile (owner: FE)**
+- **Activity-feed row semantics.** Last fragmented composed row after this run's BoardTile fix. Apply `S.*Semantic(...)` + `ExcludeSemantics` to `_ActivityRow`. No sub-button complication (simpler than BoardTile was). Effort: S.
+- **Retry on `list_detail`.** Detail screen error state offers GO BACK (fine); could add RETRY too. Effort: S.
+- **Riverpod codegen migration** (see FEATURES § Ideas) — providers are hand-rolled; `@riverpod` would cut family boilerplate. Effort: M. Architectural — write up before building.
+- **`flutter pub outdated` in the loop** — not run automatically; add to the audit step to catch newer compatible deps. Effort: XS.
+- **Integration test harness** (`integration_test`) — zero widget/integration tests today. One happy-path flow would catch most regressions. Effort: M.
 
-Audit findings from this iteration. The loop addresses one item per pass.
+## Tech debt watchlist
 
-- [x] `MediaQuery.of(context).viewInsets` in three sheets → migrate to `MediaQuery.viewInsetsOf(context)` for granular rebuild subscription (Flutter 3.10+ native feature). _Done this iteration — commit `9384ca1`._
-- [ ] **Hand-rolled providers everywhere.** 8+ files declare `Provider(...)` / `AsyncNotifierProvider(...)` / `FamilyAsyncNotifierProvider(...)`. Spec specifies `riverpod_annotation` codegen flavor. Migration would eliminate the typing boilerplate around families. _Not actioned (see Proposed)._
-- [ ] **Low `dispose()` coverage.** Only ~10 files call `dispose()` while ~9 use `TextEditingController`/`ScrollController`/`AnimationController`. Audit each controller-owning widget to confirm correct lifecycle and prevent leaks. **Effort: S.** _Open._
-- [ ] **`flutter pub outdated` not run in CI.** Detect packages with newer compatible versions on every loop pass. **Effort: XS.** _Open._
-- [ ] **No `flutter test` coverage at all.** Zero unit / widget tests. Even one smoke test per feature would catch the most disruptive regressions. _Open (see Proposed for integration test harness)._
-- [x] **Hardcoded animation durations (tap-state transitions).** Two `AnimatedContainer`s — the value-type picker in `create_list_sheet.dart:376` and the segmented filter in `home_screen.dart:222` — still hardcoded `Duration(milliseconds: 180)` while `AppAnimations.short` exists. Both migrated + given `AppAnimations.curve`; `home_screen` now imports the constants module. _Done this iteration._ Remaining hardcoded `ms` values (`220` success delay, `300` debounce/page, `250` swipe cooldown, `600`/`1200` shimmer) are intentional one-offs, not tap-state UI motion — left as-is.
+- **No automated tests, either repo** — 1 backend integration test, 0 mobile tests. Highest structural risk; every change is verified only by `analyze`/`build`/`vet`.
+- **Discover pagination** — `SearchPublicLists` is a hardcoded `LIMIT 100` full scan; needs cursor-based pagination before the board count grows. Needs design.
+- **No hot-path index audit** — membership + entry-upsert lookups run without confirmed covering indexes (see Open suggestions § Missing indexes).
+- **Hand-rolled Riverpod providers** — works, but diverges from the spec's `riverpod_annotation` flavor; family key boilerplate is the cost.
+- ~~Backend observability gaps~~ — **resolved** (all 20 500-paths now log correlated `slog.Error`).
+- ~~Stringly-typed service errors (entries)~~ — **resolved** (typed sentinels + `errors.Is`).
+- ~~`0 Semantics` app-wide~~ — **substantially closed** (leaderboard rows + board tiles labelled; activity rows remain, tracked as an Idea).
 
 ---
 
-## How to use this file
-
-- **/loop** automatically runs through Sync → Audit → Pick one task → Verify → Update this file → Report.
-- To approve a Proposed idea, move it to **Backlog** (delete the `(NOT approved)` marker) and the next loop will pick it up by priority.
-- To mark something as in-progress manually, move it from Backlog into **In Progress** before invoking /loop.
-- Don't expect /loop to ship more than one task per invocation — by design.
+### How this file is used
+Rewritten each loop run. `FEATURES.md` owns feature state; move an idea to
+FEATURES § Planned to queue it for the next pass. Never committed by the loop —
+changes are left in the working tree for human review.

@@ -10,19 +10,11 @@ class ErrorView extends StatelessWidget {
   final ApiError error;
   final VoidCallback? onRetry;
 
-  const ErrorView({
-    super.key,
-    required this.error,
-    this.onRetry,
-  });
+  const ErrorView({super.key, required this.error, this.onRetry});
 
   @override
   Widget build(BuildContext context) {
-    final message = switch (error) {
-      ApiNetworkError() => S.noNetwork,
-      ApiServerError(:final message) => message,
-      ApiUnknownError() => S.genericError,
-    };
+    final message = error.userMessage;
 
     return Center(
       child: Padding(
@@ -36,13 +28,14 @@ class ErrorView extends StatelessWidget {
               color: AppColors.error,
             ),
             const SizedBox(height: 16),
-            Text(message, style: AppTextStyles.body, textAlign: TextAlign.center),
+            Text(
+              message,
+              style: AppTextStyles.body,
+              textAlign: TextAlign.center,
+            ),
             if (onRetry != null) ...[
               const SizedBox(height: 24),
-              ElevatedButton(
-                onPressed: onRetry,
-                child: const Text(S.retry),
-              ),
+              ElevatedButton(onPressed: onRetry, child: const Text(S.retry)),
             ],
           ],
         ),

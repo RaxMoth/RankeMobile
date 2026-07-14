@@ -297,12 +297,7 @@ class _StandingsTab extends ConsumerWidget {
                     key: ValueKey(entry.id),
                     direction: DismissDirection.endToStart,
                     confirmDismiss: (_) async {
-                      _confirmRemoveEntry(
-                        context,
-                        ref,
-                        entry,
-                        isOwnEntry,
-                      );
+                      _confirmRemoveEntry(context, ref, entry, isOwnEntry);
                       return false;
                     },
                     background: Container(
@@ -324,12 +319,8 @@ class _StandingsTab extends ConsumerWidget {
                       valueType: list.valueType,
                       currentUserId: currentUserId,
                       canDelete: true,
-                      onRemove: () => _confirmRemoveEntry(
-                        context,
-                        ref,
-                        entry,
-                        isOwnEntry,
-                      ),
+                      onRemove: () =>
+                          _confirmRemoveEntry(context, ref, entry, isOwnEntry),
                     ),
                   )
                 : _StandingRow(
@@ -1395,100 +1386,119 @@ class _StandingRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () => _showEntryDetail(context),
-      onLongPress: canDelete ? onRemove : null,
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 8),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-        decoration: BoxDecoration(
-          color: isCurrentUser
-              ? AppColors.accent.withAlpha(20)
-              : AppColors.surface,
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(
-            color: isCurrentUser
-                ? AppColors.accent.withAlpha(80)
-                : AppColors.border,
-          ),
+    // Merge the row's fragmented Text nodes ("01", the avatar initial, name,
+    // note, value) into one VoiceOver announcement; ExcludeSemantics on the
+    // visual children stops them being read as disconnected pieces.
+    return MergeSemantics(
+      child: Semantics(
+        button: true,
+        label: S.standingSemantic(
+          rank: entry.rank,
+          name: entry.displayName,
+          value: _formatValue(entry),
+          note: entry.note,
+          isCurrentUser: isCurrentUser,
         ),
-        child: Row(
-          children: [
-            // Rank
-            SizedBox(
-              width: Responsive.scale(context, 36),
-              child: Text(
-                entry.rank.toString().padLeft(2, '0'),
-                style: AppTextStyles.rankNumber.copyWith(
-                  color: isCurrentUser ? AppColors.accent : AppColors.textMuted,
-                ),
-              ),
-            ),
-            const SizedBox(width: 12),
-            // Avatar placeholder
-            Container(
-              width: Responsive.scale(context, 40),
-              height: Responsive.scale(context, 40),
+        child: GestureDetector(
+          onTap: () => _showEntryDetail(context),
+          onLongPress: canDelete ? onRemove : null,
+          child: ExcludeSemantics(
+            child: Container(
+              margin: const EdgeInsets.only(bottom: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
               decoration: BoxDecoration(
-                color: AppColors.surfaceLight,
-                borderRadius: BorderRadius.circular(6),
-              ),
-              child: Center(
-                child: Text(
-                  entry.displayName.isNotEmpty
-                      ? entry.displayName[0].toUpperCase()
-                      : '?',
-                  style: AppTextStyles.body.copyWith(
-                    fontWeight: FontWeight.w800,
-                    color: isCurrentUser
-                        ? AppColors.accent
-                        : AppColors.textTertiary,
-                  ),
+                color: isCurrentUser
+                    ? AppColors.accent.withAlpha(20)
+                    : AppColors.surface,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: isCurrentUser
+                      ? AppColors.accent.withAlpha(80)
+                      : AppColors.border,
                 ),
               ),
-            ),
-            const SizedBox(width: 12),
-            // Name
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              child: Row(
                 children: [
-                  Text(
-                    entry.displayName.toUpperCase(),
-                    style: AppTextStyles.body.copyWith(
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                  if (entry.note != null && entry.note!.isNotEmpty)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 2),
-                      child: Text(
-                        entry.note!,
-                        style: AppTextStyles.badge.copyWith(
-                          color: AppColors.textTertiary,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
+                  // Rank
+                  SizedBox(
+                    width: Responsive.scale(context, 36),
+                    child: Text(
+                      entry.rank.toString().padLeft(2, '0'),
+                      style: AppTextStyles.rankNumber.copyWith(
+                        color: isCurrentUser
+                            ? AppColors.accent
+                            : AppColors.textMuted,
                       ),
                     ),
+                  ),
+                  const SizedBox(width: 12),
+                  // Avatar placeholder
+                  Container(
+                    width: Responsive.scale(context, 40),
+                    height: Responsive.scale(context, 40),
+                    decoration: BoxDecoration(
+                      color: AppColors.surfaceLight,
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Center(
+                      child: Text(
+                        entry.displayName.isNotEmpty
+                            ? entry.displayName[0].toUpperCase()
+                            : '?',
+                        style: AppTextStyles.body.copyWith(
+                          fontWeight: FontWeight.w800,
+                          color: isCurrentUser
+                              ? AppColors.accent
+                              : AppColors.textTertiary,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  // Name
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          entry.displayName.toUpperCase(),
+                          style: AppTextStyles.body.copyWith(
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        if (entry.note != null && entry.note!.isNotEmpty)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 2),
+                            child: Text(
+                              entry.note!,
+                              style: AppTextStyles.badge.copyWith(
+                                color: AppColors.textTertiary,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                  // Value
+                  Flexible(
+                    flex: 0,
+                    child: Text(
+                      _formatValue(entry),
+                      style: AppTextStyles.statValue.copyWith(
+                        color: isCurrentUser
+                            ? AppColors.accent
+                            : AppColors.textPrimary,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
                 ],
               ),
             ),
-            // Value
-            Flexible(
-              flex: 0,
-              child: Text(
-                _formatValue(entry),
-                style: AppTextStyles.statValue.copyWith(
-                  color: isCurrentUser
-                      ? AppColors.accent
-                      : AppColors.textPrimary,
-                ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-          ],
+          ),
         ),
       ),
     );
@@ -1822,8 +1832,11 @@ class _PullToSubmitHint extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        const Icon(Icons.keyboard_arrow_down,
-            size: 14, color: AppColors.textTertiary),
+        const Icon(
+          Icons.keyboard_arrow_down,
+          size: 14,
+          color: AppColors.textTertiary,
+        ),
         const SizedBox(width: 4),
         Text(
           S.pullToSubmit,

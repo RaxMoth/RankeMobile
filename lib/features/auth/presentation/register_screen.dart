@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../core/network/api_error.dart';
 import '../../../core/strings.dart';
 import '../../../core/theme/colors.dart';
 import '../../../core/theme/text_styles.dart';
@@ -32,7 +33,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
   void _register() {
     if (!_formKey.currentState!.validate()) return;
-    ref.read(authProvider.notifier).register(
+    ref
+        .read(authProvider.notifier)
+        .register(
           displayName: _nameController.text.trim(),
           email: _emailController.text.trim(),
           password: _passwordController.text,
@@ -48,9 +51,11 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         context.go('/home');
       }
       if (next.hasError) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(next.error.toString())),
-        );
+        final error = next.error;
+        final message = error is ApiError ? error.userMessage : S.genericError;
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(message)));
       }
     });
 
@@ -136,7 +141,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   onPressed: () => context.go('/login'),
                   child: Text(
                     S.hasAccount,
-                    style: AppTextStyles.label.copyWith(color: AppColors.accent),
+                    style: AppTextStyles.label.copyWith(
+                      color: AppColors.accent,
+                    ),
                   ),
                 ),
               ],

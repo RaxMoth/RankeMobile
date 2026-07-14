@@ -1,3 +1,5 @@
+import '../strings.dart';
+
 /// Typed API errors for consistent error handling across the app.
 /// Use with `Either<ApiError, T>` from fpdart in repository methods.
 sealed class ApiError {
@@ -36,4 +38,15 @@ class ApiUnknownError extends ApiError {
 
   @override
   String toString() => 'ApiUnknownError: $error';
+}
+
+extension ApiErrorMessage on ApiError {
+  /// User-facing, localized message safe to surface in the UI (SnackBars,
+  /// `ErrorView`). Prefer this over `toString()`, which returns developer
+  /// text (status codes, error codes) that must never reach the user.
+  String get userMessage => switch (this) {
+    ApiNetworkError() => S.noNetwork,
+    ApiServerError(:final message) => message,
+    ApiUnknownError() => S.genericError,
+  };
 }

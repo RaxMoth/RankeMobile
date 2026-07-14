@@ -4,11 +4,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/dev/mock_lists_repository.dart';
+import '../../../core/network/api_error.dart';
 import '../../../core/strings.dart';
 import '../../../core/theme/colors.dart';
 import '../../../core/theme/responsive.dart';
 import '../../../core/theme/text_styles.dart';
 import '../../../shared/widgets/create_fab.dart';
+import '../../../shared/widgets/error_view.dart';
 import '../../../shared/widgets/shimmer_loading.dart';
 import '../../../shared/widgets/value_type_badge.dart';
 import '../domain/entities/ranked_list.dart';
@@ -76,6 +78,7 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
                             ? IconButton(
                                 icon: const Icon(Icons.clear,
                                     color: AppColors.textTertiary, size: 18),
+                                tooltip: S.clearSearch,
                                 onPressed: () {
                                   _searchController.clear();
                                   ref
@@ -164,10 +167,11 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
               },
               loading: () => const BoardListSkeleton(count: 6),
               error: (e, _) => SliverFillRemaining(
-                child: Center(
-                  child: Text('ERROR: $e',
-                      style: AppTextStyles.body
-                          .copyWith(color: AppColors.error)),
+                // Shared ErrorView gives a typed message + retry instead of a
+                // raw exception dump with no recovery path.
+                child: ErrorView(
+                  error: e is ApiError ? e : ApiUnknownError(error: e),
+                  onRetry: () => ref.invalidate(discoverResultsProvider),
                 ),
               ),
             ),

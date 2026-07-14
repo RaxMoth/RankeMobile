@@ -32,90 +32,118 @@ class BoardTile extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return GestureDetector(
-      onTap: onTap,
-      onLongPress: () {
-        HapticFeedback.mediumImpact();
-        _showQuickActions(context, ref);
-      },
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 8),
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: AppColors.border),
-        ),
-        child: Row(
-          children: [
-            if (showRankBadge) ...[
-              SizedBox(
-                width: Responsive.scale(context, 52),
-                child: _buildRankBadge(),
-              ),
-              const SizedBox(width: 8),
-            ],
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      _ValueTypeGlyph(type: summary.valueType),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          summary.title.toUpperCase(),
-                          style: AppTextStyles.body.copyWith(
-                              fontWeight: FontWeight.w700, fontSize: 13),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
+    // Announce the whole tile as one labelled button. The descriptive Text
+    // nodes are individually wrapped in ExcludeSemantics so VoiceOver doesn't
+    // read the title/count/preview fragments as disconnected pieces — but the
+    // trailing bookmark toggle is deliberately left un-excluded so it stays an
+    // independently focusable button (see _buildTrailing).
+    return Semantics(
+      button: true,
+      label: S.boardTileSemantic(
+        title: summary.title,
+        memberCount: summary.memberCount,
+        ownRank: summary.ownRank,
+        role: summary.currentUserRole?.name,
+      ),
+      child: GestureDetector(
+        onTap: onTap,
+        onLongPress: () {
+          HapticFeedback.mediumImpact();
+          _showQuickActions(context, ref);
+        },
+        child: Container(
+          margin: const EdgeInsets.only(bottom: 8),
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: AppColors.surface,
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: AppColors.border),
+          ),
+          child: Row(
+            children: [
+              if (showRankBadge) ...[
+                SizedBox(
+                  width: Responsive.scale(context, 52),
+                  child: ExcludeSemantics(child: _buildRankBadge()),
+                ),
+                const SizedBox(width: 8),
+              ],
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        ExcludeSemantics(
+                          child: _ValueTypeGlyph(type: summary.valueType),
                         ),
-                      ),
-                      const SizedBox(width: 8),
-                      _buildTrailing(ref),
-                    ],
-                  ),
-                  const SizedBox(height: 4),
-                  Row(
-                    children: [
-                      const Icon(Icons.people_outline,
-                          size: 13, color: AppColors.textTertiary),
-                      const SizedBox(width: 4),
-                      Text(
-                        _formatCount(summary.memberCount),
-                        style:
-                            AppTextStyles.bodySecondary.copyWith(fontSize: 12),
-                      ),
-                      if (summary.ownRank != null && !showRankBadge) ...[
                         const SizedBox(width: 8),
-                        Text('#${summary.ownRank}',
-                            style: AppTextStyles.label),
+                        Expanded(
+                          child: ExcludeSemantics(
+                            child: Text(
+                              summary.title.toUpperCase(),
+                              style: AppTextStyles.body.copyWith(
+                                fontWeight: FontWeight.w700,
+                                fontSize: 13,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        _buildTrailing(ref),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    ExcludeSemantics(
+                      child: Row(
+                        children: [
+                          const Icon(
+                            Icons.people_outline,
+                            size: 13,
+                            color: AppColors.textTertiary,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            _formatCount(summary.memberCount),
+                            style: AppTextStyles.bodySecondary.copyWith(
+                              fontSize: 12,
+                            ),
+                          ),
+                          if (summary.ownRank != null && !showRankBadge) ...[
+                            const SizedBox(width: 8),
+                            Text(
+                              '#${summary.ownRank}',
+                              style: AppTextStyles.label,
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                    if (summary.topEntries.isNotEmpty) ...[
+                      const SizedBox(height: 10),
+                      Container(height: 1, color: AppColors.border),
+                      const SizedBox(height: 8),
+                      for (int i = 0; i < summary.topEntries.length; i++) ...[
+                        ExcludeSemantics(
+                          child: _EntryPreviewRow(
+                            entry: summary.topEntries[i],
+                            valueType: summary.valueType,
+                            isOwn:
+                                summary.ownRank != null &&
+                                summary.topEntries[i].rank == summary.ownRank,
+                          ),
+                        ),
+                        if (i < summary.topEntries.length - 1)
+                          const SizedBox(height: 4),
                       ],
                     ],
-                  ),
-                  if (summary.topEntries.isNotEmpty) ...[
-                    const SizedBox(height: 10),
-                    Container(
-                      height: 1,
-                      color: AppColors.border,
-                    ),
-                    const SizedBox(height: 8),
-                    for (int i = 0; i < summary.topEntries.length; i++) ...[
-                      _EntryPreviewRow(
-                        entry: summary.topEntries[i],
-                        valueType: summary.valueType,
-                        isOwn: summary.ownRank != null &&
-                            summary.topEntries[i].rank == summary.ownRank,
-                      ),
-                      if (i < summary.topEntries.length - 1)
-                        const SizedBox(height: 4),
-                    ],
                   ],
-                ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -139,21 +167,29 @@ class BoardTile extends ConsumerWidget {
 
   Widget _buildTrailing(WidgetRef ref) {
     if (showBookmark) {
-      return GestureDetector(
-        onTap: () => ref.read(bookmarkProvider.notifier).toggle(summary.id),
-        child: const Padding(
-          padding: EdgeInsets.only(left: 8),
-          child: Icon(Icons.bookmark, color: AppColors.accent, size: 18),
+      // Left un-excluded so it remains an independently focusable button even
+      // though the surrounding tile text is hidden from the semantics tree.
+      return Semantics(
+        button: true,
+        label: S.removeBookmarkAction,
+        child: GestureDetector(
+          onTap: () => ref.read(bookmarkProvider.notifier).toggle(summary.id),
+          child: const Padding(
+            padding: EdgeInsets.only(left: 8),
+            child: Icon(Icons.bookmark, color: AppColors.accent, size: 18),
+          ),
         ),
       );
     }
-    return const Icon(Icons.chevron_right,
-        color: AppColors.textTertiary, size: 18);
+    return const ExcludeSemantics(
+      child: Icon(Icons.chevron_right, color: AppColors.textTertiary, size: 18),
+    );
   }
 
   void _showQuickActions(BuildContext context, WidgetRef ref) {
-    final isBookmarked =
-        ref.read(bookmarkProvider.notifier).isBookmarked(summary.id);
+    final isBookmarked = ref
+        .read(bookmarkProvider.notifier)
+        .isBookmarked(summary.id);
     showModalBottomSheet<void>(
       context: context,
       backgroundColor: AppColors.card,
@@ -302,9 +338,7 @@ class _EntryPreviewRow extends StatelessWidget {
           style: TextStyle(
             fontSize: 12,
             fontWeight: FontWeight.w700,
-            color: entry.rank == 1
-                ? AppColors.accent
-                : AppColors.textSecondary,
+            color: entry.rank == 1 ? AppColors.accent : AppColors.textSecondary,
             fontFeatures: const [FontFeature.tabularFigures()],
           ),
         ),
