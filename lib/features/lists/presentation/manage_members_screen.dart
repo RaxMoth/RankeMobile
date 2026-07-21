@@ -3,9 +3,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:share_plus/share_plus.dart';
 
+import '../../../core/network/api_error.dart';
 import '../../../core/strings.dart';
 import '../../../core/theme/colors.dart';
 import '../../../core/theme/text_styles.dart';
+import '../../../shared/widgets/error_view.dart';
 import '../domain/entities/ranked_list.dart';
 import 'providers/lists_provider.dart';
 
@@ -31,13 +33,11 @@ class ManageMembersScreen extends ConsumerWidget {
                 loading: () => const Center(
                   child: CircularProgressIndicator(color: AppColors.accent),
                 ),
-                error: (e, _) => Center(
-                  child: Text(
-                    S.failedToLoadMembers,
-                    style: AppTextStyles.sectionHeader.copyWith(
-                      color: AppColors.error,
-                    ),
-                  ),
+                // Route a failed members load through the shared ErrorView so
+                // it gets a consistent look + a RETRY affordance.
+                error: (e, _) => ErrorView(
+                  error: e is ApiError ? e : ApiUnknownError(error: e),
+                  onRetry: () => ref.invalidate(membersProvider(listId)),
                 ),
               ),
             ),

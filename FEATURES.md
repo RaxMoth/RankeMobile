@@ -41,6 +41,7 @@ Full v1 spec (per `Instructor.md` / `CLAUDE.md`) is shipped.
 ### Accessibility
 - **Leaderboard row VoiceOver labels** (2026-07-14) — each `_StandingRow` on List Detail now announces as one merged unit (`MergeSemantics` + composed `S.standingSemantic(...)` label + `ExcludeSemantics` on the visual children) instead of reading as disconnected fragments ("zero one", a stray avatar initial, name, value). First `Semantics` usage in the app; establishes the pattern for other composed rows.
 - **Board tile VoiceOver labels** (2026-07-14) — `BoardTile` (Home / Discover / Profile / bookmarks) now announces as one labelled button via `S.boardTileSemantic(...)` ("MOVIE NIGHT board, 12 members, your rank 3") with the fragmented title/count/entry-preview `Text` nodes wrapped in `ExcludeSemantics`. The nested bookmark toggle is left un-excluded and given its own `Semantics(button, label: 'Remove bookmark')` so it stays independently focusable — the case that had blocked this in prior passes. Layout unchanged.
+- **Activity-feed row VoiceOver labels** (2026-07-14) — `_ActivityTile` (Activity tab) now announces as one labelled button via `S.activitySemantic(...)` ("JANE submitted at rank #3, in MOVIE NIGHT, 5 minutes ago") with the headline / board-name / timestamp `Text` nodes and the decorative kind-icon wrapped in `ExcludeSemantics`. The terse all-caps visual timestamp ("5D AGO") is replaced in the spoken label by a natural-language form (`S.dAgoSpoken`/`hAgoSpoken`/`mAgoSpoken`/`justNowSpoken`). **Completes the composed-row Semantics sweep** — leaderboard rows, board tiles, and activity rows are now all single-unit announcements.
 
 ### Backend
 - **Contract alignment (Phase 2A/2B)** — central `ApiPaths`, envelope helpers, camelCase contract, moderation endpoints, server-side `previous_rank`.
@@ -68,7 +69,6 @@ Parking lot — not approved for build. Move an item up to **Planned** to queue 
 - **`RestorableProperty` for filter/tab state** — preserve Home filter, nav index, create-sheet step across iOS process suspension/restoration via `RestorationMixin`. Effort: S.
 - **`Sliver*` migration for List Detail leaderboard** — `CustomScrollView` + `SliverList.builder` + `SliverPersistentHeader` podium for smoother scroll with hundreds of entries. Effort: M.
 - **`SelectableText` for entry notes** — let users copy a note without custom long-press menu. Effort: S.
-- **Semantics pass — activity-feed rows** — `BoardTile` and the leaderboard are now done (see Shipped § Accessibility). Remaining composed-row target: the activity-feed rows (`_ActivityRow`), which read as fragmented name/rank/timestamp pieces. Apply the same `S.*Semantic(...)` + `ExcludeSemantics` pattern. Effort: S.
 - **Integration test harness** — `integration_test` package; one happy-path test (login → create list → submit entry → view leaderboard). Effort: M.
 
 ## Backend ideas

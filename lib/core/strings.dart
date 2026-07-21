@@ -67,7 +67,6 @@ abstract class S {
       'Create a board or discover\npublic boards to get started';
   static const create = 'CREATE';
   static const discover = 'DISCOVER';
-  static const failedToLoad = 'FAILED TO LOAD';
 
   // ── Discover ───────────────────────────────────────────────────
   static const searchBoards = 'Search boards...';
@@ -207,7 +206,6 @@ abstract class S {
   static String failedToUpdate(Object e) => 'FAILED TO UPDATE: $e';
 
   // ── Manage members ─────────────────────────────────────────────
-  static const failedToLoadMembers = 'FAILED TO LOAD MEMBERS';
   static const noMembers = 'NO MEMBERS';
   static const removeMember = 'REMOVE MEMBER';
   static String removeMemberConfirm(String name) =>
@@ -304,6 +302,24 @@ abstract class S {
 
   /// VoiceOver label for the bookmark toggle on a saved board tile.
   static const removeBookmarkAction = 'Remove bookmark';
+
+  /// VoiceOver announcement for an activity-feed row. Composes the headline,
+  /// board name, and timestamp — visually three fragmented nodes — into one
+  /// natural-language label so the row reads as a single unit.
+  static String activitySemantic({
+    required String headline,
+    required String boardTitle,
+    required String timeAgo,
+  }) => '$headline, in $boardTitle, $timeAgo';
+
+  /// Spoken (VoiceOver) relative-time variants of [dAgo]/[hAgo]/[mAgo]/[justNow].
+  /// The visual labels are terse all-caps abbreviations ("5D AGO") that read
+  /// poorly aloud; these expand to natural language.
+  static String dAgoSpoken(int d) => d == 1 ? '1 day ago' : '$d days ago';
+  static String hAgoSpoken(int h) => h == 1 ? '1 hour ago' : '$h hours ago';
+  static String mAgoSpoken(int m) =>
+      m == 1 ? '1 minute ago' : '$m minutes ago';
+  static const justNowSpoken = 'just now';
 
   // ── Settings ────────────────────────────────────────────────────
   static const settings = 'SETTINGS';

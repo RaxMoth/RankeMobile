@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/network/api_error.dart';
 import '../../../core/strings.dart';
 import '../../../core/theme/colors.dart';
 import '../../../core/theme/text_styles.dart';
 import '../../../shared/widgets/create_fab.dart';
+import '../../../shared/widgets/error_view.dart';
 import '../../lists/presentation/providers/lists_provider.dart';
 import '../domain/activity_event.dart';
 import 'providers/activity_provider.dart';
@@ -27,12 +29,11 @@ class ActivityScreen extends ConsumerWidget {
           child: feedAsync.when(
             loading: () =>
                 const Center(child: CircularProgressIndicator(color: AppColors.accent)),
-            error: (e, _) => Center(
-              child: Text(
-                S.failedToLoad,
-                style:
-                    AppTextStyles.sectionHeader.copyWith(color: AppColors.error),
-              ),
+            // Give a failed feed load a RETRY affordance via the shared
+            // ErrorView instead of a dead-end error label.
+            error: (e, _) => ErrorView(
+              error: e is ApiError ? e : ApiUnknownError(error: e),
+              onRetry: () => ref.read(listsProvider.notifier).refresh(),
             ),
             data: (events) {
               if (events.isEmpty) {
@@ -87,63 +88,84 @@ class _ActivityTile extends StatelessWidget {
       ActivityKind.newMember => (Icons.person_add_outlined, AppColors.accent),
     };
 
-    return GestureDetector(
-      onTap: () => context.push('/lists/${event.boardId}'),
-      child: Container(
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: event.isOwn
-              ? AppColors.accent.withAlpha(15)
-              : AppColors.surface,
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(
-            color:
-                event.isOwn ? AppColors.accent.withAlpha(60) : AppColors.border,
+    // Announce the row as one VoiceOver button. The headline / board-name /
+    // timestamp Text nodes and the decorative kind-icon are individually
+    // wrapped in ExcludeSemantics so they don't read as disconnected fragments
+    // ("JANE submitted at rank #3" then a stray board title then "5D AGO").
+    return Semantics(
+      button: true,
+      label: S.activitySemantic(
+        headline: _headline(),
+        boardTitle: event.boardTitle,
+        timeAgo: _spokenTime(event.at),
+      ),
+      child: GestureDetector(
+        onTap: () => context.push('/lists/${event.boardId}'),
+        child: Container(
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: event.isOwn
+                ? AppColors.accent.withAlpha(15)
+                : AppColors.surface,
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(
+              color: event.isOwn
+                  ? AppColors.accent.withAlpha(60)
+                  : AppColors.border,
+            ),
           ),
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 36,
-              height: 36,
-              decoration: BoxDecoration(
-                color: iconColor.withAlpha(25),
-                borderRadius: BorderRadius.circular(6),
+          child: Row(
+            children: [
+              ExcludeSemantics(
+                child: Container(
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    color: iconColor.withAlpha(25),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Icon(icon, size: 18, color: iconColor),
+                ),
               ),
-              child: Icon(icon, size: 18, color: iconColor),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    _headline(),
-                    style: AppTextStyles.body.copyWith(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    ExcludeSemantics(
+                      child: Text(
+                        _headline(),
+                        style: AppTextStyles.body.copyWith(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    event.boardTitle.toUpperCase(),
-                    style: AppTextStyles.badge
-                        .copyWith(color: AppColors.textTertiary),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
+                    const SizedBox(height: 2),
+                    ExcludeSemantics(
+                      child: Text(
+                        event.boardTitle.toUpperCase(),
+                        style: AppTextStyles.badge
+                            .copyWith(color: AppColors.textTertiary),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ),
-            const SizedBox(width: 8),
-            Text(
-              _relativeTime(event.at),
-              style: AppTextStyles.badge
-                  .copyWith(color: AppColors.textTertiary, fontSize: 10),
-            ),
-          ],
+              const SizedBox(width: 8),
+              ExcludeSemantics(
+                child: Text(
+                  _relativeTime(event.at),
+                  style: AppTextStyles.badge
+                      .copyWith(color: AppColors.textTertiary, fontSize: 10),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -168,5 +190,14 @@ class _ActivityTile extends StatelessWidget {
     if (diff.inHours > 0) return S.hAgo(diff.inHours);
     if (diff.inMinutes > 0) return S.mAgo(diff.inMinutes);
     return S.justNow;
+  }
+
+  /// Spoken counterpart of [_relativeTime] for the VoiceOver label.
+  String _spokenTime(DateTime dt) {
+    final diff = DateTime.now().difference(dt);
+    if (diff.inDays > 0) return S.dAgoSpoken(diff.inDays);
+    if (diff.inHours > 0) return S.hAgoSpoken(diff.inHours);
+    if (diff.inMinutes > 0) return S.mAgoSpoken(diff.inMinutes);
+    return S.justNowSpoken;
   }
 }

@@ -9,10 +9,12 @@ This project has not yet cut a public release; everything to date lives under Un
 ### Added
 - `FEATURES.md` canonical feature tracker and this `CHANGELOG.md` (hourly improvement loop bootstrap).
 - Retry affordance on failed loads: Home and Discover error states now use the shared `ErrorView` (typed message + RETRY button) instead of a dead-end error label / raw exception dump.
+- Retry affordance extended to the **Activity feed** and **Manage members** screens: both now route their `.when` error branch through the shared `ErrorView` (typed `ApiError.userMessage` + RETRY) instead of a static "FAILED TO LOAD" label. Activity retries via `listsProvider.refresh()` (its source), members via `ref.invalidate(membersProvider(listId))`. The intentionally-terminal error screens (Invite preview "invalid invite", User profile "user not found") are left as-is — those aren't transient loads and RETRY would be misleading.
 - Accessibility: VoiceOver `tooltip`/semantic label on the Discover search "clear" icon button.
 - iOS polish: haptic feedback (`HapticFeedback.selectionClick()`) on bottom-nav **tab switch** — both the tap path and the swipe-to-switch gesture in `app_shell.dart`. Completes the haptic-feedback pass (submit / create / bookmark / filter pill were already covered); tab switch was the last uncovered key interaction.
 - Accessibility: leaderboard standing rows (`_StandingRow` in `list_detail_screen.dart`) now announce as a single VoiceOver unit via `MergeSemantics` + a composed `S.standingSemantic(...)` label ("Rank 3, JANE, 42, note: …") with `ExcludeSemantics` on the visual children. Previously the row read as disconnected fragments — the padded rank digits as "zero one", the decorative avatar initial as a stray letter, then name and value separately. First `Semantics` usage in the codebase.
 - Accessibility: board tiles (`BoardTile`, used on Home / Discover / Profile / bookmarks) now announce as a single labelled VoiceOver button via a composed `S.boardTileSemantic(...)` label ("MOVIE NIGHT board, 12 members, your rank 3"), with the fragmented title / member-count / entry-preview `Text` nodes wrapped in `ExcludeSemantics`. The nested bookmark toggle is kept un-excluded with its own `Semantics(button, label: 'Remove bookmark')` so it remains an independently focusable control — the sub-button-inside-a-button case that had blocked this fix in prior passes. Visual layout unchanged.
+- Accessibility: activity-feed rows (`_ActivityTile` in `activity_screen.dart`) now announce as a single VoiceOver button via a composed `S.activitySemantic(...)` label ("JANE submitted at rank #3, in MOVIE NIGHT, 5 minutes ago"), with the headline / board-name / timestamp `Text` nodes and the decorative kind-icon wrapped in `ExcludeSemantics`. The terse all-caps visual timestamp ("5D AGO") is expanded to natural language in the spoken label via new `S.dAgoSpoken`/`hAgoSpoken`/`mAgoSpoken`/`justNowSpoken` helpers. Completes the composed-row Semantics sweep — leaderboard rows, board tiles, and activity rows are now all single-unit announcements.
 
 ### Changed
 - Migrated stray hardcoded `Duration(milliseconds: 180)` tap-state animations to `AppAnimations.short` + `AppAnimations.curve` (`create_list_sheet.dart`, `home_screen.dart`).
@@ -30,6 +32,7 @@ This project has not yet cut a public release; everything to date lives under Un
 
 ### Removed
 - Dead `containsString` helper in `apple/verify.go` (replaced by stdlib `slices.Contains`).
+- Dead string constants `S.failedToLoad` and `S.failedToLoadMembers` (their only call sites now render `ApiError.userMessage` through `ErrorView`).
 
 ---
 
