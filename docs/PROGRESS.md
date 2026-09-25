@@ -46,6 +46,8 @@ Improvements found but not actioned (need design, or larger than a single safe p
 - **[LOW] Test coverage.** Only `internal/server/server_test.go` exists. No unit tests for handlers, middleware, the entries value-type sentinels, or the Apple verifier. Effort: M.
 
 **Mobile (owner: FE)**
+- **[HIGH] `DevConfig.useMocks` defaults to `true`** (`lib/core/dev/dev_config.dart`) — contradicts its own doc comment; a plain `flutter build ios --release` ships the in-memory mock repos. Flip the default back to `false` before any TestFlight/App Store build. Needs owner sign-off (someone changed it deliberately?).
+- **Bottom-nav items have empty labels** (`app_shell.dart`, `label: ''`) — VoiceOver announces the three tabs with no name. Add `tooltip`/labels. Effort: XS.
 - **`ErrorView` error-state sweep — nearly done.** Transient-load error branches now route through the shared `ErrorView` (typed message + RETRY): Home, Discover (prior run), **Activity, Manage members (this run)**. **Remaining:** `list_detail_screen.dart:36` already offers GO BACK — could *add* a RETRY (heavier retry wiring than a flat list, so deferred). Intentionally excluded (terminal, non-transient errors): `invite_preview_screen.dart:58` ("invalid invite"), `user_profile_screen.dart:31` ("user not found") — RETRY would be misleading there. Effort: S for the `list_detail` add.
 - **3 open `TODO`s in real flows.** `auth_interceptor.dart:66` (on 401 refresh-failure, redirect to login via GoRouter — currently the interceptor just fails the request), `auth_provider.dart:26` (`_load` doesn't restore a session from the stored token on cold start → user re-auths every launch even with a valid token), `list_detail_screen.dart:1237` (social links are inert — `url_launcher` not wired). The `auth_provider` one is the most user-visible. Each needs a small design decision. Effort: S each.
 - **Tooltip/`Semantics` coverage on icon-only controls** — the composed-*row* Semantics sweep is now complete (leaderboard rows, board tiles, activity rows). Next accessibility layer: audit standalone `IconButton`/`GestureDetector` taps app-wide for missing `tooltip`/labels (nav icons, FAB, avatar menu, back/close buttons). Not yet surveyed. Effort: S once surveyed.
@@ -56,7 +58,7 @@ Improvements found but not actioned (need design, or larger than a single safe p
 
 ## Tech debt watchlist
 
-- **No automated tests, either repo** — 1 backend integration test, 0 mobile tests. Highest structural risk; every change is verified only by `analyze`/`build`/`vet`.
+- **Thin automated tests** — mobile now has 1 integration test (happy path) + 1 regression widget test + the stock smoke test; backend has 6 `_test.go` files. Next: widget tests for auth/list flows, repository tests with Dio adapter mocks.
 - **Discover pagination** — `SearchPublicLists` is a hardcoded `LIMIT 100` full scan; needs cursor-based pagination before the board count grows. Needs design.
 - **No hot-path index audit** — membership + entry-upsert lookups run without confirmed covering indexes (see Open suggestions § Missing indexes).
 - **Hand-rolled Riverpod providers** — works, but diverges from the spec's `riverpod_annotation` flavor; family key boilerplate is the cost.

@@ -7,6 +7,8 @@ This project has not yet cut a public release; everything to date lives under Un
 ## [Unreleased]
 
 ### Added
+- **First integration test** (`integration_test/app_flow_test.dart`): the happy path login → create a number board → submit an entry → approve it as owner → entry ranked #1 on the leaderboard, run against the mock repos on the iOS simulator (`flutter test integration_test --dart-define=USE_MOCK=true`). Widgets are found via new stable `AppKeys` (`lib/core/app_keys.dart`) or semantics labels, never by copy or layout. Passes on an iPhone 15 Pro simulator (iOS 18) in ~13s.
+- Regression widget test `test/features/lists/create_list_keyboard_test.dart` guarding the create-flow keyboard fix below.
 - `FEATURES.md` canonical feature tracker and this `CHANGELOG.md` (hourly improvement loop bootstrap).
 - Retry affordance on failed loads: Home and Discover error states now use the shared `ErrorView` (typed message + RETRY button) instead of a dead-end error label / raw exception dump.
 - Retry affordance extended to the **Activity feed** and **Manage members** screens: both now route their `.when` error branch through the shared `ErrorView` (typed `ApiError.userMessage` + RETRY) instead of a static "FAILED TO LOAD" label. Activity retries via `listsProvider.refresh()` (its source), members via `ref.invalidate(membersProvider(listId))`. The intentionally-terminal error screens (Invite preview "invalid invite", User profile "user not found") are left as-is — those aren't transient loads and RETRY would be misleading.
@@ -24,6 +26,8 @@ This project has not yet cut a public release; everything to date lives under Un
 - **Backend:** `apple/verify.go` `containsString` helper replaced with stdlib `slices.Contains` (Go 1.21+).
 
 ### Fixed
+- **Create-board flow collapsed behind the keyboard.** The bottom bar added `viewInsets.bottom` padding read from a context *above* the Scaffold, on top of the Scaffold's own keyboard avoidance — the keyboard was counted twice and the step pages collapsed to 0pt, so the title field vanished while typing into it. Removed the redundant inset (`create_list_sheet.dart`). Found by the new integration test.
+- **Login screen overflowed (~104pt) with the keyboard up.** The form was a fixed `Column`; it's now a `SingleChildScrollView` that stays vertically centred when there's room (`login_screen.dart`). Found by the new integration test.
 - Auth error SnackBars leaked raw developer text to users. `login_screen.dart` and `register_screen.dart` showed `next.error.toString()` — e.g. `ApiServerError(401): INVALID_CREDENTIALS — …` — on failed sign-in/registration. They now render the localized `ApiError.userMessage` (falling back to `S.genericError` for non-`ApiError` failures such as the Apple identity-token path). Added a reusable `ApiErrorMessage` extension (`api_error.dart`) and routed `ErrorView` through it too, de-duplicating the previously-inlined `ApiError` → message switch.
 - **Backend:** `RequireListRole` middleware ran its `GetListMember` DB query on `context.Background()`, dropping request deadline/cancellation propagation on every role-protected request. Now uses `c.Request.Context()`.
 

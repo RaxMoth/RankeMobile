@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:share_plus/share_plus.dart';
 
+import '../../../core/app_keys.dart';
 import '../../../core/strings.dart';
 import '../../../core/theme/colors.dart';
 import '../../../core/theme/responsive.dart';
@@ -182,7 +183,12 @@ class _DetailContentState extends ConsumerState<_DetailContent>
             indicatorWeight: 2.0,
             dividerColor: Colors.transparent,
             padding: const EdgeInsets.symmetric(horizontal: 12),
-            tabs: _tabs.map((t) => Tab(text: t.label)).toList(),
+            tabs: _tabs
+                .map((t) => Tab(
+                      key: AppKeys.listDetailTab(t.type.name),
+                      text: t.label,
+                    ))
+                .toList(),
           ),
         ),
         // Tab content
@@ -1113,6 +1119,7 @@ class _PendingEntryCardState extends ConsumerState<_PendingEntryCard> {
               const SizedBox(width: 8),
               Expanded(
                 child: GestureDetector(
+                  key: AppKeys.pendingApprove,
                   onTap: _isProcessing ? null : _approve,
                   child: Container(
                     padding: const EdgeInsets.symmetric(vertical: 8),
@@ -1860,6 +1867,7 @@ class _SubmitButton extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.fromLTRB(20, 12, 20, 16),
       child: ElevatedButton(
+        key: AppKeys.submitEntryButton,
         onPressed: onPressed,
         style: ElevatedButton.styleFrom(
           padding: const EdgeInsets.symmetric(vertical: 18),

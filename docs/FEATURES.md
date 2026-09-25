@@ -43,6 +43,9 @@ Full v1 spec (per `Instructor.md` / `CLAUDE.md`) is shipped.
 - **Board tile VoiceOver labels** (2026-07-14) — `BoardTile` (Home / Discover / Profile / bookmarks) now announces as one labelled button via `S.boardTileSemantic(...)` ("MOVIE NIGHT board, 12 members, your rank 3") with the fragmented title/count/entry-preview `Text` nodes wrapped in `ExcludeSemantics`. The nested bookmark toggle is left un-excluded and given its own `Semantics(button, label: 'Remove bookmark')` so it stays independently focusable — the case that had blocked this in prior passes. Layout unchanged.
 - **Activity-feed row VoiceOver labels** (2026-07-14) — `_ActivityTile` (Activity tab) now announces as one labelled button via `S.activitySemantic(...)` ("JANE submitted at rank #3, in MOVIE NIGHT, 5 minutes ago") with the headline / board-name / timestamp `Text` nodes and the decorative kind-icon wrapped in `ExcludeSemantics`. The terse all-caps visual timestamp ("5D AGO") is replaced in the spoken label by a natural-language form (`S.dAgoSpoken`/`hAgoSpoken`/`mAgoSpoken`/`justNowSpoken`). **Completes the composed-row Semantics sweep** — leaderboard rows, board tiles, and activity rows are now all single-unit announcements.
 
+### Testing
+- **Integration test harness** (2026-09-25) — `integration_test/app_flow_test.dart` covers login → create board → submit entry → owner approval → ranked on leaderboard against the mock repos on the iOS simulator. Stable `AppKeys` (`lib/core/app_keys.dart`) + semantics labels as selectors. Its first run found two keyboard layout bugs (create flow, login), both fixed with a regression widget test. Planned → Shipped.
+
 ### Backend
 - **Contract alignment (Phase 2A/2B)** — central `ApiPaths`, envelope helpers, camelCase contract, moderation endpoints, server-side `previous_rank`.
 - **Production hardening (Phase 2C)** — request ID + slog, IP rate limit on `/auth/*`, body-size cap, HTTP timeouts, refresh-token reuse detection, JWT secret strength check, Apple S2S notification handler, account deletion (App Store 5.1.1(v)).
@@ -59,7 +62,7 @@ _(none)_
 
 Prioritized. Nothing here is started; the loop picks the top item when In progress is empty.
 
-_(none currently promoted from Ideas — see Ideas parking lot)_
+_(none — integration test harness shipped 2026-09-25; promote the next item from Ideas)_
 
 ## Ideas
 
@@ -69,7 +72,6 @@ Parking lot — not approved for build. Move an item up to **Planned** to queue 
 - **`RestorableProperty` for filter/tab state** — preserve Home filter, nav index, create-sheet step across iOS process suspension/restoration via `RestorationMixin`. Effort: S.
 - **`Sliver*` migration for List Detail leaderboard** — `CustomScrollView` + `SliverList.builder` + `SliverPersistentHeader` podium for smoother scroll with hundreds of entries. Effort: M.
 - **`SelectableText` for entry notes** — let users copy a note without custom long-press menu. Effort: S.
-- **Integration test harness** — `integration_test` package; one happy-path test (login → create list → submit entry → view leaderboard). Effort: M.
 
 ## Backend ideas
 

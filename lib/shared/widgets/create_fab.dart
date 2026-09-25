@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/app_keys.dart';
 import '../../core/theme/colors.dart';
 
 /// Floating action button that opens the board-creation flow as a pushed modal.
@@ -12,6 +13,7 @@ class CreateFab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return FloatingActionButton(
+      key: AppKeys.createFab,
       onPressed: () {
         HapticFeedback.lightImpact();
         context.push('/create');

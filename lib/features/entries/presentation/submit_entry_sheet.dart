@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/app_keys.dart';
 import '../../../core/strings.dart';
 import '../../../core/theme/colors.dart';
 import '../../../core/theme/text_styles.dart';
@@ -179,6 +180,7 @@ class _SubmitEntrySheetState extends ConsumerState<SubmitEntrySheet> {
         SizedBox(
           width: double.infinity,
           child: ElevatedButton(
+            key: AppKeys.entryDone,
             onPressed: () => Navigator.of(context).pop(),
             style: ElevatedButton.styleFrom(
               padding: const EdgeInsets.symmetric(vertical: 16),
@@ -257,6 +259,7 @@ class _SubmitEntrySheetState extends ConsumerState<SubmitEntrySheet> {
         SizedBox(
           width: double.infinity,
           child: ElevatedButton(
+            key: AppKeys.entrySubmit,
             onPressed: _isSubmitting ? null : _submit,
             style: ElevatedButton.styleFrom(
               padding: const EdgeInsets.symmetric(vertical: 16),
@@ -374,6 +377,7 @@ class _SubmitEntrySheetState extends ConsumerState<SubmitEntrySheet> {
         ),
         const SizedBox(height: 8),
         TextField(
+          key: AppKeys.entryNumberField,
           controller: _numberController,
           keyboardType: const TextInputType.numberWithOptions(decimal: true),
           inputFormatters: [

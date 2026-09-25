@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../core/app_keys.dart';
 import '../../../core/network/api_error.dart';
 import '../../../core/strings.dart';
 import '../../../core/theme/colors.dart';
@@ -57,102 +58,116 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     });
 
     return Scaffold(
+      // Scrollable so the form doesn't overflow when the keyboard shrinks the
+      // body (it overflowed by ~100pt on an iPhone 15 Pro). The minHeight
+      // constraint keeps the form vertically centred when there's room.
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Text(
-                  S.appName,
-                  style: AppTextStyles.displayLarge,
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  S.signInSubtitle,
-                  style: AppTextStyles.subtitle,
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 48),
-                AppTextField(
-                  controller: _emailController,
-                  label: S.email,
-                  hint: S.emailHint,
-                  keyboardType: TextInputType.emailAddress,
-                  prefixIcon: const Icon(Icons.email_outlined),
-                  validator: (value) {
-                    if (value == null || value.trim().isEmpty) {
-                      return S.emailRequired;
-                    }
-                    if (!value.contains('@')) return S.emailInvalid;
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 16),
-                AppTextField(
-                  controller: _passwordController,
-                  label: S.password,
-                  obscureText: _obscurePassword,
-                  prefixIcon: const Icon(Icons.lock_outlined),
-                  suffixIcon: IconButton(
-                    icon: Icon(
-                      _obscurePassword
-                          ? Icons.visibility_off
-                          : Icons.visibility,
-                    ),
-                    onPressed: () =>
-                        setState(() => _obscurePassword = !_obscurePassword),
-                  ),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return S.passwordRequired;
-                    }
-                    if (value.length < 6) {
-                      return S.passwordTooShort;
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 24),
-                AppButton(
-                  label: S.signIn,
-                  onPressed: _login,
-                  isLoading: authState.isLoading,
-                ),
-                const SizedBox(height: 16),
-                Row(
+        child: LayoutBuilder(
+          builder: (context, constraints) => SingleChildScrollView(
+            padding: const EdgeInsets.all(24),
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                minHeight: constraints.maxHeight - 48,
+              ),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    const Expanded(child: Divider(color: AppColors.border)),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: Text(S.or, style: AppTextStyles.label),
+                    Text(
+                      S.appName,
+                      style: AppTextStyles.displayLarge,
+                      textAlign: TextAlign.center,
                     ),
-                    const Expanded(child: Divider(color: AppColors.border)),
+                    const SizedBox(height: 8),
+                    Text(
+                      S.signInSubtitle,
+                      style: AppTextStyles.subtitle,
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 48),
+                    AppTextField(
+                      key: AppKeys.loginEmail,
+                      controller: _emailController,
+                      label: S.email,
+                      hint: S.emailHint,
+                      keyboardType: TextInputType.emailAddress,
+                      prefixIcon: const Icon(Icons.email_outlined),
+                      validator: (value) {
+                        if (value == null || value.trim().isEmpty) {
+                          return S.emailRequired;
+                        }
+                        if (!value.contains('@')) return S.emailInvalid;
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 16),
+                    AppTextField(
+                      key: AppKeys.loginPassword,
+                      controller: _passwordController,
+                      label: S.password,
+                      obscureText: _obscurePassword,
+                      prefixIcon: const Icon(Icons.lock_outlined),
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                          _obscurePassword
+                              ? Icons.visibility_off
+                              : Icons.visibility,
+                        ),
+                        onPressed: () => setState(
+                          () => _obscurePassword = !_obscurePassword,
+                        ),
+                      ),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return S.passwordRequired;
+                        }
+                        if (value.length < 6) {
+                          return S.passwordTooShort;
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 24),
+                    AppButton(
+                      key: AppKeys.loginSubmit,
+                      label: S.signIn,
+                      onPressed: _login,
+                      isLoading: authState.isLoading,
+                    ),
+                    const SizedBox(height: 16),
+                    Row(
+                      children: [
+                        const Expanded(child: Divider(color: AppColors.border)),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          child: Text(S.or, style: AppTextStyles.label),
+                        ),
+                        const Expanded(child: Divider(color: AppColors.border)),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    AppButton(
+                      label: S.signInApple,
+                      icon: Icons.apple,
+                      onPressed: () =>
+                          ref.read(authProvider.notifier).signInWithApple(),
+                      isLoading: authState.isLoading,
+                    ),
+                    const SizedBox(height: 24),
+                    TextButton(
+                      onPressed: () => context.go('/register'),
+                      child: Text(
+                        S.noAccount,
+                        style: AppTextStyles.label.copyWith(
+                          color: AppColors.accent,
+                        ),
+                      ),
+                    ),
                   ],
                 ),
-                const SizedBox(height: 16),
-                AppButton(
-                  label: S.signInApple,
-                  icon: Icons.apple,
-                  onPressed: () =>
-                      ref.read(authProvider.notifier).signInWithApple(),
-                  isLoading: authState.isLoading,
-                ),
-                const SizedBox(height: 24),
-                TextButton(
-                  onPressed: () => context.go('/register'),
-                  child: Text(
-                    S.noAccount,
-                    style: AppTextStyles.label.copyWith(
-                      color: AppColors.accent,
-                    ),
-                  ),
-                ),
-              ],
+              ),
             ),
           ),
         ),

@@ -7,7 +7,7 @@ Use this checklist before every production submission.
 - All primary flows are functional end-to-end (auth, discover, create, submit, moderation).
 - No placeholder or dead-end screens in production builds.
 - Empty/error states are user-friendly and actionable.
-
+x
 ## 4.0 Design
 
 - Visual hierarchy is consistent across tabs and detail screens.

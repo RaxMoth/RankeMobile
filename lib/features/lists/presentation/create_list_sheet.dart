@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/app_keys.dart';
 import '../../../core/dev/mock_lists_repository.dart';
 import '../../../core/strings.dart';
 import '../../../core/theme/animations.dart';
@@ -218,10 +219,12 @@ class _CreateListScreenState extends ConsumerState<CreateListScreen> {
             ),
             // Bottom nav
             Padding(
-              padding: EdgeInsets.fromLTRB(
-                // viewInsetsOf scopes the rebuild to keyboard-only changes.
-                20, 8, 20, 16 + MediaQuery.viewInsetsOf(context).bottom,
-              ),
+              // No keyboard inset here: this is a full-screen route and its
+              // Scaffold (resizeToAvoidBottomInset) already lifts the body
+              // above the keyboard. Adding viewInsets again — read from this
+              // State's context, which sits above the Scaffold — counted the
+              // keyboard twice and collapsed the step pages to 0pt.
+              padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
               child: Row(
                 children: [
                   if (_step > 0)
@@ -243,6 +246,7 @@ class _CreateListScreenState extends ConsumerState<CreateListScreen> {
                   Expanded(
                     flex: 2,
                     child: ElevatedButton(
+                      key: AppKeys.createPrimary,
                       onPressed: _isSubmitting
                           ? null
                           : (_step == _stepCount - 1 ? _submit : _next),
@@ -342,6 +346,7 @@ class _TypeStep extends StatelessWidget {
         ),
         for (final t in ValueType.values) ...[
           _TypeCard(
+            key: AppKeys.createTypeCard(t.name),
             type: t,
             isSelected: value == t,
             onTap: () => onSelected(t),
@@ -358,6 +363,7 @@ class _TypeCard extends StatelessWidget {
   final bool isSelected;
   final VoidCallback onTap;
   const _TypeCard({
+    super.key,
     required this.type,
     required this.isSelected,
     required this.onTap,
@@ -460,6 +466,7 @@ class _IdentityStep extends StatelessWidget {
             style: AppTextStyles.sectionHeader.copyWith(fontSize: 11)),
         const SizedBox(height: 10),
         TextField(
+          key: AppKeys.createTitle,
           controller: titleController,
           style: AppTextStyles.body,
           autofocus: true,
