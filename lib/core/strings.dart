@@ -256,6 +256,7 @@ abstract class S {
   static const noNetwork = 'No network connection. Please check your internet.';
   static const genericError = 'Something went wrong. Please try again.';
   static const retry = 'RETRY';
+  static const loadMoreFailed = 'Couldn\'t load more boards.';
 
   // ── Entry detail ────────────────────────────────────────────────
   static const note = 'NOTE';

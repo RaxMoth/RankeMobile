@@ -2,6 +2,7 @@ import 'package:fpdart/fpdart.dart';
 
 import '../../../core/network/api_error.dart';
 import '../../profile/domain/entities/user_profile.dart';
+import 'entities/public_lists_page.dart';
 import 'entities/ranked_list.dart';
 
 /// Abstract lists repository interface
@@ -61,9 +62,14 @@ abstract class ListsRepository {
 
   Future<Either<ApiError, String>> regenerateInvite(String listId);
 
-  Future<Either<ApiError, List<ListSummary>>> searchPublicLists({
+  /// Fetches one page of public boards. Pass the previous page's
+  /// [PublicListsPage.nextCursor] as [cursor] to continue; omit it for the
+  /// first page. [limit] defaults to the server's page size when null.
+  Future<Either<ApiError, PublicListsPage>> searchPublicLists({
     String? query,
     String? category,
+    String? cursor,
+    int? limit,
   });
 
   Future<Either<ApiError, UserProfile>> getUserProfile(String userId);

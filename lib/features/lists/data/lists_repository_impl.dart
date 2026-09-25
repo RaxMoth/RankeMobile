@@ -3,6 +3,7 @@ import 'package:fpdart/fpdart.dart';
 import '../../../core/network/api_error.dart';
 import '../../../core/network/api_helpers.dart';
 import '../../profile/domain/entities/user_profile.dart';
+import '../domain/entities/public_lists_page.dart';
 import '../domain/entities/ranked_list.dart';
 import '../domain/lists_repository.dart';
 import 'lists_remote_data_source.dart';
@@ -159,16 +160,25 @@ class ListsRepositoryImpl implements ListsRepository {
   }
 
   @override
-  Future<Either<ApiError, List<ListSummary>>> searchPublicLists({
+  Future<Either<ApiError, PublicListsPage>> searchPublicLists({
     String? query,
     String? category,
+    String? cursor,
+    int? limit,
   }) {
     return safeApiCall(() async {
-      final data = await _dataSource.searchPublicLists(
+      final page = await _dataSource.searchPublicLists(
         query: query,
         category: category,
+        cursor: cursor,
+        limit: limit,
       );
-      return data.map((e) => _mapListSummary(e as Map<String, dynamic>)).toList();
+      return PublicListsPage(
+        items: page.items
+            .map((e) => _mapListSummary(e as Map<String, dynamic>))
+            .toList(),
+        nextCursor: page.nextCursor,
+      );
     });
   }
 

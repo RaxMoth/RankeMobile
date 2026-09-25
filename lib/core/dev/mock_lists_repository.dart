@@ -1,6 +1,7 @@
 import 'package:fpdart/fpdart.dart';
 import 'package:uuid/uuid.dart';
 
+import '../../features/lists/domain/entities/public_lists_page.dart';
 import '../../features/lists/domain/entities/ranked_list.dart';
 import '../../features/lists/domain/lists_repository.dart';
 import '../../features/profile/domain/entities/user_profile.dart';
@@ -498,9 +499,11 @@ class MockListsRepository implements ListsRepository {
   }
 
   @override
-  Future<Either<ApiError, List<ListSummary>>> searchPublicLists({
+  Future<Either<ApiError, PublicListsPage>> searchPublicLists({
     String? query,
     String? category,
+    String? cursor,
+    int? limit,
   }) async {
     await Future<void>.delayed(DevConfig.networkDelay);
     final results = <ListSummary>[];
@@ -543,7 +546,16 @@ class MockListsRepository implements ListsRepository {
       ));
     }
 
-    return Right(results);
+    // Page like the backend does (default 30, cap 100) so dev mode runs the
+    // same load-more path. An offset stands in for the real keyset cursor —
+    // callers treat the cursor as opaque either way.
+    final start = (int.tryParse(cursor ?? '') ?? 0).clamp(0, results.length);
+    final size = (limit ?? 30).clamp(1, 100);
+    final end = (start + size).clamp(0, results.length);
+    return Right(PublicListsPage(
+      items: results.sublist(start, end),
+      nextCursor: end < results.length ? '$end' : null,
+    ));
   }
 
   // ─── Create / Update / Delete ───────────────────────────────

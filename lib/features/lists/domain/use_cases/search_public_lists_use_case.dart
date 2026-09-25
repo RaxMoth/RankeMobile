@@ -1,6 +1,6 @@
 import 'package:fpdart/fpdart.dart';
 import '../../../../core/network/api_error.dart';
-import '../entities/ranked_list.dart';
+import '../entities/public_lists_page.dart';
 import '../lists_repository.dart';
 
 class SearchPublicListsUseCase {
@@ -8,10 +8,17 @@ class SearchPublicListsUseCase {
 
   SearchPublicListsUseCase(this._repository);
 
-  Future<Either<ApiError, List<ListSummary>>> call({
+  Future<Either<ApiError, PublicListsPage>> call({
     String? query,
     String? category,
+    String? cursor,
+    int? limit,
   }) {
-    return _repository.searchPublicLists(query: query, category: category);
+    return _repository.searchPublicLists(
+      query: query,
+      category: category,
+      cursor: cursor,
+      limit: limit,
+    );
   }
 }

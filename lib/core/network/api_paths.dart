@@ -26,6 +26,11 @@ abstract class ApiPaths {
   // ── Lists ────────────────────────────────────────────────────
   static const String lists = '$_v1/lists';
   static const String listsPublic = '$_v1/lists/public';
+
+  /// Response header carrying the keyset cursor for the next page of
+  /// [listsPublic]. Absent on the last page. Matches the backend's
+  /// `handler.NextCursorHeader`.
+  static const String nextCursorHeader = 'X-Next-Cursor';
   static String listById(String id) => '$_v1/lists/$id';
   static String listMembers(String id) => '$_v1/lists/$id/members';
   static String listMember(String id, String userId) =>

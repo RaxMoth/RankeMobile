@@ -23,7 +23,14 @@ abstract class ListsRemoteDataSource {
   );
   Future<void> deleteEntry(String listId, String entryId);
   Future<Map<String, dynamic>> regenerateInvite(String listId);
-  Future<List<dynamic>> searchPublicLists({String? query, String? category});
+  /// Returns one page of raw board JSON plus the cursor for the next page,
+  /// read from the `X-Next-Cursor` response header (null on the last page).
+  Future<({List<dynamic> items, String? nextCursor})> searchPublicLists({
+    String? query,
+    String? category,
+    String? cursor,
+    int? limit,
+  });
   Future<Map<String, dynamic>> getUserProfile(String userId);
 }
 
@@ -137,21 +144,32 @@ class ListsRemoteDataSourceImpl implements ListsRemoteDataSource {
   }
 
   @override
-  Future<List<dynamic>> searchPublicLists({
+  Future<({List<dynamic> items, String? nextCursor})> searchPublicLists({
     String? query,
     String? category,
+    String? cursor,
+    int? limit,
   }) async {
     // Build a clean query-param map with only non-null entries.
     // (`?query` as a map value is not valid Dart.)
     final params = <String, dynamic>{
       if (query != null && query.isNotEmpty) 'q': query,
       if (category != null && category.isNotEmpty) 'category': category,
+      if (cursor != null && cursor.isNotEmpty) 'cursor': cursor,
+      'limit': ?limit,
     };
     final response = await _apiClient.dio.get<Map<String, dynamic>>(
       ApiPaths.listsPublic,
       queryParameters: params.isEmpty ? null : params,
     );
-    return unwrapEnvelope<List<dynamic>>(response.data);
+    // The body stays a bare array; the cursor rides in a header so older
+    // clients that ignore it keep working. Dio's header lookup is
+    // case-insensitive.
+    final next = response.headers.value(ApiPaths.nextCursorHeader);
+    return (
+      items: unwrapEnvelope<List<dynamic>>(response.data),
+      nextCursor: (next == null || next.isEmpty) ? null : next,
+    );
   }
 
   @override

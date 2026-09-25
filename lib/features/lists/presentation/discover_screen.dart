@@ -35,6 +35,19 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
     super.dispose();
   }
 
+  /// Starts fetching the next page once the user is within this many logical
+  /// pixels of the bottom — early enough that it usually lands before they
+  /// get there.
+  static const _loadMoreThreshold = 600.0;
+
+  bool _onScroll(ScrollNotification n) {
+    if (n.metrics.axis == Axis.vertical &&
+        n.metrics.extentAfter < _loadMoreThreshold) {
+      ref.read(discoverResultsProvider.notifier).loadMore();
+    }
+    return false; // let RefreshIndicator see the notification too
+  }
+
   void _onSearchChanged(String value) {
     _debounce?.cancel();
     _debounce = Timer(const Duration(milliseconds: 300), () {
@@ -56,6 +69,8 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
           onRefresh: () async {
             ref.invalidate(discoverResultsProvider);
           },
+          child: NotificationListener<ScrollNotification>(
+          onNotification: _onScroll,
           child: CustomScrollView(
           slivers: [
             SliverToBoxAdapter(
@@ -120,7 +135,8 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
             const SliverToBoxAdapter(child: SizedBox(height: 16)),
             // Results
             resultsAsync.when(
-              data: (lists) {
+              data: (results) {
+                final lists = results.items;
                 if (lists.isEmpty) {
                   return SliverFillRemaining(
                     child: Center(
@@ -158,10 +174,22 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
                 }
                 return SliverPadding(
                   padding: const EdgeInsets.symmetric(horizontal: 20),
-                  sliver: SliverList.builder(
-                    itemCount: lists.length,
-                    itemBuilder: (context, index) =>
-                        _DiscoverBoardCard(summary: lists[index]),
+                  sliver: SliverMainAxisGroup(
+                    slivers: [
+                      SliverList.builder(
+                        itemCount: lists.length,
+                        itemBuilder: (context, index) =>
+                            _DiscoverBoardCard(summary: lists[index]),
+                      ),
+                      SliverToBoxAdapter(
+                        child: _LoadMoreFooter(
+                          state: results,
+                          onRetry: () => ref
+                              .read(discoverResultsProvider.notifier)
+                              .loadMore(),
+                        ),
+                      ),
+                    ],
                   ),
                 );
               },
@@ -177,9 +205,60 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
             ),
           ],
         ),
+        ),
       ),
       ),
     );
+  }
+}
+
+/// Bottom-of-list status for pagination: a spinner while the next page
+/// loads, a retry row if it failed, and nothing once every page is in.
+class _LoadMoreFooter extends StatelessWidget {
+  final DiscoverState state;
+  final VoidCallback onRetry;
+
+  const _LoadMoreFooter({required this.state, required this.onRetry});
+
+  @override
+  Widget build(BuildContext context) {
+    if (state.isLoadingMore) {
+      return const Padding(
+        padding: EdgeInsets.symmetric(vertical: 24),
+        child: Center(
+          child: SizedBox(
+            width: 22,
+            height: 22,
+            child: CircularProgressIndicator(
+              strokeWidth: 2,
+              color: AppColors.accent,
+            ),
+          ),
+        ),
+      );
+    }
+    if (state.loadMoreError != null) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        child: Column(
+          children: [
+            Text(
+              S.loadMoreFailed,
+              style: AppTextStyles.badge.copyWith(color: AppColors.textTertiary),
+            ),
+            // TextButton keeps the 44pt minimum touch target.
+            TextButton(
+              onPressed: onRetry,
+              child: Text(
+                S.retry,
+                style: AppTextStyles.button.copyWith(color: AppColors.accent),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+    return const SizedBox.shrink();
   }
 }
 
