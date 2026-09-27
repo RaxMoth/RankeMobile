@@ -46,10 +46,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   Widget build(BuildContext context) {
     final authState = ref.watch(authProvider);
 
+    // Navigation after sign-in is the router's job (it may resume a pending
+    // invite link); this screen only reports failures.
     ref.listen(authProvider, (_, next) {
-      if (next.hasValue && next.value != null) {
-        context.go('/home');
-      }
       if (next.hasError) {
         final error = next.error;
         final message = error is ApiError ? error.userMessage : S.genericError;

@@ -9,7 +9,7 @@ class SubmitEntryUseCase {
 
   SubmitEntryUseCase(this._repository);
 
-  Future<Either<ApiError, RankedEntry>> call({
+  Future<Either<ApiError, Submission>> call({
     required String listId,
     required EntryInput input,
   }) {

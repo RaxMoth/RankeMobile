@@ -7,6 +7,7 @@ import '../../../core/network/api_error.dart';
 import '../../../core/strings.dart';
 import '../../../core/theme/colors.dart';
 import '../../../core/theme/text_styles.dart';
+import '../../../shared/widgets/confirm_sheet.dart';
 import '../../../shared/widgets/error_view.dart';
 import '../domain/entities/ranked_list.dart';
 import 'providers/lists_provider.dart';
@@ -133,6 +134,10 @@ class _MemberRow extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // Only the owner assigns roles (the API rejects anyone else).
+    final viewerIsOwner =
+        ref.watch(listDetailProvider(listId)).valueOrNull?.currentUserRole ==
+        MemberRole.owner;
     return Dismissible(
       key: ValueKey(member.userId),
       direction: member.role == MemberRole.owner
@@ -204,7 +209,7 @@ class _MemberRow extends ConsumerWidget {
               ),
               // Role badge (tappable for non-owners)
               GestureDetector(
-                onTap: member.role != MemberRole.owner
+                onTap: viewerIsOwner && member.role != MemberRole.owner
                     ? () => _showRolePicker(context, ref)
                     : null,
                 child: Container(
@@ -238,6 +243,7 @@ class _MemberRow extends ConsumerWidget {
     return switch (role) {
       MemberRole.owner => AppColors.accent,
       MemberRole.admin => AppColors.categoryCoding,
+      MemberRole.moderator => AppColors.categoryHealth,
       MemberRole.member => AppColors.textSecondary,
     };
   }
@@ -279,7 +285,11 @@ class _MemberRow extends ConsumerWidget {
   }
 
   void _showRolePicker(BuildContext context, WidgetRef ref) {
-    final availableRoles = [MemberRole.admin, MemberRole.member];
+    final availableRoles = [
+      MemberRole.admin,
+      MemberRole.moderator,
+      MemberRole.member,
+    ];
     showModalBottomSheet<void>(
       context: context,
       backgroundColor: AppColors.card,
@@ -302,9 +312,11 @@ class _MemberRow extends ConsumerWidget {
             ...availableRoles.map(
               (role) => ListTile(
                 leading: Icon(
-                  role == MemberRole.admin
-                      ? Icons.shield_outlined
-                      : Icons.person_outline,
+                  switch (role) {
+                    MemberRole.admin => Icons.shield_outlined,
+                    MemberRole.moderator => Icons.fact_check_outlined,
+                    _ => Icons.person_outline,
+                  },
                   color: _roleColor(role),
                 ),
                 title: Text(
@@ -313,14 +325,24 @@ class _MemberRow extends ConsumerWidget {
                     fontWeight: FontWeight.w700,
                   ),
                 ),
+                subtitle: Text(
+                  S.roleDescription(role),
+                  style: AppTextStyles.bodySecondary,
+                ),
                 trailing: member.role == role
                     ? const Icon(Icons.check, color: AppColors.accent, size: 18)
                     : null,
-                onTap: () {
+                onTap: () async {
                   Navigator.pop(ctx);
-                  ref
-                      .read(membersProvider(listId).notifier)
-                      .updateRole(userId: member.userId, role: role);
+                  try {
+                    await ref
+                        .read(membersProvider(listId).notifier)
+                        .updateRole(userId: member.userId, role: role);
+                  } catch (e) {
+                    if (context.mounted) {
+                      showErrorSnackBar(context, S.failedToUpdate(e));
+                    }
+                  }
                 },
               ),
             ),

@@ -32,7 +32,9 @@ abstract class ApiPaths {
   /// `handler.NextCursorHeader`.
   static const String nextCursorHeader = 'X-Next-Cursor';
   static String listById(String id) => '$_v1/lists/$id';
+  static String listJoin(String id) => '$_v1/lists/$id/join';
   static String listMembers(String id) => '$_v1/lists/$id/members';
+  static String listLeave(String id) => '$_v1/lists/$id/members/me';
   static String listMember(String id, String userId) =>
       '$_v1/lists/$id/members/$userId';
   static String listInvite(String id) => '$_v1/lists/$id/invite';
@@ -43,12 +45,15 @@ abstract class ApiPaths {
 
   // ── Entries ──────────────────────────────────────────────────
   static String entryMine(String listId) => '$_v1/lists/$listId/entries/me';
-  static String entriesPending(String listId) =>
-      '$_v1/lists/$listId/entries/pending';
-  static String entryApprove(String listId, String entryId) =>
-      '$_v1/lists/$listId/entries/$entryId/approve';
-  static String entryReject(String listId, String entryId) =>
-      '$_v1/lists/$listId/entries/$entryId/reject';
+  static String entryRanks(String listId) => '$_v1/lists/$listId/entries/ranks';
   static String entryById(String listId, String entryId) =>
       '$_v1/lists/$listId/entries/$entryId';
+
+  // ── Moderation (review queue) ────────────────────────────────
+  static String submissionsPending(String listId) =>
+      '$_v1/lists/$listId/submissions/pending';
+  static String submissionApprove(String listId, String submissionId) =>
+      '$_v1/lists/$listId/submissions/$submissionId/approve';
+  static String submissionReject(String listId, String submissionId) =>
+      '$_v1/lists/$listId/submissions/$submissionId/reject';
 }

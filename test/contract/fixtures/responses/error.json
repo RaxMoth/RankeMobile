@@ -1,0 +1,6 @@
+{
+  "error": {
+    "code": "LIST_LOCKED",
+    "message": "this board is locked — no new entries"
+  }
+}

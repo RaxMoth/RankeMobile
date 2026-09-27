@@ -4,8 +4,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/strings.dart';
 import '../../../core/theme/colors.dart';
 import '../../../core/theme/text_styles.dart';
+import '../../../shared/widgets/confirm_sheet.dart';
 import '../domain/entities/ranked_list.dart';
 import 'providers/lists_provider.dart';
+import 'widgets/category_picker.dart';
 
 /// Bottom sheet for editing board details (admin/owner only).
 class EditBoardSheet extends ConsumerStatefulWidget {
@@ -29,6 +31,7 @@ class _EditBoardSheetState extends ConsumerState<EditBoardSheet> {
   late final TextEditingController _whatsappController;
   late final TextEditingController _discordController;
   late bool _isPublic;
+  late String? _category;
   bool _isSubmitting = false;
 
   @override
@@ -44,6 +47,7 @@ class _EditBoardSheetState extends ConsumerState<EditBoardSheet> {
     _discordController =
         TextEditingController(text: widget.list.discordLink ?? '');
     _isPublic = widget.list.isPublic;
+    _category = widget.list.category;
   }
 
   @override
@@ -56,10 +60,12 @@ class _EditBoardSheetState extends ConsumerState<EditBoardSheet> {
     super.dispose();
   }
 
-  String? _changedOrNull(String current, String? original) {
-    final trimmed = current.trim();
-    if (trimmed == (original ?? '')) return null;
-    return trimmed.isEmpty ? null : trimmed;
+  /// PATCH value for an optional text field: null when unchanged (the key
+  /// is omitted), "" when the user cleared it (the API clears the field),
+  /// otherwise the new value.
+  String? _patch(String? current, String? original) {
+    final value = current?.trim() ?? '';
+    return value == (original ?? '') ? null : value;
   }
 
   Future<void> _save() async {
@@ -70,26 +76,20 @@ class _EditBoardSheetState extends ConsumerState<EditBoardSheet> {
     try {
       await ref.read(listDetailProvider(widget.listId).notifier).updateList(
             title: title != widget.list.title ? title : null,
-            description: _changedOrNull(
+            description: _patch(
                 _descriptionController.text, widget.list.description),
             isPublic: _isPublic != widget.list.isPublic ? _isPublic : null,
-            telegramLink: _changedOrNull(
+            category: _patch(_category, widget.list.category),
+            telegramLink: _patch(
                 _telegramController.text, widget.list.telegramLink),
-            whatsappLink: _changedOrNull(
+            whatsappLink: _patch(
                 _whatsappController.text, widget.list.whatsappLink),
-            discordLink: _changedOrNull(
+            discordLink: _patch(
                 _discordController.text, widget.list.discordLink),
           );
       if (mounted) Navigator.pop(context);
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(S.failedToUpdate(e)),
-            backgroundColor: AppColors.error,
-          ),
-        );
-      }
+      if (mounted) showErrorSnackBar(context, S.failedToUpdate(e));
     } finally {
       if (mounted) setState(() => _isSubmitting = false);
     }
@@ -141,6 +141,15 @@ class _EditBoardSheetState extends ConsumerState<EditBoardSheet> {
               maxLines: 3,
               decoration:
                   const InputDecoration(hintText: S.describeBoard),
+            ),
+            const SizedBox(height: 20),
+            // Category
+            Text(S.category,
+                style: AppTextStyles.sectionHeader.copyWith(fontSize: 11)),
+            const SizedBox(height: 8),
+            CategoryPicker(
+              category: _category,
+              onChanged: (c) => setState(() => _category = c),
             ),
             const SizedBox(height: 20),
             // Communication channels

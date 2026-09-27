@@ -1,0 +1,11 @@
+{
+  "title": "Fastest 5K",
+  "description": "Personal bests, chip time only",
+  "valueType": "duration",
+  "rankOrder": "asc",
+  "isPublic": true,
+  "category": "FITNESS",
+  "telegramLink": "https://t.me/fastest5k",
+  "whatsappLink": "https://chat.whatsapp.com/fastest5k",
+  "discordLink": "https://discord.gg/fastest5k"
+}

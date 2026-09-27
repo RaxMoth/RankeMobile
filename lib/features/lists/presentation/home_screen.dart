@@ -110,11 +110,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     final owned = lists
                         .where((l) => l.currentUserRole == MemberRole.owner)
                         .toList();
+                    // Every non-owner role (admin, moderator, member).
                     final participating = lists
                         .where(
                           (l) =>
-                              l.currentUserRole == MemberRole.admin ||
-                              l.currentUserRole == MemberRole.member,
+                              l.currentUserRole != null &&
+                              l.currentUserRole != MemberRole.owner,
                         )
                         .toList();
                     final shownIds = {

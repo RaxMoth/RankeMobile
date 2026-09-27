@@ -35,7 +35,15 @@ lib/
 - **Auth**: Apple Sign In required (App Store rule if any social login)
 
 ### Dev Mode
-`lib/core/dev/dev_config.dart` — set `useDevMode = true` to swap real API repos with in-memory mock repos. Mock data includes 7 seeded boards with realistic entries. Toggle in `injection.dart`.
+`flutter run --dart-define=USE_MOCK=true` swaps the real API repos for in-memory mocks (`lib/core/dev/`, 7 seeded boards). The default is the real backend (`--dart-define=API_BASE_URL=...`). Mocks must behave like the backend — `test/core/dev/mock_repositories_test.dart` pins that.
+
+### API contract with RankeBE
+The wire format is shared with `../RankeBE` through `test/contract/fixtures` (a copy of `RankeBE/contract`: routes, error codes, request/response JSON generated from the backend's DTOs). `test/contract/api_contract_test.dart` runs every repository call against those fixtures.
+
+- All JSON parsing lives in `features/*/data/*_json.dart` (`ListsJson`, `AuthJson`) — never map JSON inline in a repository.
+- Backend changed? `tool/sync_contract.sh && flutter test`.
+- New endpoint or field? Change the backend + `make contract` there, sync, then add the call/assertion to the contract test — its coverage check fails until every route and fixture is used.
+- Error codes: branch on `ApiErrorCode` constants; show `describeError(e)` / `userMessage`, never `e.toString()`.
 
 ## Mobile-First Rules
 
@@ -94,14 +102,22 @@ flutter build ios --simulator
 | Entities | `lib/features/lists/domain/entities/ranked_list.dart` |
 | Lists providers | `lib/features/lists/presentation/providers/lists_provider.dart` |
 | Auth provider | `lib/features/auth/presentation/providers/auth_provider.dart` |
+| Route guard (auth, onboarding, deep links) | `lib/core/router/auth_redirect.dart` |
+| JSON mapping | `lib/features/lists/data/lists_json.dart`, `lib/features/auth/data/auth_json.dart` |
+| API contract tests | `test/contract/` |
 
 ## Entities
 
-- `RankedList` — id, title, description, valueType, rankOrder, isPublic, locked, entries, memberCount, currentUserRole, telegramLink, whatsappLink, discordLink
-- `RankedEntry` — id, userId, displayName, rank, valueNumber, valueDurationMs, valueText, note, submittedAt
-- `ListSummary` — id, title, valueType, rankOrder, isPublic, memberCount, ownRank, currentUserRole, category
+- `RankedList` — id, title, description, valueType, rankOrder, isPublic, locked, category, inviteToken, entries, memberCount, currentUserRole (the viewer's; null = not a member), telegramLink, whatsappLink, discordLink, mySubmission
+- `RankedEntry` — id, userId, displayName, rank, previousRank, valueNumber, valueDurationMs, valueText, manualRank, note, submittedAt (always approved)
+- `Submission` — id, userId, displayName, valueNumber, valueDurationMs, valueText, note, status, submittedAt, reviewedAt
+- `ListSummary` — id, title, valueType, rankOrder, isPublic, memberCount, ownRank, currentUserRole, category, topEntries, pendingCount
 - `ListMember` — userId, displayName, role
 - `EntryInput` — valueNumber, valueDurationMs, valueText, note
 - `User` — id, email, displayName, createdAt
 
-Enums: `ValueType` (number, duration, text), `RankOrder` (asc, desc), `MemberRole` (owner, admin, member)
+Enums: `ValueType` (number, duration, text), `RankOrder` (asc, desc), `MemberRole` (owner, admin, moderator, member), `EntryStatus` (pending, approved, rejected)
+
+## Moderation (always on)
+
+Submitting an entry creates a pending `Submission`; nothing reaches a board until an owner, admin or moderator approves it in the board's review tab. While an edit is pending, the approved entry stays on the board. `MemberRole.canReview` (owner/admin/moderator) gates the review queue, `MemberRole.canManage` (owner/admin) the board actions. Only the owner assigns roles.

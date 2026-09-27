@@ -23,6 +23,7 @@ abstract class AppKeys {
   // ── List detail ──────────────────────────────────────────────
   static Key listDetailTab(String tab) => ValueKey('listDetail.tab.$tab');
   static const submitEntryButton = Key('listDetail.submitEntry');
+  static const joinBoardButton = Key('listDetail.joinBoard');
   static const pendingApprove = Key('listDetail.pendingApprove');
 
   // ── Submit entry sheet ───────────────────────────────────────

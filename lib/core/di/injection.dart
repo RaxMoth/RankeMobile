@@ -4,15 +4,17 @@ import '../../features/auth/data/auth_remote_data_source.dart';
 import '../../features/auth/data/auth_repository_impl.dart';
 import '../../features/auth/domain/auth_repository.dart';
 import '../../features/auth/domain/use_cases/apple_sign_in_use_case.dart';
+import '../../features/auth/domain/use_cases/delete_account_use_case.dart';
 import '../../features/auth/domain/use_cases/login_use_case.dart';
 import '../../features/auth/domain/use_cases/logout_use_case.dart';
 import '../../features/auth/domain/use_cases/register_use_case.dart';
+import '../../features/auth/domain/use_cases/restore_session_use_case.dart';
 import '../../features/entries/data/entries_remote_data_source.dart';
 import '../../features/entries/data/entries_repository_impl.dart';
 import '../../features/entries/domain/entries_repository.dart';
-import '../../features/entries/domain/use_cases/approve_entry_use_case.dart';
-import '../../features/entries/domain/use_cases/get_pending_entries_use_case.dart';
-import '../../features/entries/domain/use_cases/reject_entry_use_case.dart';
+import '../../features/entries/domain/use_cases/approve_submission_use_case.dart';
+import '../../features/entries/domain/use_cases/get_pending_submissions_use_case.dart';
+import '../../features/entries/domain/use_cases/reject_submission_use_case.dart';
 import '../../features/entries/domain/use_cases/submit_entry_use_case.dart';
 import '../../features/lists/data/lists_remote_data_source.dart';
 import '../../features/lists/data/lists_repository_impl.dart';
@@ -28,6 +30,8 @@ import '../dev/mock_auth_repository.dart';
 import '../dev/mock_entries_repository.dart';
 import '../dev/mock_lists_repository.dart';
 import '../network/api_client.dart';
+import '../network/auth_interceptor.dart';
+import '../network/session_events.dart';
 
 final getIt = GetIt.instance;
 
@@ -36,6 +40,8 @@ Future<void> setupDI() async {
   // Idempotent setup prevents duplicate registration crashes when tests
   // or debug sessions reinitialize the graph.
   await getIt.reset();
+
+  getIt.registerSingleton<SessionEvents>(SessionEvents());
 
   if (DevConfig.useMocks) {
     _registerDevMode();
@@ -58,8 +64,14 @@ void _registerDevMode() {
 }
 
 void _registerProductionMode() {
-  // Core
-  getIt.registerSingleton<ApiClient>(ApiClient());
+  // Core — a session that can't be refreshed signs the user out.
+  getIt.registerSingleton<ApiClient>(
+    ApiClient(
+      authInterceptor: AuthInterceptor(
+        onSessionExpired: getIt<SessionEvents>().notifyExpired,
+      ),
+    ),
+  );
 
   // Auth
   getIt.registerLazySingleton<AuthRemoteDataSource>(
@@ -92,6 +104,8 @@ void _registerUseCases() {
   getIt.registerFactory(() => RegisterUseCase(getIt<AuthRepository>()));
   getIt.registerFactory(() => AppleSignInUseCase(getIt<AuthRepository>()));
   getIt.registerFactory(() => LogoutUseCase(getIt<AuthRepository>()));
+  getIt.registerFactory(() => RestoreSessionUseCase(getIt<AuthRepository>()));
+  getIt.registerFactory(() => DeleteAccountUseCase(getIt<AuthRepository>()));
 
   // Lists use cases
   getIt.registerFactory(() => GetListsUseCase(getIt<ListsRepository>()));
@@ -107,9 +121,13 @@ void _registerUseCases() {
 
   // Entries use cases
   getIt.registerFactory(() => SubmitEntryUseCase(getIt<EntriesRepository>()));
-  getIt.registerFactory(() => ApproveEntryUseCase(getIt<EntriesRepository>()));
-  getIt.registerFactory(() => RejectEntryUseCase(getIt<EntriesRepository>()));
   getIt.registerFactory(
-    () => GetPendingEntriesUseCase(getIt<EntriesRepository>()),
+    () => ApproveSubmissionUseCase(getIt<EntriesRepository>()),
+  );
+  getIt.registerFactory(
+    () => RejectSubmissionUseCase(getIt<EntriesRepository>()),
+  );
+  getIt.registerFactory(
+    () => GetPendingSubmissionsUseCase(getIt<EntriesRepository>()),
   );
 }

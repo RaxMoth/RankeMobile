@@ -17,25 +17,50 @@ import '../../features/profile/presentation/profile_screen.dart';
 import '../../features/profile/presentation/settings_screen.dart';
 import '../../features/profile/presentation/user_profile_screen.dart';
 import '../../features/shell/app_shell.dart';
+import '../../features/shell/splash_screen.dart';
+import 'auth_redirect.dart';
 
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
-
-const _publicPaths = {'/login', '/register', '/onboarding'};
 
 /// Whether onboarding has been completed.
 /// Loaded synchronously in main() and overridden via ProviderScope.
 /// Mutable so OnboardingScreen can mark it true after completion.
 final onboardingCompleteProvider = StateProvider<bool>((ref) => false);
 
-/// GoRouter provider with auth guard redirect.
+/// The app's single GoRouter. Auth and onboarding changes re-run the
+/// redirect (via [GoRouter.refreshListenable]) instead of rebuilding the
+/// router, so the navigation stack — and a pending deep link — survive
+/// sign-in. See [AuthRedirect] for the rules.
 final goRouterProvider = Provider<GoRouter>((ref) {
-  final authState = ref.watch(authProvider);
-  final onboardingDone = ref.watch(onboardingCompleteProvider);
+  final guard = AuthRedirect();
+  final refresh = ValueNotifier<int>(0);
+  ref.onDispose(refresh.dispose);
 
-  return GoRouter(
+  // The launch-time session restore is the only auth load that should hold
+  // the app on the splash screen; later loads (a login in progress) keep
+  // the user where they are.
+  var sessionResolved = !ref.read(authProvider).isLoading;
+  ref.listen(authProvider, (_, next) {
+    if (!next.isLoading) sessionResolved = true;
+    refresh.value++;
+  });
+  ref.listen(onboardingCompleteProvider, (_, _) => refresh.value++);
+
+  final router = GoRouter(
     navigatorKey: _rootNavigatorKey,
-    initialLocation: '/home',
+    initialLocation: AuthRedirect.splash,
+    refreshListenable: refresh,
+    redirect: (context, state) => guard(
+      location: state.uri,
+      onboardingDone: ref.read(onboardingCompleteProvider),
+      sessionResolved: sessionResolved,
+      signedIn: ref.read(authProvider).valueOrNull != null,
+    ),
     routes: [
+      GoRoute(
+        path: AuthRedirect.splash,
+        builder: (context, state) => const SplashScreen(),
+      ),
       // Shell with bottom nav: HOME / DISCOVER / ACTIVITY
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) =>
@@ -137,25 +162,6 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const CreateListScreen(),
       ),
     ],
-    redirect: (context, state) {
-      final isLoggedIn = authState.valueOrNull != null;
-      final isPublicRoute = _publicPaths.contains(state.matchedLocation);
-      final isOnboarding = state.matchedLocation == '/onboarding';
-
-      // First launch: show onboarding
-      if (!onboardingDone && !isOnboarding) return '/onboarding';
-
-      // Not logged in and trying to access protected route → login
-      if (!isLoggedIn && !isPublicRoute) return '/login';
-
-      // Logged in and on auth/public page → home
-      // But don't redirect away from onboarding until it's completed
-      if (isLoggedIn && isPublicRoute && (onboardingDone || !isOnboarding)) {
-        return '/home';
-      }
-
-      return null;
-    },
     errorBuilder: (context, state) => Scaffold(
       body: Center(
         child: Column(
@@ -174,4 +180,6 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       ),
     ),
   );
+  ref.onDispose(router.dispose);
+  return router;
 });

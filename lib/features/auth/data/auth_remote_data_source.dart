@@ -28,6 +28,12 @@ abstract class AuthRemoteDataSource {
   Future<void> logout({String? refreshToken});
 
   Future<Map<String, dynamic>> refreshToken({required String refreshToken});
+
+  /// The signed-in user (`GET /users/me`).
+  Future<Map<String, dynamic>> getMe();
+
+  /// Permanently deletes the signed-in user's account.
+  Future<void> deleteAccount();
 }
 
 class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
@@ -55,11 +61,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   }) async {
     final response = await _apiClient.dio.post<Map<String, dynamic>>(
       ApiPaths.authRegister,
-      data: {
-        'email': email,
-        'password': password,
-        'displayName': displayName,
-      },
+      data: {'email': email, 'password': password, 'displayName': displayName},
     );
     return unwrapEnvelope<Map<String, dynamic>>(response.data);
   }
@@ -71,10 +73,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   }) async {
     final response = await _apiClient.dio.post<Map<String, dynamic>>(
       ApiPaths.authApple,
-      data: {
-        'identityToken': identityToken,
-        'fullName': ?fullName,
-      },
+      data: {'identityToken': identityToken, 'fullName': ?fullName},
     );
     return unwrapEnvelope<Map<String, dynamic>>(response.data);
   }
@@ -96,5 +95,18 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       data: {'refreshToken': refreshToken},
     );
     return unwrapEnvelope<Map<String, dynamic>>(response.data);
+  }
+
+  @override
+  Future<Map<String, dynamic>> getMe() async {
+    final response = await _apiClient.dio.get<Map<String, dynamic>>(
+      ApiPaths.usersMe,
+    );
+    return unwrapEnvelope<Map<String, dynamic>>(response.data);
+  }
+
+  @override
+  Future<void> deleteAccount() async {
+    await _apiClient.dio.delete<void>(ApiPaths.usersMe);
   }
 }

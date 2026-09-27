@@ -2,11 +2,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:get_it/get_it.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import '../../../../core/dev/dev_config.dart';
+import '../../../../core/network/session_events.dart';
 import '../../domain/entities/user.dart';
 import '../../domain/use_cases/apple_sign_in_use_case.dart';
+import '../../domain/use_cases/delete_account_use_case.dart';
 import '../../domain/use_cases/login_use_case.dart';
 import '../../domain/use_cases/logout_use_case.dart';
 import '../../domain/use_cases/register_use_case.dart';
+import '../../domain/use_cases/restore_session_use_case.dart';
 
 final authProvider = AsyncNotifierProvider<AuthNotifier, User?>(
   AuthNotifier.new,
@@ -23,14 +26,19 @@ class AuthNotifier extends AsyncNotifier<User?> {
         displayName: 'Max Roth',
       );
     }
-    // TODO: Check stored token and load current user
-    return null;
+
+    // A session the API can no longer refresh ends here, from any screen.
+    final sub = GetIt.instance<SessionEvents>().expired.listen(
+      (_) => state = const AsyncData(null),
+    );
+    ref.onDispose(sub.cancel);
+
+    // Resume a stored session (Right(null) / Left → signed out).
+    final result = await GetIt.instance<RestoreSessionUseCase>().call();
+    return result.fold((_) => null, (user) => user);
   }
 
-  Future<void> login({
-    required String email,
-    required String password,
-  }) async {
+  Future<void> login({required String email, required String password}) async {
     state = const AsyncLoading();
     final result = await GetIt.instance<LoginUseCase>().call(
       email: email,
@@ -97,5 +105,12 @@ class AuthNotifier extends AsyncNotifier<User?> {
   Future<void> logout() async {
     await GetIt.instance<LogoutUseCase>().call();
     state = const AsyncData(null);
+  }
+
+  /// Permanently deletes the account. Throws the ApiError on failure and
+  /// leaves the user signed in, so the UI can report it.
+  Future<void> deleteAccount() async {
+    final result = await GetIt.instance<DeleteAccountUseCase>().call();
+    result.fold((error) => throw error, (_) => state = const AsyncData(null));
   }
 }

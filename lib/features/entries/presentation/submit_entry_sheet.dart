@@ -39,6 +39,8 @@ class _SubmitEntrySheetState extends ConsumerState<SubmitEntrySheet> {
   final _noteController = TextEditingController();
   int _durationMs = 0;
   bool _isSubmitting = false;
+
+  /// True once the entry was queued for review.
   bool _submitted = false;
   String? _valueError;
 
@@ -142,6 +144,7 @@ class _SubmitEntrySheetState extends ConsumerState<SubmitEntrySheet> {
     );
   }
 
+  /// Moderation is always on: a submission waits for review.
   Widget _buildSuccessState() {
     return Column(
       mainAxisSize: MainAxisSize.min,

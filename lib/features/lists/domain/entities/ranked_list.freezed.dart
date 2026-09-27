@@ -24,14 +24,18 @@ mixin _$RankedList {
   RankOrder get rankOrder => throw _privateConstructorUsedError;
   bool get isPublic => throw _privateConstructorUsedError;
   bool get locked => throw _privateConstructorUsedError;
+  String? get category => throw _privateConstructorUsedError;
   String? get inviteToken => throw _privateConstructorUsedError;
   List<RankedEntry> get entries => throw _privateConstructorUsedError;
-  List<RankedEntry> get pendingEntries => throw _privateConstructorUsedError;
   int get memberCount => throw _privateConstructorUsedError;
   MemberRole? get currentUserRole => throw _privateConstructorUsedError;
   String? get telegramLink => throw _privateConstructorUsedError;
   String? get whatsappLink => throw _privateConstructorUsedError;
   String? get discordLink => throw _privateConstructorUsedError;
+
+  /// The viewer's latest submission while it waits for review or after it
+  /// was rejected; null once approved (it's on the board then).
+  Submission? get mySubmission => throw _privateConstructorUsedError;
 
   /// Create a copy of RankedList
   /// with the given fields replaced by the non-null parameter values.
@@ -55,15 +59,18 @@ abstract class $RankedListCopyWith<$Res> {
     RankOrder rankOrder,
     bool isPublic,
     bool locked,
+    String? category,
     String? inviteToken,
     List<RankedEntry> entries,
-    List<RankedEntry> pendingEntries,
     int memberCount,
     MemberRole? currentUserRole,
     String? telegramLink,
     String? whatsappLink,
     String? discordLink,
+    Submission? mySubmission,
   });
+
+  $SubmissionCopyWith<$Res>? get mySubmission;
 }
 
 /// @nodoc
@@ -88,14 +95,15 @@ class _$RankedListCopyWithImpl<$Res, $Val extends RankedList>
     Object? rankOrder = null,
     Object? isPublic = null,
     Object? locked = null,
+    Object? category = freezed,
     Object? inviteToken = freezed,
     Object? entries = null,
-    Object? pendingEntries = null,
     Object? memberCount = null,
     Object? currentUserRole = freezed,
     Object? telegramLink = freezed,
     Object? whatsappLink = freezed,
     Object? discordLink = freezed,
+    Object? mySubmission = freezed,
   }) {
     return _then(
       _value.copyWith(
@@ -127,6 +135,10 @@ class _$RankedListCopyWithImpl<$Res, $Val extends RankedList>
                 ? _value.locked
                 : locked // ignore: cast_nullable_to_non_nullable
                       as bool,
+            category: freezed == category
+                ? _value.category
+                : category // ignore: cast_nullable_to_non_nullable
+                      as String?,
             inviteToken: freezed == inviteToken
                 ? _value.inviteToken
                 : inviteToken // ignore: cast_nullable_to_non_nullable
@@ -134,10 +146,6 @@ class _$RankedListCopyWithImpl<$Res, $Val extends RankedList>
             entries: null == entries
                 ? _value.entries
                 : entries // ignore: cast_nullable_to_non_nullable
-                      as List<RankedEntry>,
-            pendingEntries: null == pendingEntries
-                ? _value.pendingEntries
-                : pendingEntries // ignore: cast_nullable_to_non_nullable
                       as List<RankedEntry>,
             memberCount: null == memberCount
                 ? _value.memberCount
@@ -159,9 +167,27 @@ class _$RankedListCopyWithImpl<$Res, $Val extends RankedList>
                 ? _value.discordLink
                 : discordLink // ignore: cast_nullable_to_non_nullable
                       as String?,
+            mySubmission: freezed == mySubmission
+                ? _value.mySubmission
+                : mySubmission // ignore: cast_nullable_to_non_nullable
+                      as Submission?,
           )
           as $Val,
     );
+  }
+
+  /// Create a copy of RankedList
+  /// with the given fields replaced by the non-null parameter values.
+  @override
+  @pragma('vm:prefer-inline')
+  $SubmissionCopyWith<$Res>? get mySubmission {
+    if (_value.mySubmission == null) {
+      return null;
+    }
+
+    return $SubmissionCopyWith<$Res>(_value.mySubmission!, (value) {
+      return _then(_value.copyWith(mySubmission: value) as $Val);
+    });
   }
 }
 
@@ -182,15 +208,19 @@ abstract class _$$RankedListImplCopyWith<$Res>
     RankOrder rankOrder,
     bool isPublic,
     bool locked,
+    String? category,
     String? inviteToken,
     List<RankedEntry> entries,
-    List<RankedEntry> pendingEntries,
     int memberCount,
     MemberRole? currentUserRole,
     String? telegramLink,
     String? whatsappLink,
     String? discordLink,
+    Submission? mySubmission,
   });
+
+  @override
+  $SubmissionCopyWith<$Res>? get mySubmission;
 }
 
 /// @nodoc
@@ -214,14 +244,15 @@ class __$$RankedListImplCopyWithImpl<$Res>
     Object? rankOrder = null,
     Object? isPublic = null,
     Object? locked = null,
+    Object? category = freezed,
     Object? inviteToken = freezed,
     Object? entries = null,
-    Object? pendingEntries = null,
     Object? memberCount = null,
     Object? currentUserRole = freezed,
     Object? telegramLink = freezed,
     Object? whatsappLink = freezed,
     Object? discordLink = freezed,
+    Object? mySubmission = freezed,
   }) {
     return _then(
       _$RankedListImpl(
@@ -253,6 +284,10 @@ class __$$RankedListImplCopyWithImpl<$Res>
             ? _value.locked
             : locked // ignore: cast_nullable_to_non_nullable
                   as bool,
+        category: freezed == category
+            ? _value.category
+            : category // ignore: cast_nullable_to_non_nullable
+                  as String?,
         inviteToken: freezed == inviteToken
             ? _value.inviteToken
             : inviteToken // ignore: cast_nullable_to_non_nullable
@@ -260,10 +295,6 @@ class __$$RankedListImplCopyWithImpl<$Res>
         entries: null == entries
             ? _value._entries
             : entries // ignore: cast_nullable_to_non_nullable
-                  as List<RankedEntry>,
-        pendingEntries: null == pendingEntries
-            ? _value._pendingEntries
-            : pendingEntries // ignore: cast_nullable_to_non_nullable
                   as List<RankedEntry>,
         memberCount: null == memberCount
             ? _value.memberCount
@@ -285,6 +316,10 @@ class __$$RankedListImplCopyWithImpl<$Res>
             ? _value.discordLink
             : discordLink // ignore: cast_nullable_to_non_nullable
                   as String?,
+        mySubmission: freezed == mySubmission
+            ? _value.mySubmission
+            : mySubmission // ignore: cast_nullable_to_non_nullable
+                  as Submission?,
       ),
     );
   }
@@ -301,16 +336,16 @@ class _$RankedListImpl implements _RankedList {
     required this.rankOrder,
     required this.isPublic,
     this.locked = false,
+    this.category,
     this.inviteToken,
     required final List<RankedEntry> entries,
-    final List<RankedEntry> pendingEntries = const [],
     required this.memberCount,
     this.currentUserRole,
     this.telegramLink,
     this.whatsappLink,
     this.discordLink,
-  }) : _entries = entries,
-       _pendingEntries = pendingEntries;
+    this.mySubmission,
+  }) : _entries = entries;
 
   @override
   final String id;
@@ -328,6 +363,8 @@ class _$RankedListImpl implements _RankedList {
   @JsonKey()
   final bool locked;
   @override
+  final String? category;
+  @override
   final String? inviteToken;
   final List<RankedEntry> _entries;
   @override
@@ -335,15 +372,6 @@ class _$RankedListImpl implements _RankedList {
     if (_entries is EqualUnmodifiableListView) return _entries;
     // ignore: implicit_dynamic_type
     return EqualUnmodifiableListView(_entries);
-  }
-
-  final List<RankedEntry> _pendingEntries;
-  @override
-  @JsonKey()
-  List<RankedEntry> get pendingEntries {
-    if (_pendingEntries is EqualUnmodifiableListView) return _pendingEntries;
-    // ignore: implicit_dynamic_type
-    return EqualUnmodifiableListView(_pendingEntries);
   }
 
   @override
@@ -357,9 +385,14 @@ class _$RankedListImpl implements _RankedList {
   @override
   final String? discordLink;
 
+  /// The viewer's latest submission while it waits for review or after it
+  /// was rejected; null once approved (it's on the board then).
+  @override
+  final Submission? mySubmission;
+
   @override
   String toString() {
-    return 'RankedList(id: $id, title: $title, description: $description, valueType: $valueType, rankOrder: $rankOrder, isPublic: $isPublic, locked: $locked, inviteToken: $inviteToken, entries: $entries, pendingEntries: $pendingEntries, memberCount: $memberCount, currentUserRole: $currentUserRole, telegramLink: $telegramLink, whatsappLink: $whatsappLink, discordLink: $discordLink)';
+    return 'RankedList(id: $id, title: $title, description: $description, valueType: $valueType, rankOrder: $rankOrder, isPublic: $isPublic, locked: $locked, category: $category, inviteToken: $inviteToken, entries: $entries, memberCount: $memberCount, currentUserRole: $currentUserRole, telegramLink: $telegramLink, whatsappLink: $whatsappLink, discordLink: $discordLink, mySubmission: $mySubmission)';
   }
 
   @override
@@ -378,13 +411,11 @@ class _$RankedListImpl implements _RankedList {
             (identical(other.isPublic, isPublic) ||
                 other.isPublic == isPublic) &&
             (identical(other.locked, locked) || other.locked == locked) &&
+            (identical(other.category, category) ||
+                other.category == category) &&
             (identical(other.inviteToken, inviteToken) ||
                 other.inviteToken == inviteToken) &&
             const DeepCollectionEquality().equals(other._entries, _entries) &&
-            const DeepCollectionEquality().equals(
-              other._pendingEntries,
-              _pendingEntries,
-            ) &&
             (identical(other.memberCount, memberCount) ||
                 other.memberCount == memberCount) &&
             (identical(other.currentUserRole, currentUserRole) ||
@@ -394,7 +425,9 @@ class _$RankedListImpl implements _RankedList {
             (identical(other.whatsappLink, whatsappLink) ||
                 other.whatsappLink == whatsappLink) &&
             (identical(other.discordLink, discordLink) ||
-                other.discordLink == discordLink));
+                other.discordLink == discordLink) &&
+            (identical(other.mySubmission, mySubmission) ||
+                other.mySubmission == mySubmission));
   }
 
   @override
@@ -407,14 +440,15 @@ class _$RankedListImpl implements _RankedList {
     rankOrder,
     isPublic,
     locked,
+    category,
     inviteToken,
     const DeepCollectionEquality().hash(_entries),
-    const DeepCollectionEquality().hash(_pendingEntries),
     memberCount,
     currentUserRole,
     telegramLink,
     whatsappLink,
     discordLink,
+    mySubmission,
   );
 
   /// Create a copy of RankedList
@@ -435,14 +469,15 @@ abstract class _RankedList implements RankedList {
     required final RankOrder rankOrder,
     required final bool isPublic,
     final bool locked,
+    final String? category,
     final String? inviteToken,
     required final List<RankedEntry> entries,
-    final List<RankedEntry> pendingEntries,
     required final int memberCount,
     final MemberRole? currentUserRole,
     final String? telegramLink,
     final String? whatsappLink,
     final String? discordLink,
+    final Submission? mySubmission,
   }) = _$RankedListImpl;
 
   @override
@@ -460,11 +495,11 @@ abstract class _RankedList implements RankedList {
   @override
   bool get locked;
   @override
+  String? get category;
+  @override
   String? get inviteToken;
   @override
   List<RankedEntry> get entries;
-  @override
-  List<RankedEntry> get pendingEntries;
   @override
   int get memberCount;
   @override
@@ -475,6 +510,11 @@ abstract class _RankedList implements RankedList {
   String? get whatsappLink;
   @override
   String? get discordLink;
+
+  /// The viewer's latest submission while it waits for review or after it
+  /// was rejected; null once approved (it's on the board then).
+  @override
+  Submission? get mySubmission;
 
   /// Create a copy of RankedList
   /// with the given fields replaced by the non-null parameter values.
@@ -497,7 +537,6 @@ mixin _$RankedEntry {
   int? get manualRank => throw _privateConstructorUsedError;
   String? get note => throw _privateConstructorUsedError;
   DateTime get submittedAt => throw _privateConstructorUsedError;
-  EntryStatus get status => throw _privateConstructorUsedError;
 
   /// Create a copy of RankedEntry
   /// with the given fields replaced by the non-null parameter values.
@@ -525,7 +564,6 @@ abstract class $RankedEntryCopyWith<$Res> {
     int? manualRank,
     String? note,
     DateTime submittedAt,
-    EntryStatus status,
   });
 }
 
@@ -555,7 +593,6 @@ class _$RankedEntryCopyWithImpl<$Res, $Val extends RankedEntry>
     Object? manualRank = freezed,
     Object? note = freezed,
     Object? submittedAt = null,
-    Object? status = null,
   }) {
     return _then(
       _value.copyWith(
@@ -603,10 +640,6 @@ class _$RankedEntryCopyWithImpl<$Res, $Val extends RankedEntry>
                 ? _value.submittedAt
                 : submittedAt // ignore: cast_nullable_to_non_nullable
                       as DateTime,
-            status: null == status
-                ? _value.status
-                : status // ignore: cast_nullable_to_non_nullable
-                      as EntryStatus,
           )
           as $Val,
     );
@@ -634,7 +667,6 @@ abstract class _$$RankedEntryImplCopyWith<$Res>
     int? manualRank,
     String? note,
     DateTime submittedAt,
-    EntryStatus status,
   });
 }
 
@@ -663,7 +695,6 @@ class __$$RankedEntryImplCopyWithImpl<$Res>
     Object? manualRank = freezed,
     Object? note = freezed,
     Object? submittedAt = null,
-    Object? status = null,
   }) {
     return _then(
       _$RankedEntryImpl(
@@ -711,10 +742,6 @@ class __$$RankedEntryImplCopyWithImpl<$Res>
             ? _value.submittedAt
             : submittedAt // ignore: cast_nullable_to_non_nullable
                   as DateTime,
-        status: null == status
-            ? _value.status
-            : status // ignore: cast_nullable_to_non_nullable
-                  as EntryStatus,
       ),
     );
   }
@@ -735,7 +762,6 @@ class _$RankedEntryImpl implements _RankedEntry {
     this.manualRank,
     this.note,
     required this.submittedAt,
-    this.status = EntryStatus.approved,
   });
 
   @override
@@ -760,13 +786,10 @@ class _$RankedEntryImpl implements _RankedEntry {
   final String? note;
   @override
   final DateTime submittedAt;
-  @override
-  @JsonKey()
-  final EntryStatus status;
 
   @override
   String toString() {
-    return 'RankedEntry(id: $id, userId: $userId, displayName: $displayName, rank: $rank, previousRank: $previousRank, valueNumber: $valueNumber, valueDurationMs: $valueDurationMs, valueText: $valueText, manualRank: $manualRank, note: $note, submittedAt: $submittedAt, status: $status)';
+    return 'RankedEntry(id: $id, userId: $userId, displayName: $displayName, rank: $rank, previousRank: $previousRank, valueNumber: $valueNumber, valueDurationMs: $valueDurationMs, valueText: $valueText, manualRank: $manualRank, note: $note, submittedAt: $submittedAt)';
   }
 
   @override
@@ -791,8 +814,7 @@ class _$RankedEntryImpl implements _RankedEntry {
                 other.manualRank == manualRank) &&
             (identical(other.note, note) || other.note == note) &&
             (identical(other.submittedAt, submittedAt) ||
-                other.submittedAt == submittedAt) &&
-            (identical(other.status, status) || other.status == status));
+                other.submittedAt == submittedAt));
   }
 
   @override
@@ -809,7 +831,6 @@ class _$RankedEntryImpl implements _RankedEntry {
     manualRank,
     note,
     submittedAt,
-    status,
   );
 
   /// Create a copy of RankedEntry
@@ -834,7 +855,6 @@ abstract class _RankedEntry implements RankedEntry {
     final int? manualRank,
     final String? note,
     required final DateTime submittedAt,
-    final EntryStatus status,
   }) = _$RankedEntryImpl;
 
   @override
@@ -859,14 +879,360 @@ abstract class _RankedEntry implements RankedEntry {
   String? get note;
   @override
   DateTime get submittedAt;
-  @override
-  EntryStatus get status;
 
   /// Create a copy of RankedEntry
   /// with the given fields replaced by the non-null parameter values.
   @override
   @JsonKey(includeFromJson: false, includeToJson: false)
   _$$RankedEntryImplCopyWith<_$RankedEntryImpl> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
+/// @nodoc
+mixin _$Submission {
+  String get id => throw _privateConstructorUsedError;
+  String get userId => throw _privateConstructorUsedError;
+
+  /// Only set in the review queue (who submitted it).
+  String? get displayName => throw _privateConstructorUsedError;
+  double? get valueNumber => throw _privateConstructorUsedError;
+  int? get valueDurationMs => throw _privateConstructorUsedError;
+  String? get valueText => throw _privateConstructorUsedError;
+  String? get note => throw _privateConstructorUsedError;
+  EntryStatus get status => throw _privateConstructorUsedError;
+  DateTime get submittedAt => throw _privateConstructorUsedError;
+  DateTime? get reviewedAt => throw _privateConstructorUsedError;
+
+  /// Create a copy of Submission
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  $SubmissionCopyWith<Submission> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
+/// @nodoc
+abstract class $SubmissionCopyWith<$Res> {
+  factory $SubmissionCopyWith(
+    Submission value,
+    $Res Function(Submission) then,
+  ) = _$SubmissionCopyWithImpl<$Res, Submission>;
+  @useResult
+  $Res call({
+    String id,
+    String userId,
+    String? displayName,
+    double? valueNumber,
+    int? valueDurationMs,
+    String? valueText,
+    String? note,
+    EntryStatus status,
+    DateTime submittedAt,
+    DateTime? reviewedAt,
+  });
+}
+
+/// @nodoc
+class _$SubmissionCopyWithImpl<$Res, $Val extends Submission>
+    implements $SubmissionCopyWith<$Res> {
+  _$SubmissionCopyWithImpl(this._value, this._then);
+
+  // ignore: unused_field
+  final $Val _value;
+  // ignore: unused_field
+  final $Res Function($Val) _then;
+
+  /// Create a copy of Submission
+  /// with the given fields replaced by the non-null parameter values.
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? id = null,
+    Object? userId = null,
+    Object? displayName = freezed,
+    Object? valueNumber = freezed,
+    Object? valueDurationMs = freezed,
+    Object? valueText = freezed,
+    Object? note = freezed,
+    Object? status = null,
+    Object? submittedAt = null,
+    Object? reviewedAt = freezed,
+  }) {
+    return _then(
+      _value.copyWith(
+            id: null == id
+                ? _value.id
+                : id // ignore: cast_nullable_to_non_nullable
+                      as String,
+            userId: null == userId
+                ? _value.userId
+                : userId // ignore: cast_nullable_to_non_nullable
+                      as String,
+            displayName: freezed == displayName
+                ? _value.displayName
+                : displayName // ignore: cast_nullable_to_non_nullable
+                      as String?,
+            valueNumber: freezed == valueNumber
+                ? _value.valueNumber
+                : valueNumber // ignore: cast_nullable_to_non_nullable
+                      as double?,
+            valueDurationMs: freezed == valueDurationMs
+                ? _value.valueDurationMs
+                : valueDurationMs // ignore: cast_nullable_to_non_nullable
+                      as int?,
+            valueText: freezed == valueText
+                ? _value.valueText
+                : valueText // ignore: cast_nullable_to_non_nullable
+                      as String?,
+            note: freezed == note
+                ? _value.note
+                : note // ignore: cast_nullable_to_non_nullable
+                      as String?,
+            status: null == status
+                ? _value.status
+                : status // ignore: cast_nullable_to_non_nullable
+                      as EntryStatus,
+            submittedAt: null == submittedAt
+                ? _value.submittedAt
+                : submittedAt // ignore: cast_nullable_to_non_nullable
+                      as DateTime,
+            reviewedAt: freezed == reviewedAt
+                ? _value.reviewedAt
+                : reviewedAt // ignore: cast_nullable_to_non_nullable
+                      as DateTime?,
+          )
+          as $Val,
+    );
+  }
+}
+
+/// @nodoc
+abstract class _$$SubmissionImplCopyWith<$Res>
+    implements $SubmissionCopyWith<$Res> {
+  factory _$$SubmissionImplCopyWith(
+    _$SubmissionImpl value,
+    $Res Function(_$SubmissionImpl) then,
+  ) = __$$SubmissionImplCopyWithImpl<$Res>;
+  @override
+  @useResult
+  $Res call({
+    String id,
+    String userId,
+    String? displayName,
+    double? valueNumber,
+    int? valueDurationMs,
+    String? valueText,
+    String? note,
+    EntryStatus status,
+    DateTime submittedAt,
+    DateTime? reviewedAt,
+  });
+}
+
+/// @nodoc
+class __$$SubmissionImplCopyWithImpl<$Res>
+    extends _$SubmissionCopyWithImpl<$Res, _$SubmissionImpl>
+    implements _$$SubmissionImplCopyWith<$Res> {
+  __$$SubmissionImplCopyWithImpl(
+    _$SubmissionImpl _value,
+    $Res Function(_$SubmissionImpl) _then,
+  ) : super(_value, _then);
+
+  /// Create a copy of Submission
+  /// with the given fields replaced by the non-null parameter values.
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? id = null,
+    Object? userId = null,
+    Object? displayName = freezed,
+    Object? valueNumber = freezed,
+    Object? valueDurationMs = freezed,
+    Object? valueText = freezed,
+    Object? note = freezed,
+    Object? status = null,
+    Object? submittedAt = null,
+    Object? reviewedAt = freezed,
+  }) {
+    return _then(
+      _$SubmissionImpl(
+        id: null == id
+            ? _value.id
+            : id // ignore: cast_nullable_to_non_nullable
+                  as String,
+        userId: null == userId
+            ? _value.userId
+            : userId // ignore: cast_nullable_to_non_nullable
+                  as String,
+        displayName: freezed == displayName
+            ? _value.displayName
+            : displayName // ignore: cast_nullable_to_non_nullable
+                  as String?,
+        valueNumber: freezed == valueNumber
+            ? _value.valueNumber
+            : valueNumber // ignore: cast_nullable_to_non_nullable
+                  as double?,
+        valueDurationMs: freezed == valueDurationMs
+            ? _value.valueDurationMs
+            : valueDurationMs // ignore: cast_nullable_to_non_nullable
+                  as int?,
+        valueText: freezed == valueText
+            ? _value.valueText
+            : valueText // ignore: cast_nullable_to_non_nullable
+                  as String?,
+        note: freezed == note
+            ? _value.note
+            : note // ignore: cast_nullable_to_non_nullable
+                  as String?,
+        status: null == status
+            ? _value.status
+            : status // ignore: cast_nullable_to_non_nullable
+                  as EntryStatus,
+        submittedAt: null == submittedAt
+            ? _value.submittedAt
+            : submittedAt // ignore: cast_nullable_to_non_nullable
+                  as DateTime,
+        reviewedAt: freezed == reviewedAt
+            ? _value.reviewedAt
+            : reviewedAt // ignore: cast_nullable_to_non_nullable
+                  as DateTime?,
+      ),
+    );
+  }
+}
+
+/// @nodoc
+
+class _$SubmissionImpl implements _Submission {
+  const _$SubmissionImpl({
+    required this.id,
+    required this.userId,
+    this.displayName,
+    this.valueNumber,
+    this.valueDurationMs,
+    this.valueText,
+    this.note,
+    required this.status,
+    required this.submittedAt,
+    this.reviewedAt,
+  });
+
+  @override
+  final String id;
+  @override
+  final String userId;
+
+  /// Only set in the review queue (who submitted it).
+  @override
+  final String? displayName;
+  @override
+  final double? valueNumber;
+  @override
+  final int? valueDurationMs;
+  @override
+  final String? valueText;
+  @override
+  final String? note;
+  @override
+  final EntryStatus status;
+  @override
+  final DateTime submittedAt;
+  @override
+  final DateTime? reviewedAt;
+
+  @override
+  String toString() {
+    return 'Submission(id: $id, userId: $userId, displayName: $displayName, valueNumber: $valueNumber, valueDurationMs: $valueDurationMs, valueText: $valueText, note: $note, status: $status, submittedAt: $submittedAt, reviewedAt: $reviewedAt)';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is _$SubmissionImpl &&
+            (identical(other.id, id) || other.id == id) &&
+            (identical(other.userId, userId) || other.userId == userId) &&
+            (identical(other.displayName, displayName) ||
+                other.displayName == displayName) &&
+            (identical(other.valueNumber, valueNumber) ||
+                other.valueNumber == valueNumber) &&
+            (identical(other.valueDurationMs, valueDurationMs) ||
+                other.valueDurationMs == valueDurationMs) &&
+            (identical(other.valueText, valueText) ||
+                other.valueText == valueText) &&
+            (identical(other.note, note) || other.note == note) &&
+            (identical(other.status, status) || other.status == status) &&
+            (identical(other.submittedAt, submittedAt) ||
+                other.submittedAt == submittedAt) &&
+            (identical(other.reviewedAt, reviewedAt) ||
+                other.reviewedAt == reviewedAt));
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    runtimeType,
+    id,
+    userId,
+    displayName,
+    valueNumber,
+    valueDurationMs,
+    valueText,
+    note,
+    status,
+    submittedAt,
+    reviewedAt,
+  );
+
+  /// Create a copy of Submission
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  @override
+  @pragma('vm:prefer-inline')
+  _$$SubmissionImplCopyWith<_$SubmissionImpl> get copyWith =>
+      __$$SubmissionImplCopyWithImpl<_$SubmissionImpl>(this, _$identity);
+}
+
+abstract class _Submission implements Submission {
+  const factory _Submission({
+    required final String id,
+    required final String userId,
+    final String? displayName,
+    final double? valueNumber,
+    final int? valueDurationMs,
+    final String? valueText,
+    final String? note,
+    required final EntryStatus status,
+    required final DateTime submittedAt,
+    final DateTime? reviewedAt,
+  }) = _$SubmissionImpl;
+
+  @override
+  String get id;
+  @override
+  String get userId;
+
+  /// Only set in the review queue (who submitted it).
+  @override
+  String? get displayName;
+  @override
+  double? get valueNumber;
+  @override
+  int? get valueDurationMs;
+  @override
+  String? get valueText;
+  @override
+  String? get note;
+  @override
+  EntryStatus get status;
+  @override
+  DateTime get submittedAt;
+  @override
+  DateTime? get reviewedAt;
+
+  /// Create a copy of Submission
+  /// with the given fields replaced by the non-null parameter values.
+  @override
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  _$$SubmissionImplCopyWith<_$SubmissionImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }
 
@@ -882,6 +1248,9 @@ mixin _$ListSummary {
   MemberRole? get currentUserRole => throw _privateConstructorUsedError;
   String? get category => throw _privateConstructorUsedError;
   List<RankedEntry> get topEntries => throw _privateConstructorUsedError;
+
+  /// Submissions waiting for review; 0 unless the viewer can review.
+  int get pendingCount => throw _privateConstructorUsedError;
 
   /// Create a copy of ListSummary
   /// with the given fields replaced by the non-null parameter values.
@@ -908,6 +1277,7 @@ abstract class $ListSummaryCopyWith<$Res> {
     MemberRole? currentUserRole,
     String? category,
     List<RankedEntry> topEntries,
+    int pendingCount,
   });
 }
 
@@ -936,6 +1306,7 @@ class _$ListSummaryCopyWithImpl<$Res, $Val extends ListSummary>
     Object? currentUserRole = freezed,
     Object? category = freezed,
     Object? topEntries = null,
+    Object? pendingCount = null,
   }) {
     return _then(
       _value.copyWith(
@@ -979,6 +1350,10 @@ class _$ListSummaryCopyWithImpl<$Res, $Val extends ListSummary>
                 ? _value.topEntries
                 : topEntries // ignore: cast_nullable_to_non_nullable
                       as List<RankedEntry>,
+            pendingCount: null == pendingCount
+                ? _value.pendingCount
+                : pendingCount // ignore: cast_nullable_to_non_nullable
+                      as int,
           )
           as $Val,
     );
@@ -1005,6 +1380,7 @@ abstract class _$$ListSummaryImplCopyWith<$Res>
     MemberRole? currentUserRole,
     String? category,
     List<RankedEntry> topEntries,
+    int pendingCount,
   });
 }
 
@@ -1032,6 +1408,7 @@ class __$$ListSummaryImplCopyWithImpl<$Res>
     Object? currentUserRole = freezed,
     Object? category = freezed,
     Object? topEntries = null,
+    Object? pendingCount = null,
   }) {
     return _then(
       _$ListSummaryImpl(
@@ -1075,6 +1452,10 @@ class __$$ListSummaryImplCopyWithImpl<$Res>
             ? _value._topEntries
             : topEntries // ignore: cast_nullable_to_non_nullable
                   as List<RankedEntry>,
+        pendingCount: null == pendingCount
+            ? _value.pendingCount
+            : pendingCount // ignore: cast_nullable_to_non_nullable
+                  as int,
       ),
     );
   }
@@ -1094,6 +1475,7 @@ class _$ListSummaryImpl implements _ListSummary {
     this.currentUserRole,
     this.category,
     final List<RankedEntry> topEntries = const [],
+    this.pendingCount = 0,
   }) : _topEntries = topEntries;
 
   @override
@@ -1123,9 +1505,14 @@ class _$ListSummaryImpl implements _ListSummary {
     return EqualUnmodifiableListView(_topEntries);
   }
 
+  /// Submissions waiting for review; 0 unless the viewer can review.
+  @override
+  @JsonKey()
+  final int pendingCount;
+
   @override
   String toString() {
-    return 'ListSummary(id: $id, title: $title, valueType: $valueType, rankOrder: $rankOrder, isPublic: $isPublic, memberCount: $memberCount, ownRank: $ownRank, currentUserRole: $currentUserRole, category: $category, topEntries: $topEntries)';
+    return 'ListSummary(id: $id, title: $title, valueType: $valueType, rankOrder: $rankOrder, isPublic: $isPublic, memberCount: $memberCount, ownRank: $ownRank, currentUserRole: $currentUserRole, category: $category, topEntries: $topEntries, pendingCount: $pendingCount)';
   }
 
   @override
@@ -1151,7 +1538,9 @@ class _$ListSummaryImpl implements _ListSummary {
             const DeepCollectionEquality().equals(
               other._topEntries,
               _topEntries,
-            ));
+            ) &&
+            (identical(other.pendingCount, pendingCount) ||
+                other.pendingCount == pendingCount));
   }
 
   @override
@@ -1167,6 +1556,7 @@ class _$ListSummaryImpl implements _ListSummary {
     currentUserRole,
     category,
     const DeepCollectionEquality().hash(_topEntries),
+    pendingCount,
   );
 
   /// Create a copy of ListSummary
@@ -1190,6 +1580,7 @@ abstract class _ListSummary implements ListSummary {
     final MemberRole? currentUserRole,
     final String? category,
     final List<RankedEntry> topEntries,
+    final int pendingCount,
   }) = _$ListSummaryImpl;
 
   @override
@@ -1212,6 +1603,10 @@ abstract class _ListSummary implements ListSummary {
   String? get category;
   @override
   List<RankedEntry> get topEntries;
+
+  /// Submissions waiting for review; 0 unless the viewer can review.
+  @override
+  int get pendingCount;
 
   /// Create a copy of ListSummary
   /// with the given fields replaced by the non-null parameter values.

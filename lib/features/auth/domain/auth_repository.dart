@@ -22,4 +22,10 @@ abstract class AuthRepository {
   });
 
   Future<Either<ApiError, void>> logout();
+
+  /// Resumes a stored session on app launch. Right(null) means signed out.
+  Future<Either<ApiError, User?>> restoreSession();
+
+  /// Permanently deletes the account and signs out locally.
+  Future<Either<ApiError, void>> deleteAccount();
 }

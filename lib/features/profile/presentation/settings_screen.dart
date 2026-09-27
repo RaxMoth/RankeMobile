@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/strings.dart';
 import '../../../core/theme/colors.dart';
 import '../../../core/theme/text_styles.dart';
+import '../../../shared/widgets/confirm_sheet.dart';
 import '../../auth/presentation/providers/auth_provider.dart';
 
 /// Settings screen — account, privacy, legal.
@@ -29,13 +30,22 @@ class SettingsScreen extends ConsumerWidget {
               ),
             ),
             const SizedBox(height: 8),
-            _SettingsRow(
-              icon: Icons.logout,
-              label: S.signOut,
-              onTap: () async {
-                await ref.read(authProvider.notifier).logout();
-                if (context.mounted) context.go('/login');
-              },
+            _SettingsCard(
+              children: [
+                _SettingsRow(
+                  icon: Icons.logout,
+                  label: S.signOut,
+                  onTap: () => ref.read(authProvider.notifier).logout(),
+                ),
+                const Divider(color: AppColors.border, height: 1, indent: 48),
+                // App Store 5.1.1(v): account deletion must be in-app.
+                _SettingsRow(
+                  icon: Icons.delete_forever_outlined,
+                  label: S.deleteAccount,
+                  destructive: true,
+                  onTap: () => _deleteAccount(context, ref),
+                ),
+              ],
             ),
             const SizedBox(height: 24),
             // Legal section
@@ -81,6 +91,24 @@ class SettingsScreen extends ConsumerWidget {
         ),
       ),
     );
+  }
+
+  Future<void> _deleteAccount(BuildContext context, WidgetRef ref) async {
+    final confirmed = await showConfirmSheet(
+      context,
+      title: S.deleteAccount,
+      message: S.deleteAccountConfirm,
+      confirmLabel: S.delete,
+    );
+    if (!confirmed) return;
+    try {
+      // Signing out flips the auth state; the router takes it to login.
+      await ref.read(authProvider.notifier).deleteAccount();
+    } catch (e) {
+      if (context.mounted) {
+        showErrorSnackBar(context, S.failedToDeleteAccount(e));
+      }
+    }
   }
 
   Widget _buildHeader(BuildContext context) {
@@ -168,11 +196,13 @@ class _SettingsRow extends StatelessWidget {
   final IconData icon;
   final String label;
   final VoidCallback onTap;
+  final bool destructive;
 
   const _SettingsRow({
     required this.icon,
     required this.label,
     required this.onTap,
+    this.destructive = false,
   });
 
   @override
@@ -189,12 +219,19 @@ class _SettingsRow extends StatelessWidget {
         ),
         child: Row(
           children: [
-            Icon(icon, color: AppColors.textSecondary, size: 22),
+            Icon(
+              icon,
+              color: destructive ? AppColors.error : AppColors.textSecondary,
+              size: 22,
+            ),
             const SizedBox(width: 14),
             Expanded(
               child: Text(
                 label,
-                style: AppTextStyles.body.copyWith(fontWeight: FontWeight.w600),
+                style: AppTextStyles.body.copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: destructive ? AppColors.error : null,
+                ),
               ),
             ),
             const Icon(

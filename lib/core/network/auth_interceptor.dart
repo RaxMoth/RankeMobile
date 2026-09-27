@@ -6,24 +6,40 @@ import '../constants/app_constants.dart';
 import 'api_helpers.dart';
 import 'api_paths.dart';
 
-/// JWT attach + 401 → refresh + retry
+/// Attaches the access token and, on a 401, refreshes it once and retries.
+///
+/// * Calls under `/auth/` are never refreshed: a 401 there is a real answer
+///   (wrong password, bad refresh token), not an expired session.
+/// * Concurrent 401s share one refresh. The backend rotates refresh tokens
+///   and treats reuse of a rotated one as theft, so a second refresh with
+///   a stale token would sign the user out everywhere. A request that waited
+///   on the mutex first checks whether the token already changed and just
+///   retries with it.
+/// * When the session can't be recovered, tokens are cleared and
+///   [onSessionExpired] fires so the app can return to login.
 class AuthInterceptor extends Interceptor {
   final FlutterSecureStorage _storage;
   final Mutex _refreshMutex = Mutex();
+  final void Function()? onSessionExpired;
 
-  /// Separate Dio instance for refresh calls (no interceptor — avoids infinite loop)
-  late final Dio _refreshDio;
+  /// Separate Dio for refresh + retry (no interceptors — avoids loops).
+  final Dio _refreshDio;
 
-  AuthInterceptor({FlutterSecureStorage? storage})
-    : _storage = storage ?? const FlutterSecureStorage() {
-    _refreshDio = Dio(
-      BaseOptions(
-        baseUrl: AppConstants.apiBaseUrl,
-        connectTimeout: const Duration(seconds: 10),
-        receiveTimeout: const Duration(seconds: 30),
-      ),
-    );
-  }
+  AuthInterceptor({
+    FlutterSecureStorage? storage,
+    Dio? refreshDio,
+    this.onSessionExpired,
+  }) : _storage = storage ?? const FlutterSecureStorage(),
+       _refreshDio =
+           refreshDio ??
+           Dio(
+             BaseOptions(
+               baseUrl: AppConstants.apiBaseUrl,
+               connectTimeout: const Duration(seconds: 10),
+               receiveTimeout: const Duration(seconds: 30),
+               contentType: Headers.jsonContentType,
+             ),
+           );
 
   @override
   Future<void> onRequest(
@@ -34,7 +50,7 @@ class AuthInterceptor extends Interceptor {
     if (token != null) {
       options.headers['Authorization'] = 'Bearer $token';
     }
-    super.onRequest(options, handler);
+    handler.next(options);
   }
 
   @override
@@ -42,61 +58,63 @@ class AuthInterceptor extends Interceptor {
     DioException err,
     ErrorInterceptorHandler handler,
   ) async {
-    if (err.response?.statusCode == 401) {
-      try {
-        // Use mutex so only one refresh call is made when multiple 401s arrive
-        await _refreshMutex.acquire();
-        try {
-          final refreshed = await _attemptTokenRefresh();
-          if (refreshed) {
-            // Retry the original request with the new token
-            final token = await _storage.read(key: AppConstants.accessTokenKey);
-            err.requestOptions.headers['Authorization'] = 'Bearer $token';
-            final response = await _refreshDio.fetch<dynamic>(
-              err.requestOptions,
-            );
-            return handler.resolve(response);
-          }
-        } finally {
-          _refreshMutex.release();
-        }
-      } catch (_) {
-        // Refresh failed — clear tokens and let the error propagate
-        await _clearTokens();
-        // TODO: redirect to login via GoRouter
-      }
+    final options = err.requestOptions;
+    if (err.response?.statusCode != 401 || _isAuthCall(options.path)) {
+      return handler.next(err);
     }
-    super.onError(err, handler);
+
+    final sentToken = _bearer(options);
+    final String? token = await _refreshMutex.protect(() async {
+      final current = await _storage.read(key: AppConstants.accessTokenKey);
+      // Another request refreshed while we waited — reuse its token.
+      if (current != null && current != sentToken) return current;
+      return _refresh();
+    });
+
+    if (token == null) {
+      await _clearTokens();
+      onSessionExpired?.call();
+      return handler.next(err);
+    }
+
+    try {
+      options.headers['Authorization'] = 'Bearer $token';
+      return handler.resolve(await _refreshDio.fetch<dynamic>(options));
+    } on DioException catch (retryErr) {
+      return handler.next(retryErr);
+    }
   }
 
-  Future<bool> _attemptTokenRefresh() async {
+  /// Exchanges the stored refresh token for a new pair. Returns the new
+  /// access token, or null when the session is gone.
+  Future<String?> _refresh() async {
     final refreshToken = await _storage.read(key: AppConstants.refreshTokenKey);
-    if (refreshToken == null) return false;
-
+    if (refreshToken == null) return null;
     try {
       final response = await _refreshDio.post<Map<String, dynamic>>(
         ApiPaths.authRefresh,
         data: {'refreshToken': refreshToken},
       );
-
-      if (response.statusCode == 200) {
-        // Unwrap `{ "data": { "accessToken": ..., "refreshToken": ... } }`
-        final payload =
-            unwrapEnvelope<Map<String, dynamic>>(response.data);
-        await _storage.write(
-          key: AppConstants.accessTokenKey,
-          value: payload['accessToken'] as String,
-        );
-        await _storage.write(
-          key: AppConstants.refreshTokenKey,
-          value: payload['refreshToken'] as String,
-        );
-        return true;
-      }
+      final payload = unwrapEnvelope<Map<String, dynamic>>(response.data);
+      final access = payload['accessToken'] as String;
+      await _storage.write(key: AppConstants.accessTokenKey, value: access);
+      await _storage.write(
+        key: AppConstants.refreshTokenKey,
+        value: payload['refreshToken'] as String,
+      );
+      return access;
     } catch (_) {
-      // Refresh request itself failed
+      return null;
     }
-    return false;
+  }
+
+  static bool _isAuthCall(String path) => path.contains('/auth/');
+
+  static String? _bearer(RequestOptions options) {
+    final header = options.headers['Authorization'];
+    return header is String && header.startsWith('Bearer ')
+        ? header.substring(7)
+        : null;
   }
 
   Future<void> _clearTokens() async {

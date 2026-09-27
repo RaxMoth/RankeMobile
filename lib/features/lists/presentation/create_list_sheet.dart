@@ -4,13 +4,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/app_keys.dart';
-import '../../../core/dev/mock_lists_repository.dart';
 import '../../../core/strings.dart';
 import '../../../core/theme/animations.dart';
 import '../../../core/theme/colors.dart';
 import '../../../core/theme/text_styles.dart';
 import '../domain/entities/ranked_list.dart';
 import 'providers/lists_provider.dart';
+import 'widgets/category_picker.dart';
 
 /// Multi-step board creation flow.
 ///
@@ -496,44 +496,7 @@ class _IdentityStep extends StatelessWidget {
         Text(S.category,
             style: AppTextStyles.sectionHeader.copyWith(fontSize: 11)),
         const SizedBox(height: 10),
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: BoardCategory.all.map((cat) {
-            final isSelected = category == cat;
-            return GestureDetector(
-              onTap: () => onCategoryChanged(isSelected ? null : cat),
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 14, vertical: 10),
-                decoration: BoxDecoration(
-                  color: isSelected
-                      ? AppColors.accent.withAlpha(25)
-                      : AppColors.surface,
-                  borderRadius: BorderRadius.circular(6),
-                  border: Border.all(
-                    color: isSelected ? AppColors.accent : AppColors.border,
-                    width: isSelected ? 1.5 : 1,
-                  ),
-                ),
-                child: Text(
-                  cat,
-                  style: AppTextStyles.badge.copyWith(
-                    color: isSelected
-                        ? AppColors.accent
-                        : AppColors.textSecondary,
-                    fontWeight: isSelected ? FontWeight.w800 : FontWeight.w500,
-                  ),
-                ),
-              ),
-            );
-          }).toList(),
-        ),
-        const SizedBox(height: 6),
-        Text(
-          category != null ? S.categoryDeselectHint : S.categoryHelp,
-          style: AppTextStyles.badge.copyWith(color: AppColors.textTertiary),
-        ),
+        CategoryPicker(category: category, onChanged: onCategoryChanged),
       ],
     );
   }

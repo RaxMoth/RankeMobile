@@ -1,6 +1,7 @@
 import 'package:fpdart/fpdart.dart';
 import 'package:uuid/uuid.dart';
 
+import '../../features/lists/domain/entities/board_category.dart';
 import '../../features/lists/domain/entities/public_lists_page.dart';
 import '../../features/lists/domain/entities/ranked_list.dart';
 import '../../features/lists/domain/lists_repository.dart';
@@ -34,24 +35,16 @@ List<RankedEntry> _withMockDeltas(List<RankedEntry> entries) {
   }).toList();
 }
 
-/// Category constants used for seed data and Discover filtering.
-class BoardCategory {
-  static const finance = 'FINANCE';
-  static const fitness = 'FITNESS';
-  static const coding = 'CODING';
-  static const health = 'HEALTH';
-  static const gaming = 'GAMING';
-  static const education = 'EDUCATION';
-
-  static const all = [finance, fitness, coding, health, gaming, education];
-}
-
 /// Mock lists repository with in-memory state for dev mode.
 /// Supports full CRUD — data persists for the lifetime of the app.
 class MockListsRepository implements ListsRepository {
   final Map<String, _MockListData> _lists = {};
   final Map<String, List<ListMember>> _members = {};
   final Map<String, String> _categories = {}; // listId → category
+
+  /// Review queue + history per board, shared with [MockEntriesRepository]
+  /// (the backend's `submissions` table).
+  final Map<String, List<Submission>> submissions = {};
 
   MockListsRepository() {
     _seedData();
@@ -482,6 +475,11 @@ class MockListsRepository implements ListsRepository {
         currentUserRole: list.currentUserRole,
         category: _categories[list.id],
         topEntries: _withMockDeltas(list.entries.take(3).toList()),
+        pendingCount: (list.currentUserRole?.canReview ?? false)
+            ? (submissions[list.id] ?? [])
+                  .where((s) => s.status == EntryStatus.pending)
+                  .length
+            : 0,
       );
     }).toList();
     return Right(summaries);
@@ -495,7 +493,16 @@ class MockListsRepository implements ListsRepository {
       return const Left(ApiServerError(
           code: 'NOT_FOUND', message: 'Board not found', statusCode: 404));
     }
-    return Right(data.list);
+    // The viewer's latest submission while pending or rejected.
+    final mine = (submissions[listId] ?? [])
+        .where((s) => s.userId == _currentUserId)
+        .lastOrNull;
+    return Right(
+      data.list.copyWith(
+        category: _categories[listId],
+        mySubmission: mine?.status == EntryStatus.approved ? null : mine,
+      ),
+    );
   }
 
   @override
@@ -608,6 +615,7 @@ class MockListsRepository implements ListsRepository {
     String? description,
     bool? isPublic,
     bool? locked,
+    String? category,
     String? telegramLink,
     String? whatsappLink,
     String? discordLink,
@@ -618,14 +626,24 @@ class MockListsRepository implements ListsRepository {
       return const Left(ApiServerError(
           code: 'NOT_FOUND', message: 'Board not found', statusCode: 404));
     }
+    // Backend PATCH semantics: null = unchanged, "" = cleared.
+    String? patch(String? value, String? current) =>
+        value == null ? current : (value.isEmpty ? null : value);
+    final newCategory = patch(category, _categories[listId]);
+    if (newCategory == null) {
+      _categories.remove(listId);
+    } else {
+      _categories[listId] = newCategory;
+    }
     final updated = data.list.copyWith(
       title: title ?? data.list.title,
-      description: description ?? data.list.description,
+      description: patch(description, data.list.description),
       isPublic: isPublic ?? data.list.isPublic,
       locked: locked ?? data.list.locked,
-      telegramLink: telegramLink ?? data.list.telegramLink,
-      whatsappLink: whatsappLink ?? data.list.whatsappLink,
-      discordLink: discordLink ?? data.list.discordLink,
+      category: newCategory,
+      telegramLink: patch(telegramLink, data.list.telegramLink),
+      whatsappLink: patch(whatsappLink, data.list.whatsappLink),
+      discordLink: patch(discordLink, data.list.discordLink),
     );
     _lists[listId] = _MockListData(list: updated);
     return Right(updated);
@@ -659,6 +677,80 @@ class MockListsRepository implements ListsRepository {
     return const Right(null);
   }
 
+  @override
+  Future<Either<ApiError, void>> reorderEntries({
+    required String listId,
+    required List<String> orderedEntryIds,
+  }) async {
+    await Future<void>.delayed(DevConfig.networkDelay);
+    final data = _lists[listId];
+    if (data == null) return const Right(null);
+    final byId = {for (final e in data.list.entries) e.id: e};
+    final reordered = [
+      for (var i = 0; i < orderedEntryIds.length; i++)
+        if (byId[orderedEntryIds[i]] case final e?)
+          e.copyWith(manualRank: i + 1, rank: i + 1, previousRank: e.rank),
+    ];
+    _lists[listId] = _MockListData(
+      list: data.list.copyWith(entries: reordered),
+    );
+    return const Right(null);
+  }
+
+  // ─── Membership ─────────────────────────────────────────────
+
+  @override
+  Future<Either<ApiError, void>> joinList(String listId) async {
+    await Future<void>.delayed(DevConfig.networkDelay);
+    final data = _lists[listId];
+    if (data == null || data.list.currentUserRole != null) {
+      return const Right(null);
+    }
+    _members.putIfAbsent(listId, () => []).add(
+      const ListMember(
+        userId: _currentUserId,
+        displayName: 'Max Roth',
+        role: MemberRole.member,
+      ),
+    );
+    _lists[listId] = _MockListData(
+      list: data.list.copyWith(
+        currentUserRole: MemberRole.member,
+        memberCount: data.list.memberCount + 1,
+      ),
+    );
+    return const Right(null);
+  }
+
+  @override
+  Future<Either<ApiError, void>> leaveList(String listId) async {
+    await Future<void>.delayed(DevConfig.networkDelay);
+    final data = _lists[listId];
+    if (data == null) return const Right(null);
+    if (data.list.currentUserRole == MemberRole.owner) {
+      return const Left(ApiServerError(
+        code: 'VALIDATION_ERROR',
+        message: "the owner can't leave their own board — delete it instead",
+        statusCode: 400,
+      ));
+    }
+    _members[listId]?.removeWhere((m) => m.userId == _currentUserId);
+    submissions[listId]?.removeWhere(
+      (s) => s.userId == _currentUserId && s.status == EntryStatus.pending,
+    );
+    _lists[listId] = _MockListData(
+      list: data.list.copyWith(
+        currentUserRole: null,
+        memberCount: data.list.memberCount - 1,
+        entries: [
+          for (final e in data.list.entries)
+            if (e.userId != _currentUserId) e,
+        ],
+      ),
+    );
+    return const Right(null);
+  }
+
   // ─── Invite Operations ──────────────────────────────────────
 
   @override
@@ -687,7 +779,8 @@ class MockListsRepository implements ListsRepository {
       return const Left(ApiServerError(
           code: 'NOT_FOUND', message: 'Board not found', statusCode: 404));
     }
-    return Right(data.list.inviteToken ?? 'inv-${listId.substring(0, 8)}');
+    final token = data.list.inviteToken ?? 'inv-${listId.substring(0, 8)}';
+    return Right('rankapp://app/invite/$token');
   }
 
   @override

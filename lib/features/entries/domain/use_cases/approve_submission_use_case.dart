@@ -2,15 +2,18 @@ import 'package:fpdart/fpdart.dart';
 import '../../../../core/network/api_error.dart';
 import '../entries_repository.dart';
 
-class RejectEntryUseCase {
+class ApproveSubmissionUseCase {
   final EntriesRepository _repository;
 
-  RejectEntryUseCase(this._repository);
+  ApproveSubmissionUseCase(this._repository);
 
   Future<Either<ApiError, void>> call({
     required String listId,
-    required String entryId,
+    required String submissionId,
   }) {
-    return _repository.rejectEntry(listId: listId, entryId: entryId);
+    return _repository.approveSubmission(
+      listId: listId,
+      submissionId: submissionId,
+    );
   }
 }

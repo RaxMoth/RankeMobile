@@ -1,0 +1,27 @@
+{
+  "data": [
+    {
+      "id": "22222222-2222-4222-8222-222222222222",
+      "title": "Heaviest bench",
+      "description": "Paused reps only",
+      "valueType": "number",
+      "rankOrder": "desc",
+      "isPublic": true,
+      "locked": false,
+      "category": "FITNESS",
+      "memberCount": 12,
+      "currentUserRole": "admin",
+      "pendingCount": 0
+    },
+    {
+      "id": "44444444-4444-4444-8444-444444444444",
+      "title": "5K PRs",
+      "valueType": "duration",
+      "rankOrder": "asc",
+      "isPublic": true,
+      "locked": false,
+      "memberCount": 1,
+      "pendingCount": 0
+    }
+  ]
+}

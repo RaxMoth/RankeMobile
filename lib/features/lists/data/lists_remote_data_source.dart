@@ -11,6 +11,8 @@ abstract class ListsRemoteDataSource {
   Future<Map<String, dynamic>> getListDetail(String listId);
   Future<Map<String, dynamic>> createList(Map<String, dynamic> data);
   Future<void> deleteList(String listId);
+  Future<void> joinList(String listId);
+  Future<void> leaveList(String listId);
   Future<Map<String, dynamic>> getInvitePreview(String token);
   Future<Map<String, dynamic>> joinByInvite(String token);
   Future<Map<String, dynamic>> getInviteLink(String listId);
@@ -22,7 +24,9 @@ abstract class ListsRemoteDataSource {
     Map<String, dynamic> data,
   );
   Future<void> deleteEntry(String listId, String entryId);
+  Future<void> updateRanks(String listId, List<Map<String, dynamic>> ranks);
   Future<Map<String, dynamic>> regenerateInvite(String listId);
+
   /// Returns one page of raw board JSON plus the cursor for the next page,
   /// read from the `X-Next-Cursor` response header (null on the last page).
   Future<({List<dynamic> items, String? nextCursor})> searchPublicLists({
@@ -67,6 +71,16 @@ class ListsRemoteDataSourceImpl implements ListsRemoteDataSource {
   @override
   Future<void> deleteList(String listId) async {
     await _apiClient.dio.delete<void>(ApiPaths.listById(listId));
+  }
+
+  @override
+  Future<void> joinList(String listId) async {
+    await _apiClient.dio.post<void>(ApiPaths.listJoin(listId));
+  }
+
+  @override
+  Future<void> leaveList(String listId) async {
+    await _apiClient.dio.delete<void>(ApiPaths.listLeave(listId));
   }
 
   @override
@@ -133,6 +147,14 @@ class ListsRemoteDataSourceImpl implements ListsRemoteDataSource {
   @override
   Future<void> deleteEntry(String listId, String entryId) async {
     await _apiClient.dio.delete<void>(ApiPaths.entryById(listId, entryId));
+  }
+
+  @override
+  Future<void> updateRanks(
+    String listId,
+    List<Map<String, dynamic>> ranks,
+  ) async {
+    await _apiClient.dio.patch<void>(ApiPaths.entryRanks(listId), data: ranks);
   }
 
   @override

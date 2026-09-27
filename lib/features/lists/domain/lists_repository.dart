@@ -25,10 +25,17 @@ abstract class ListsRepository {
 
   Future<Either<ApiError, void>> deleteList(String listId);
 
+  /// Joins a public board (idempotent).
+  Future<Either<ApiError, void>> joinList(String listId);
+
+  /// Leaves a board; the caller's entry is removed. Owners can't leave.
+  Future<Either<ApiError, void>> leaveList(String listId);
+
   Future<Either<ApiError, RankedList>> getInvitePreview(String token);
 
   Future<Either<ApiError, void>> joinByInvite(String token);
 
+  /// The ready-to-share invite URL (built by the backend).
   Future<Either<ApiError, String>> getInviteLink(String listId);
 
   Future<Either<ApiError, List<ListMember>>> getMembers(String listId);
@@ -44,12 +51,15 @@ abstract class ListsRepository {
     required String userId,
   });
 
+  /// Patches a board. A null argument leaves that field unchanged; an empty
+  /// string clears an optional one (description, category, links).
   Future<Either<ApiError, RankedList>> updateList({
     required String listId,
     String? title,
     String? description,
     bool? isPublic,
     bool? locked,
+    String? category,
     String? telegramLink,
     String? whatsappLink,
     String? discordLink,
@@ -58,6 +68,12 @@ abstract class ListsRepository {
   Future<Either<ApiError, void>> deleteEntry({
     required String listId,
     required String entryId,
+  });
+
+  /// Sets a text board's ranking: [orderedEntryIds] best first (#1 first).
+  Future<Either<ApiError, void>> reorderEntries({
+    required String listId,
+    required List<String> orderedEntryIds,
   });
 
   Future<Either<ApiError, String>> regenerateInvite(String listId);

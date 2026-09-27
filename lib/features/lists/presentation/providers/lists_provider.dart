@@ -2,9 +2,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:get_it/get_it.dart';
 
 import '../../../entries/domain/entities/entry.dart';
-import '../../../entries/domain/use_cases/approve_entry_use_case.dart';
-import '../../../entries/domain/use_cases/get_pending_entries_use_case.dart';
-import '../../../entries/domain/use_cases/reject_entry_use_case.dart';
+import '../../../entries/domain/entries_repository.dart';
+import '../../../entries/domain/use_cases/approve_submission_use_case.dart';
+import '../../../entries/domain/use_cases/get_pending_submissions_use_case.dart';
+import '../../../entries/domain/use_cases/reject_submission_use_case.dart';
 import '../../../entries/domain/use_cases/submit_entry_use_case.dart';
 import '../../domain/entities/ranked_list.dart';
 import '../../domain/lists_repository.dart';
@@ -77,22 +78,59 @@ class ListDetailNotifier extends FamilyAsyncNotifier<RankedList, String> {
     );
   }
 
-  Future<void> submitEntry(EntryInput input) async {
+  /// Queues the caller's entry for review and returns the submission.
+  Future<Submission> submitEntry(EntryInput input) async {
     final result = await GetIt.instance<SubmitEntryUseCase>().call(
       listId: arg,
       input: input,
     );
-    result.fold(
-      (error) => throw error,
-      (_) => ref.invalidateSelf(),
-    );
+    return result.fold((error) => throw error, (submission) {
+      _refreshBoardAndHome();
+      return submission;
+    });
   }
 
+  /// Joins this (public) board so the caller can submit.
+  Future<void> join() async {
+    final result = await GetIt.instance<ListsRepository>().joinList(arg);
+    result.fold((error) => throw error, (_) => _refreshBoardAndHome());
+  }
+
+  /// Leaves this board; the caller's entry goes with it.
+  Future<void> leave() async {
+    final result = await GetIt.instance<ListsRepository>().leaveList(arg);
+    result.fold((error) => throw error, (_) => _refreshBoardAndHome());
+  }
+
+  /// Deletes the caller's own entry (allowed for any member).
+  Future<void> deleteMyEntry() async {
+    final result = await GetIt.instance<EntriesRepository>().deleteMyEntry(arg);
+    result.fold((error) => throw error, (_) => _refreshBoardAndHome());
+  }
+
+  /// Saves a text board's order, best first.
+  Future<void> reorderEntries(List<String> orderedEntryIds) async {
+    final result = await GetIt.instance<ListsRepository>().reorderEntries(
+      listId: arg,
+      orderedEntryIds: orderedEntryIds,
+    );
+    result.fold((error) => throw error, (_) => _refreshBoardAndHome());
+  }
+
+  /// Membership, ranks and podiums shown on Home all derive from this
+  /// board, so both are refetched after a write.
+  void _refreshBoardAndHome() {
+    ref.invalidateSelf();
+    ref.invalidate(listsProvider);
+  }
+
+  /// See [ListsRepository.updateList]: null = unchanged, "" = clear.
   Future<void> updateList({
     String? title,
     String? description,
     bool? isPublic,
     bool? locked,
+    String? category,
     String? telegramLink,
     String? whatsappLink,
     String? discordLink,
@@ -104,6 +142,7 @@ class ListDetailNotifier extends FamilyAsyncNotifier<RankedList, String> {
       description: description,
       isPublic: isPublic,
       locked: locked,
+      category: category,
       telegramLink: telegramLink,
       whatsappLink: whatsappLink,
       discordLink: discordLink,
@@ -117,10 +156,7 @@ class ListDetailNotifier extends FamilyAsyncNotifier<RankedList, String> {
   Future<void> deleteEntry(String entryId) async {
     final repo = GetIt.instance<ListsRepository>();
     final result = await repo.deleteEntry(listId: arg, entryId: entryId);
-    result.fold(
-      (error) => throw error,
-      (_) => ref.invalidateSelf(),
-    );
+    result.fold((error) => throw error, (_) => _refreshBoardAndHome());
   }
 
   Future<String> getInviteLink() async {
@@ -151,54 +187,47 @@ class InvitePreviewNotifier extends FamilyAsyncNotifier<RankedList, String> {
 
   Future<void> join() async {
     final result = await GetIt.instance<JoinByInviteUseCase>().call(arg);
-    result.fold(
-      (error) => throw error,
-      (_) {},
-    );
+    result.fold((error) => throw error, (_) => ref.invalidate(listsProvider));
   }
 }
 
-// --- Pending entries (admin approval) ---
+// --- Review queue (owner / admin / moderator) ---
 
-final pendingEntriesProvider = AsyncNotifierProvider.family<
-    PendingEntriesNotifier, List<RankedEntry>, String>(
-    PendingEntriesNotifier.new);
+final pendingSubmissionsProvider = AsyncNotifierProvider.family<
+    PendingSubmissionsNotifier, List<Submission>, String>(
+    PendingSubmissionsNotifier.new);
 
-class PendingEntriesNotifier
-    extends FamilyAsyncNotifier<List<RankedEntry>, String> {
+class PendingSubmissionsNotifier
+    extends FamilyAsyncNotifier<List<Submission>, String> {
   @override
-  Future<List<RankedEntry>> build(String arg) async {
+  Future<List<Submission>> build(String arg) async {
     final result =
-        await GetIt.instance<GetPendingEntriesUseCase>().call(arg);
-    return result.fold(
-      (error) => throw error,
-      (entries) => entries,
-    );
+        await GetIt.instance<GetPendingSubmissionsUseCase>().call(arg);
+    return result.fold((error) => throw error, (queue) => queue);
   }
 
-  Future<void> approve(String entryId) async {
-    final result = await GetIt.instance<ApproveEntryUseCase>().call(
+  /// Puts the submission on the board.
+  Future<void> approve(String submissionId) async {
+    final result = await GetIt.instance<ApproveSubmissionUseCase>().call(
       listId: arg,
-      entryId: entryId,
+      submissionId: submissionId,
     );
-    result.fold(
-      (error) => throw error,
-      (_) {
-        ref.invalidateSelf();
-        ref.invalidate(listDetailProvider(arg));
-      },
-    );
+    result.fold((error) => throw error, (_) => _refresh());
   }
 
-  Future<void> reject(String entryId) async {
-    final result = await GetIt.instance<RejectEntryUseCase>().call(
+  Future<void> reject(String submissionId) async {
+    final result = await GetIt.instance<RejectSubmissionUseCase>().call(
       listId: arg,
-      entryId: entryId,
+      submissionId: submissionId,
     );
-    result.fold(
-      (error) => throw error,
-      (_) => ref.invalidateSelf(),
-    );
+    result.fold((error) => throw error, (_) => _refresh());
+  }
+
+  /// The queue, the board and Home's pending counts all change.
+  void _refresh() {
+    ref.invalidateSelf();
+    ref.invalidate(listDetailProvider(arg));
+    ref.invalidate(listsProvider);
   }
 }
 

@@ -9,6 +9,7 @@ import '../../../core/strings.dart';
 import '../../../core/theme/colors.dart';
 import '../../../core/theme/responsive.dart';
 import '../../../core/theme/text_styles.dart';
+import '../../../shared/widgets/confirm_sheet.dart';
 import '../../auth/presentation/providers/auth_provider.dart';
 import '../../entries/presentation/submit_entry_sheet.dart';
 import '../../entries/presentation/widgets/duration_picker.dart';
@@ -16,6 +17,7 @@ import '../domain/entities/ranked_list.dart';
 import 'edit_board_sheet.dart';
 import 'providers/bookmark_provider.dart';
 import 'providers/lists_provider.dart';
+import 'reorder_entries_sheet.dart';
 
 /// List Detail Screen — full ranked leaderboard with standings
 class ListDetailScreen extends ConsumerWidget {
@@ -91,9 +93,11 @@ class _DetailContentState extends ConsumerState<_DetailContent>
   late TabController _tabController;
   late List<_TabDef> _tabs;
 
-  bool get _isAdmin =>
-      widget.list.currentUserRole == MemberRole.owner ||
-      widget.list.currentUserRole == MemberRole.admin;
+  /// Owner/admin: runs the board (edit, members, remove entries).
+  bool get _isAdmin => widget.list.currentUserRole?.canManage ?? false;
+
+  /// Owner/admin/moderator: reviews submissions.
+  bool get _canReview => widget.list.currentUserRole?.canReview ?? false;
 
   bool get _hasCommsLinks =>
       widget.list.telegramLink != null ||
@@ -109,8 +113,9 @@ class _DetailContentState extends ConsumerState<_DetailContent>
       tabs.add(const _TabDef(S.comms, _TabType.comms));
     }
     tabs.add(const _TabDef(S.stats, _TabType.stats));
-    if (_isAdmin) {
-      tabs.add(const _TabDef(S.admin, _TabType.admin));
+    // Moderators get the review queue only; admins the full admin tab.
+    if (_canReview) {
+      tabs.add(_TabDef(_isAdmin ? S.admin : S.review, _TabType.admin));
     }
     return tabs;
   }
@@ -184,10 +189,12 @@ class _DetailContentState extends ConsumerState<_DetailContent>
             dividerColor: Colors.transparent,
             padding: const EdgeInsets.symmetric(horizontal: 12),
             tabs: _tabs
-                .map((t) => Tab(
-                      key: AppKeys.listDetailTab(t.type.name),
-                      text: t.label,
-                    ))
+                .map(
+                  (t) => Tab(
+                    key: AppKeys.listDetailTab(t.type.name),
+                    text: t.label,
+                  ),
+                )
                 .toList(),
           ),
         ),
@@ -212,7 +219,11 @@ class _DetailContentState extends ConsumerState<_DetailContent>
       _TabType.info => _InfoTab(list: widget.list),
       _TabType.comms => _CommsTab(list: widget.list, isAdmin: _isAdmin),
       _TabType.stats => _StatsTab(list: widget.list),
-      _TabType.admin => _AdminTab(list: widget.list, listId: widget.listId),
+      _TabType.admin => _AdminTab(
+        list: widget.list,
+        listId: widget.listId,
+        canManage: _isAdmin,
+      ),
     };
   }
 }
@@ -279,7 +290,11 @@ class _StandingsTab extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final currentUserId = ref.watch(authProvider).valueOrNull?.id;
-    final canSubmit = !list.locked;
+    // Only members can submit (the API 403s anyone else); a visitor on a
+    // public board is offered to join instead.
+    final isMember = list.currentUserRole != null;
+    final canSubmit = isMember && !list.locked;
+    final canJoin = !isMember && list.isPublic;
 
     Widget listView = ListView(
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
@@ -290,6 +305,8 @@ class _StandingsTab extends ConsumerWidget {
             padding: EdgeInsets.only(bottom: 12),
             child: _PullToSubmitHint(),
           ),
+        if (list.mySubmission case final mine?)
+          _MySubmissionBanner(submission: mine, valueType: list.valueType),
         if (list.entries.isEmpty)
           _EmptyStandings()
         else
@@ -302,8 +319,15 @@ class _StandingsTab extends ConsumerWidget {
                 ? Dismissible(
                     key: ValueKey(entry.id),
                     direction: DismissDirection.endToStart,
+                    // The sheet handles removal; the row itself never
+                    // dismisses (the list refreshes instead).
                     confirmDismiss: (_) async {
-                      _confirmRemoveEntry(context, ref, entry, isOwnEntry);
+                      await _confirmRemoveEntry(
+                        context,
+                        ref,
+                        entry,
+                        isOwnEntry,
+                      );
                       return false;
                     },
                     background: Container(
@@ -355,7 +379,9 @@ class _StandingsTab extends ConsumerWidget {
       children: [
         Expanded(child: listView),
         if (canSubmit)
-          _SubmitButton(onPressed: () => _openSubmitSheet(context)),
+          _SubmitButton(onPressed: () => _openSubmitSheet(context))
+        else if (canJoin)
+          _JoinButton(listId: listId),
       ],
     );
   }
@@ -378,74 +404,33 @@ class _StandingsTab extends ConsumerWidget {
     );
   }
 
-  void _confirmRemoveEntry(
+  Future<void> _confirmRemoveEntry(
     BuildContext context,
     WidgetRef ref,
     RankedEntry entry, [
     bool isOwnEntry = false,
-  ]) {
-    showModalBottomSheet<void>(
-      context: context,
-      backgroundColor: AppColors.card,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
-      builder: (ctx) => Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              isOwnEntry ? S.deleteMyEntry : S.removeEntry,
-              style: AppTextStyles.screenTitle,
-            ),
-            const SizedBox(height: 12),
-            Text(
-              isOwnEntry
-                  ? S.deleteOwnEntryConfirm
-                  : S.removeEntryConfirm(entry.displayName),
-              style: AppTextStyles.bodySecondary,
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 20),
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton(
-                    onPressed: () => Navigator.pop(ctx),
-                    style: OutlinedButton.styleFrom(
-                      side: const BorderSide(color: AppColors.border),
-                    ),
-                    child: Text(
-                      S.cancel,
-                      style: AppTextStyles.button.copyWith(
-                        color: AppColors.textSecondary,
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: () async {
-                      Navigator.pop(ctx);
-                      await ref
-                          .read(listDetailProvider(listId).notifier)
-                          .deleteEntry(entry.id);
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.error,
-                    ),
-                    child: const Text(S.remove),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-          ],
-        ),
-      ),
+  ]) async {
+    final confirmed = await showConfirmSheet(
+      context,
+      title: isOwnEntry ? S.deleteMyEntry : S.removeEntry,
+      message: isOwnEntry
+          ? S.deleteOwnEntryConfirm
+          : S.removeEntryConfirm(entry.displayName),
+      confirmLabel: S.remove,
     );
+    if (!confirmed) return;
+    final notifier = ref.read(listDetailProvider(listId).notifier);
+    try {
+      // Members may only delete their own entry, through /entries/me;
+      // removing someone else's is an owner/admin action.
+      if (isOwnEntry) {
+        await notifier.deleteMyEntry();
+      } else {
+        await notifier.deleteEntry(entry.id);
+      }
+    } catch (e) {
+      if (context.mounted) showErrorSnackBar(context, S.failed(e));
+    }
   }
 }
 
@@ -498,7 +483,49 @@ class _InfoTab extends StatelessWidget {
             ],
           ],
         ),
+        // Owners can't leave (they delete the board instead).
+        if (list.currentUserRole != null &&
+            list.currentUserRole != MemberRole.owner)
+          _LeaveBoardButton(listId: list.id),
       ],
+    );
+  }
+}
+
+class _LeaveBoardButton extends ConsumerWidget {
+  final String listId;
+
+  const _LeaveBoardButton({required this.listId});
+
+  Future<void> _leave(BuildContext context, WidgetRef ref) async {
+    final confirmed = await showConfirmSheet(
+      context,
+      title: S.leaveBoard,
+      message: S.leaveBoardConfirm,
+      confirmLabel: S.leaveBoard,
+    );
+    if (!confirmed || !context.mounted) return;
+    try {
+      await ref.read(listDetailProvider(listId).notifier).leave();
+      if (context.mounted) context.go('/home');
+    } catch (e) {
+      if (context.mounted) showErrorSnackBar(context, S.failedToLeave(e));
+    }
+  }
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return OutlinedButton.icon(
+      onPressed: () => _leave(context, ref),
+      icon: const Icon(Icons.logout, color: AppColors.error, size: 18),
+      label: Text(
+        S.leaveBoard,
+        style: AppTextStyles.button.copyWith(color: AppColors.error),
+      ),
+      style: OutlinedButton.styleFrom(
+        minimumSize: const Size.fromHeight(48),
+        side: const BorderSide(color: AppColors.error),
+      ),
     );
   }
 }
@@ -706,15 +733,22 @@ class _RecentActivitySection extends StatelessWidget {
 
 // ─── ADMIN TAB ───────────────────────────────────────────────
 
+/// Review queue for owners, admins and moderators; the board management
+/// actions below it only for owners/admins ([canManage]).
 class _AdminTab extends ConsumerWidget {
   final RankedList list;
   final String listId;
+  final bool canManage;
 
-  const _AdminTab({required this.list, required this.listId});
+  const _AdminTab({
+    required this.list,
+    required this.listId,
+    required this.canManage,
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final pendingAsync = ref.watch(pendingEntriesProvider(listId));
+    final pendingAsync = ref.watch(pendingSubmissionsProvider(listId));
 
     return ListView(
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
@@ -722,9 +756,17 @@ class _AdminTab extends ConsumerWidget {
         // Pending submissions section
         pendingAsync.when(
           data: (pending) => pending.isEmpty
-              ? const SizedBox.shrink()
+              ? Padding(
+                  padding: const EdgeInsets.only(bottom: 16),
+                  child: Text(
+                    S.noPendingSubmissions,
+                    style: AppTextStyles.badge.copyWith(
+                      color: AppColors.textTertiary,
+                    ),
+                  ),
+                )
               : _PendingSubmissionsSection(
-                  entries: pending,
+                  submissions: pending,
                   listId: listId,
                   valueType: list.valueType,
                 ),
@@ -749,39 +791,70 @@ class _AdminTab extends ConsumerWidget {
           ),
           error: (_, _) => const SizedBox.shrink(),
         ),
-        // Admin actions
-        _AdminActionCard(
-          icon: Icons.edit_outlined,
-          title: S.editBoard,
-          subtitle: S.editBoardSubtitle,
-          onTap: () => _openEditSheet(context),
-        ),
-        const SizedBox(height: 8),
-        _AdminActionCard(
-          icon: list.locked ? Icons.lock_open : Icons.lock_outline,
-          title: list.locked ? S.unlockBoard : S.lockBoard,
-          subtitle: list.locked ? S.unlockBoardSubtitle : S.lockBoardSubtitle,
-          onTap: () async {
-            await ref
-                .read(listDetailProvider(listId).notifier)
-                .updateList(locked: !list.locked);
-          },
-        ),
-        const SizedBox(height: 8),
-        _AdminActionCard(
-          icon: Icons.people_outline,
-          title: S.manageMembers,
-          subtitle: S.manageMembersSubtitle(list.memberCount),
-          onTap: () => context.push('/lists/$listId/members'),
-        ),
-        const SizedBox(height: 8),
-        _AdminActionCard(
-          icon: Icons.share_outlined,
-          title: S.shareInvite,
-          subtitle: S.shareInviteSubtitle,
-          onTap: () => _shareInvite(context, ref),
-        ),
+        if (canManage) ...[
+          // Admin actions
+          _AdminActionCard(
+            icon: Icons.edit_outlined,
+            title: S.editBoard,
+            subtitle: S.editBoardSubtitle,
+            onTap: () => _openEditSheet(context),
+          ),
+          const SizedBox(height: 8),
+          _AdminActionCard(
+            icon: list.locked ? Icons.lock_open : Icons.lock_outline,
+            title: list.locked ? S.unlockBoard : S.lockBoard,
+            subtitle: list.locked ? S.unlockBoardSubtitle : S.lockBoardSubtitle,
+            onTap: () async {
+              try {
+                await ref
+                    .read(listDetailProvider(listId).notifier)
+                    .updateList(locked: !list.locked);
+              } catch (e) {
+                if (context.mounted) {
+                  showErrorSnackBar(context, S.failedToUpdate(e));
+                }
+              }
+            },
+          ),
+          // Text values have no natural order — admins rank them by hand.
+          if (list.valueType == ValueType.text && list.entries.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            _AdminActionCard(
+              icon: Icons.swap_vert,
+              title: S.reorderEntries,
+              subtitle: S.reorderEntriesSubtitle,
+              onTap: () => _openReorderSheet(context),
+            ),
+          ],
+          const SizedBox(height: 8),
+          _AdminActionCard(
+            icon: Icons.people_outline,
+            title: S.manageMembers,
+            subtitle: S.manageMembersSubtitle(list.memberCount),
+            onTap: () => context.push('/lists/$listId/members'),
+          ),
+          const SizedBox(height: 8),
+          _AdminActionCard(
+            icon: Icons.share_outlined,
+            title: S.shareInvite,
+            subtitle: S.shareInviteSubtitle,
+            onTap: () => _shareInvite(context, ref),
+          ),
+        ],
       ],
+    );
+  }
+
+  void _openReorderSheet(BuildContext context) {
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: AppColors.card,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (_) =>
+          ReorderEntriesSheet(listId: listId, entries: list.entries),
     );
   }
 
@@ -804,14 +877,7 @@ class _AdminTab extends ConsumerWidget {
           .getInviteLink();
       await SharePlus.instance.share(ShareParams(text: S.shareMessage(link)));
     } catch (e) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(S.failedToGetInvite(e)),
-            backgroundColor: AppColors.error,
-          ),
-        );
-      }
+      if (context.mounted) showErrorSnackBar(context, S.failedToGetInvite(e));
     }
   }
 }
@@ -880,12 +946,12 @@ class _AdminActionCard extends StatelessWidget {
 // ─── Pending Submissions ─────────────────────────────────────
 
 class _PendingSubmissionsSection extends ConsumerWidget {
-  final List<RankedEntry> entries;
+  final List<Submission> submissions;
   final String listId;
   final ValueType valueType;
 
   const _PendingSubmissionsSection({
-    required this.entries,
+    required this.submissions,
     required this.listId,
     required this.valueType,
   });
@@ -912,15 +978,15 @@ class _PendingSubmissionsSection extends ConsumerWidget {
               ),
               const SizedBox(width: 8),
               Text(
-                S.pendingSubmissions(entries.length),
+                S.pendingSubmissions(submissions.length),
                 style: AppTextStyles.badge.copyWith(color: AppColors.warning),
               ),
             ],
           ),
           const SizedBox(height: 12),
-          ...entries.map(
-            (entry) => _PendingEntryCard(
-              entry: entry,
+          ...submissions.map(
+            (submission) => _PendingEntryCard(
+              submission: submission,
               listId: listId,
               valueType: valueType,
             ),
@@ -932,12 +998,12 @@ class _PendingSubmissionsSection extends ConsumerWidget {
 }
 
 class _PendingEntryCard extends ConsumerStatefulWidget {
-  final RankedEntry entry;
+  final Submission submission;
   final String listId;
   final ValueType valueType;
 
   const _PendingEntryCard({
-    required this.entry,
+    required this.submission,
     required this.listId,
     required this.valueType,
   });
@@ -953,8 +1019,8 @@ class _PendingEntryCardState extends ConsumerState<_PendingEntryCard> {
     setState(() => _isProcessing = true);
     try {
       await ref
-          .read(pendingEntriesProvider(widget.listId).notifier)
-          .approve(widget.entry.id);
+          .read(pendingSubmissionsProvider(widget.listId).notifier)
+          .approve(widget.submission.id);
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -973,8 +1039,8 @@ class _PendingEntryCardState extends ConsumerState<_PendingEntryCard> {
     setState(() => _isProcessing = true);
     try {
       await ref
-          .read(pendingEntriesProvider(widget.listId).notifier)
-          .reject(widget.entry.id);
+          .read(pendingSubmissionsProvider(widget.listId).notifier)
+          .reject(widget.submission.id);
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -989,23 +1055,8 @@ class _PendingEntryCardState extends ConsumerState<_PendingEntryCard> {
     }
   }
 
-  String _formatValue() {
-    return switch (widget.valueType) {
-      ValueType.number =>
-        widget.entry.valueNumber?.toStringAsFixed(
-              widget.entry.valueNumber!.truncateToDouble() ==
-                      widget.entry.valueNumber!
-                  ? 0
-                  : 1,
-            ) ??
-            '—',
-      ValueType.duration =>
-        widget.entry.valueDurationMs != null
-            ? formatDuration(widget.entry.valueDurationMs!)
-            : '—',
-      ValueType.text => widget.entry.valueText ?? '—',
-    };
-  }
+  String _formatValue() =>
+      _submissionValue(widget.submission, widget.valueType);
 
   String _relativeTime(DateTime dt) {
     final diff = DateTime.now().difference(dt);
@@ -1039,8 +1090,8 @@ class _PendingEntryCardState extends ConsumerState<_PendingEntryCard> {
                 ),
                 child: Center(
                   child: Text(
-                    widget.entry.displayName.isNotEmpty
-                        ? widget.entry.displayName[0].toUpperCase()
+                    (widget.submission.displayName ?? '').isNotEmpty
+                        ? widget.submission.displayName![0].toUpperCase()
                         : '?',
                     style: AppTextStyles.body.copyWith(
                       fontWeight: FontWeight.w800,
@@ -1055,16 +1106,16 @@ class _PendingEntryCardState extends ConsumerState<_PendingEntryCard> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      widget.entry.displayName.toUpperCase(),
+                      (widget.submission.displayName ?? '').toUpperCase(),
                       style: AppTextStyles.body.copyWith(
                         fontWeight: FontWeight.w700,
                         fontSize: 13,
                       ),
                     ),
-                    if (widget.entry.note != null &&
-                        widget.entry.note!.isNotEmpty)
+                    if (widget.submission.note != null &&
+                        widget.submission.note!.isNotEmpty)
                       Text(
-                        widget.entry.note!,
+                        widget.submission.note!,
                         style: AppTextStyles.badge.copyWith(
                           color: AppColors.textTertiary,
                         ),
@@ -1084,7 +1135,7 @@ class _PendingEntryCardState extends ConsumerState<_PendingEntryCard> {
                     ),
                   ),
                   Text(
-                    _relativeTime(widget.entry.submittedAt),
+                    _relativeTime(widget.submission.submittedAt),
                     style: AppTextStyles.badge.copyWith(
                       color: AppColors.textTertiary,
                     ),
@@ -1850,6 +1901,129 @@ class _PullToSubmitHint extends StatelessWidget {
           style: AppTextStyles.badge.copyWith(color: AppColors.textTertiary),
         ),
       ],
+    );
+  }
+}
+
+// ─── My Submission Banner ─────────────────────────────────────
+
+/// Tells the viewer where their latest submission stands: waiting for
+/// review, or rejected. Gone once it's approved (it's on the board).
+class _MySubmissionBanner extends StatelessWidget {
+  final Submission submission;
+  final ValueType valueType;
+
+  const _MySubmissionBanner({
+    required this.submission,
+    required this.valueType,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final rejected = submission.status == EntryStatus.rejected;
+    final color = rejected ? AppColors.error : AppColors.warning;
+    final value = _submissionValue(submission, valueType);
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: color.withAlpha(90)),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            rejected ? Icons.block : Icons.hourglass_top,
+            color: color,
+            size: 16,
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              rejected
+                  ? S.mySubmissionRejected(value)
+                  : S.mySubmissionPending(value),
+              style: AppTextStyles.badge.copyWith(color: color),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// A submission's value as the board shows it.
+String _submissionValue(Submission s, ValueType type) => switch (type) {
+  ValueType.number =>
+    s.valueNumber == null
+        ? '—'
+        : s.valueNumber!.toStringAsFixed(
+            s.valueNumber!.truncateToDouble() == s.valueNumber! ? 0 : 1,
+          ),
+  ValueType.duration =>
+    s.valueDurationMs != null ? formatDuration(s.valueDurationMs!) : '—',
+  ValueType.text => s.valueText ?? '—',
+};
+
+// ─── Join Button ──────────────────────────────────────────────
+
+/// Shown instead of the submit button to a visitor on a public board.
+class _JoinButton extends ConsumerStatefulWidget {
+  final String listId;
+
+  const _JoinButton({required this.listId});
+
+  @override
+  ConsumerState<_JoinButton> createState() => _JoinButtonState();
+}
+
+class _JoinButtonState extends ConsumerState<_JoinButton> {
+  bool _joining = false;
+
+  Future<void> _join() async {
+    setState(() => _joining = true);
+    try {
+      await ref.read(listDetailProvider(widget.listId).notifier).join();
+    } catch (e) {
+      if (mounted) showErrorSnackBar(context, S.failedToJoin(e));
+    } finally {
+      if (mounted) setState(() => _joining = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(20, 12, 20, 16),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            S.joinToSubmitHint,
+            style: AppTextStyles.badge.copyWith(color: AppColors.textTertiary),
+          ),
+          const SizedBox(height: 8),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              key: AppKeys.joinBoardButton,
+              onPressed: _joining ? null : _join,
+              style: ElevatedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: 18),
+              ),
+              child: _joining
+                  ? const SizedBox(
+                      height: 18,
+                      width: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Text(S.joinBoard),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

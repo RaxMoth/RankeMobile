@@ -77,8 +77,8 @@ class ProfileScreen extends ConsumerWidget {
                       .length;
                   final joined = lists
                       .where((l) =>
-                          l.currentUserRole == MemberRole.admin ||
-                          l.currentUserRole == MemberRole.member)
+                          l.currentUserRole != null &&
+                          l.currentUserRole != MemberRole.owner)
                       .length;
                   return _StatsSection(
                     ownedCount: owned,

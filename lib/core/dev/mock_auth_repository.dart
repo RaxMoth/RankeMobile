@@ -30,11 +30,9 @@ class MockAuthRepository implements AuthRepository {
     required String displayName,
   }) async {
     await Future<void>.delayed(DevConfig.networkDelay);
-    return Right(User(
-      id: 'dev-user-001',
-      email: email,
-      displayName: displayName,
-    ));
+    return Right(
+      User(id: 'dev-user-001', email: email, displayName: displayName),
+    );
   }
 
   @override
@@ -48,6 +46,16 @@ class MockAuthRepository implements AuthRepository {
 
   @override
   Future<Either<ApiError, void>> logout() async {
+    await Future<void>.delayed(DevConfig.networkDelay);
+    return const Right(null);
+  }
+
+  @override
+  Future<Either<ApiError, User?>> restoreSession() async =>
+      const Right(_devUser);
+
+  @override
+  Future<Either<ApiError, void>> deleteAccount() async {
     await Future<void>.delayed(DevConfig.networkDelay);
     return const Right(null);
   }

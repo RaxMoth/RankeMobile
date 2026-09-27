@@ -1,7 +1,10 @@
 // Happy-path end-to-end flow against the in-memory mock repositories:
 //
-//   login → create board → submit entry → approve it (owner moderation)
-//   → see it ranked on the leaderboard
+//   login → create board → submit entry → approve it (moderation is always
+//   on) → see it ranked on the leaderboard
+//
+// The mocks mirror the backend's behaviour — see
+// test/core/dev/mock_repositories_test.dart.
 //
 // Run on a booted iOS simulator (no backend needed):
 //
@@ -66,92 +69,91 @@ Future<void> pumpUntilGone(
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
-  testWidgets(
-    'login → create board → submit entry → approve → ranked on leaderboard',
-    (tester) async {
-      expect(
-        DevConfig.useMocks,
-        isTrue,
-        reason: 'Run with --dart-define=USE_MOCK=true',
-      );
-      final semantics = tester.ensureSemantics();
+  testWidgets('login → create board → submit entry → approve → ranked on leaderboard', (
+    tester,
+  ) async {
+    expect(
+      DevConfig.useMocks,
+      isTrue,
+      reason: 'Run with --dart-define=USE_MOCK=true',
+    );
+    final semantics = tester.ensureSemantics();
 
-      await setupDI();
-      await tester.pumpWidget(
-        ProviderScope(
-          overrides: [
-            onboardingCompleteProvider.overrideWith((ref) => true),
-            authProvider.overrideWith(_SignedOutAuthNotifier.new),
-          ],
-          child: const RankeApp(),
-        ),
-      );
+    await setupDI();
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          onboardingCompleteProvider.overrideWith((ref) => true),
+          authProvider.overrideWith(_SignedOutAuthNotifier.new),
+        ],
+        child: const RankeApp(),
+      ),
+    );
 
-      // ── Login ────────────────────────────────────────────────
-      await pumpUntilFound(tester, find.byKey(AppKeys.loginEmail));
-      await tester.enterText(find.byKey(AppKeys.loginEmail), 'max@ranked.app');
-      await tester.enterText(find.byKey(AppKeys.loginPassword), 'password123');
-      await tester.tap(find.byKey(AppKeys.loginSubmit));
+    // ── Login ────────────────────────────────────────────────
+    await pumpUntilFound(tester, find.byKey(AppKeys.loginEmail));
+    await tester.enterText(find.byKey(AppKeys.loginEmail), 'max@ranked.app');
+    await tester.enterText(find.byKey(AppKeys.loginPassword), 'password123');
+    await tester.tap(find.byKey(AppKeys.loginSubmit));
 
-      // ── Create a number board ────────────────────────────────
-      await pumpUntilFound(tester, find.byKey(AppKeys.createFab));
-      await tester.tap(find.byKey(AppKeys.createFab));
+    // ── Create a number board ────────────────────────────────
+    await pumpUntilFound(tester, find.byKey(AppKeys.createFab));
+    await tester.tap(find.byKey(AppKeys.createFab));
 
-      await pumpUntilFound(tester, find.byKey(AppKeys.createTypeCard('number')));
-      await tester.tap(find.byKey(AppKeys.createTypeCard('number')));
+    await pumpUntilFound(tester, find.byKey(AppKeys.createTypeCard('number')));
+    await tester.tap(find.byKey(AppKeys.createTypeCard('number')));
 
-      // Type tap auto-advances to the identity step.
-      await pumpUntilFound(tester, find.byKey(AppKeys.createTitle));
+    // Type tap auto-advances to the identity step.
+    await pumpUntilFound(tester, find.byKey(AppKeys.createTitle));
+    await tester.pumpAndSettle();
+    const boardTitle = 'E2E Board';
+    await tester.enterText(find.byKey(AppKeys.createTitle), boardTitle);
+
+    // identity → rules → share → create
+    for (var i = 0; i < 3; i++) {
+      await tester.tap(find.byKey(AppKeys.createPrimary));
       await tester.pumpAndSettle();
-      const boardTitle = 'E2E Board';
-      await tester.enterText(find.byKey(AppKeys.createTitle), boardTitle);
+    }
 
-      // identity → rules → share → create
-      for (var i = 0; i < 3; i++) {
-        await tester.tap(find.byKey(AppKeys.createPrimary));
-        await tester.pumpAndSettle();
-      }
+    // ── Open the new board from Home ─────────────────────────
+    final boardTile = find.bySemanticsLabel(RegExp('^$boardTitle board'));
+    await pumpUntilFound(tester, find.byKey(AppKeys.createFab));
+    await tester.scrollUntilVisible(
+      boardTile,
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.tap(boardTile);
 
-      // ── Open the new board from Home ─────────────────────────
-      final boardTile = find.bySemanticsLabel(RegExp('^$boardTitle board'));
-      await pumpUntilFound(tester, find.byKey(AppKeys.createFab));
-      await tester.scrollUntilVisible(
-        boardTile,
-        200,
-        scrollable: find.byType(Scrollable).first,
-      );
-      await tester.tap(boardTile);
+    // ── Submit an entry ──────────────────────────────────────
+    await pumpUntilFound(tester, find.byKey(AppKeys.submitEntryButton));
+    await tester.tap(find.byKey(AppKeys.submitEntryButton));
 
-      // ── Submit an entry ──────────────────────────────────────
-      await pumpUntilFound(tester, find.byKey(AppKeys.submitEntryButton));
-      await tester.tap(find.byKey(AppKeys.submitEntryButton));
+    await pumpUntilFound(tester, find.byKey(AppKeys.entryNumberField));
+    await tester.enterText(find.byKey(AppKeys.entryNumberField), '42');
+    await tester.tap(find.byKey(AppKeys.entrySubmit));
 
-      await pumpUntilFound(tester, find.byKey(AppKeys.entryNumberField));
-      await tester.enterText(find.byKey(AppKeys.entryNumberField), '42');
-      await tester.tap(find.byKey(AppKeys.entrySubmit));
+    await pumpUntilFound(tester, find.byKey(AppKeys.entryDone));
+    await tester.tap(find.byKey(AppKeys.entryDone));
+    await tester.pumpAndSettle();
 
-      await pumpUntilFound(tester, find.byKey(AppKeys.entryDone));
-      await tester.tap(find.byKey(AppKeys.entryDone));
-      await tester.pumpAndSettle();
+    // ── Approve it as the board owner ────────────────────────
+    await tester.tap(find.byKey(AppKeys.listDetailTab('admin')));
+    await pumpUntilFound(tester, find.byKey(AppKeys.pendingApprove));
+    await tester.tap(find.byKey(AppKeys.pendingApprove));
+    await pumpUntilGone(tester, find.byKey(AppKeys.pendingApprove));
 
-      // ── Approve it as the board owner ────────────────────────
-      await tester.tap(find.byKey(AppKeys.listDetailTab('admin')));
-      await pumpUntilFound(tester, find.byKey(AppKeys.pendingApprove));
-      await tester.tap(find.byKey(AppKeys.pendingApprove));
-      await pumpUntilGone(tester, find.byKey(AppKeys.pendingApprove));
+    // ── The entry is now ranked #1 and marked as ours ────────
+    await tester.tap(find.byKey(AppKeys.listDetailTab('standings')));
+    await pumpUntilFound(
+      tester,
+      find.bySemanticsLabel(RegExp(r'^Rank 1, your entry, ')),
+    );
+    expect(
+      find.bySemanticsLabel(RegExp(r'^Rank 1, your entry, ')),
+      findsOneWidget,
+    );
 
-      // ── The entry is now ranked #1 and marked as ours ────────
-      await tester.tap(find.byKey(AppKeys.listDetailTab('standings')));
-      await pumpUntilFound(
-        tester,
-        find.bySemanticsLabel(RegExp(r'^Rank 1, your entry, ')),
-      );
-      expect(
-        find.bySemanticsLabel(RegExp(r'^Rank 1, your entry, ')),
-        findsOneWidget,
-      );
-
-      semantics.dispose();
-    },
-  );
+    semantics.dispose();
+  });
 }

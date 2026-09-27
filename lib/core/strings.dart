@@ -1,4 +1,6 @@
+import '../features/lists/domain/entities/ranked_list.dart';
 import 'constants/app_constants.dart';
+import 'network/api_error.dart';
 
 /// Centralized UI strings for the Ranked app.
 /// All user-facing text lives here for maintainability and future i18n.
@@ -19,6 +21,12 @@ abstract class S {
   static const signUpApple = 'SIGN UP WITH APPLE';
   static const createAccount = 'CREATE ACCOUNT';
   static const signOut = 'SIGN OUT';
+  static const deleteAccount = 'DELETE ACCOUNT';
+  static const deleteAccountConfirm =
+      'Permanently delete your account, your entries and every board you own? '
+      'Members of your boards lose access to them. This cannot be undone.';
+  static String failedToDeleteAccount(Object e) =>
+      'FAILED TO DELETE ACCOUNT: ${describeError(e)}';
   static const or = 'or';
   static const noAccount = "Don't have an account? Sign up";
   static const hasAccount = 'Already have an account? Sign in';
@@ -108,7 +116,8 @@ abstract class S {
   static const lowestWinsShort = 'LOWEST WINS';
   static const publicLabel = 'PUBLIC';
   static const privateLabel = 'PRIVATE';
-  static String failedToCreateBoard(Object e) => 'FAILED TO CREATE BOARD: $e';
+  static String failedToCreateBoard(Object e) =>
+      'FAILED TO CREATE BOARD: ${describeError(e)}';
 
   // ── Value type descriptions ────────────────────────────────────
   static const valueTypeNumber = 'Numeric values \u2022 e.g. 48.2, 156, 31240';
@@ -123,6 +132,12 @@ abstract class S {
   static const comms = 'COMMS';
   static const stats = 'STATS';
   static const admin = 'ADMIN';
+  static const review = 'REVIEW';
+  static const noPendingSubmissions = 'NOTHING TO REVIEW';
+  static String mySubmissionPending(String value) =>
+      'YOUR SUBMISSION ($value) IS WAITING FOR REVIEW';
+  static String mySubmissionRejected(String value) =>
+      'YOUR SUBMISSION ($value) WAS REJECTED';
   static const failedToLoadBoard = 'FAILED TO LOAD BOARD';
   static const goBack = 'GO BACK';
   static const noEntriesYet = 'NO ENTRIES YET';
@@ -149,6 +164,7 @@ abstract class S {
   static const deleteMyEntry = 'DELETE MY ENTRY';
   static const removeEntry = 'REMOVE ENTRY';
   static const remove = 'REMOVE';
+  static const delete = 'DELETE';
   static String deleteOwnEntryConfirm =
       'Delete your entry from this board? This cannot be undone.';
   static String removeEntryConfirm(String name) =>
@@ -158,9 +174,9 @@ abstract class S {
   static const submitEntry = 'SUBMIT ENTRY';
   static const confirmSubmission = 'CONFIRM SUBMISSION';
   static const submissionReceived = 'SUBMISSION RECEIVED';
-  static const pendingApproval = 'PENDING ADMIN APPROVAL';
+  static const pendingApproval = 'WAITING FOR REVIEW';
   static const submissionApprovalHint =
-      'Your entry will appear in standings\nonce approved by a moderator.';
+      'Your entry will appear in the standings\nonce a moderator approves it.';
   static const done = 'DONE';
   static const noteOptional = 'NOTE (OPTIONAL)';
   static const noteHint = 'Add context to your entry...';
@@ -173,17 +189,18 @@ abstract class S {
   static const shareProof = 'SHARE PROOF IN COMMUNITY';
   static const shareProofHint =
       'Send evidence (photos, videos) in the group chat to help admins verify your entry.';
-  static String submissionFailed(Object e) => 'SUBMISSION FAILED: $e';
+  static String submissionFailed(Object e) =>
+      'SUBMISSION FAILED: ${describeError(e)}';
 
   // ── Pending entries (admin) ────────────────────────────────────
   static String pendingSubmissions(int count) => 'PENDING SUBMISSIONS ($count)';
   static const approve = 'APPROVE';
   static const reject = 'REJECT';
-  static String failed(Object e) => 'FAILED: $e';
+  static String failed(Object e) => 'FAILED: ${describeError(e)}';
 
   // ── Admin tab ──────────────────────────────────────────────────
   static const editBoard = 'EDIT BOARD';
-  static const editBoardSubtitle = 'MODIFY TITLE, DESCRIPTION, LINKS';
+  static const editBoardSubtitle = 'MODIFY TITLE, CATEGORY, LINKS';
   static const lockBoard = 'LOCK BOARD';
   static const unlockBoard = 'UNLOCK BOARD';
   static const lockBoardSubtitle = 'PREVENT NEW ENTRY SUBMISSIONS';
@@ -191,11 +208,17 @@ abstract class S {
   static const manageMembers = 'MANAGE MEMBERS';
   static String manageMembersSubtitle(int count) =>
       '$count MEMBERS — ROLES & ACCESS';
+  static const reorderEntries = 'REORDER ENTRIES';
+  static const reorderEntriesSubtitle = 'SET THE RANKING OF TEXT ENTRIES';
+  static const reorderHint = 'Drag entries into ranking order — top is #1.';
+  static const saveOrder = 'SAVE ORDER';
   static const shareInvite = 'SHARE INVITE';
   static const shareInviteSubtitle = 'GENERATE INVITE LINK';
-  static String shareMessage(String link) =>
-      'Join my board on Ranked: rankapp://invite/$link';
-  static String failedToGetInvite(Object e) => 'FAILED TO GET INVITE: $e';
+
+  /// [link] is the backend's ready-to-open invite URL — share it verbatim.
+  static String shareMessage(String link) => 'Join my board on Ranked: $link';
+  static String failedToGetInvite(Object e) =>
+      'FAILED TO GET INVITE: ${describeError(e)}';
 
   // ── Edit board sheet ───────────────────────────────────────────
   static const title = 'TITLE';
@@ -203,7 +226,8 @@ abstract class S {
   static const description = 'DESCRIPTION';
   static const describeBoard = 'DESCRIBE THE BOARD...';
   static const saveChanges = 'SAVE CHANGES';
-  static String failedToUpdate(Object e) => 'FAILED TO UPDATE: $e';
+  static String failedToUpdate(Object e) =>
+      'FAILED TO UPDATE: ${describeError(e)}';
 
   // ── Manage members ─────────────────────────────────────────────
   static const noMembers = 'NO MEMBERS';
@@ -211,6 +235,12 @@ abstract class S {
   static String removeMemberConfirm(String name) =>
       'Remove $name from this board?';
   static const setRole = 'SET ROLE';
+  static String roleDescription(MemberRole role) => switch (role) {
+    MemberRole.owner => 'Owns the board',
+    MemberRole.admin => 'Runs the board and reviews submissions',
+    MemberRole.moderator => 'Reviews submissions',
+    MemberRole.member => 'Submits entries',
+  };
 
   // ── Invite preview ─────────────────────────────────────────────
   static const invalidInvite = 'INVALID INVITE';
@@ -218,10 +248,16 @@ abstract class S {
       'THIS INVITE LINK MAY HAVE EXPIRED\nOR BEEN REVOKED';
   static const goHome = 'GO HOME';
   static const joinBoard = 'JOIN BOARD';
+  static const joinToSubmitHint = 'JOIN THIS BOARD TO SUBMIT ENTRIES';
+  static const leaveBoard = 'LEAVE BOARD';
+  static const leaveBoardConfirm =
+      'Leave this board? Your entry will be removed from the standings.';
+  static String failedToLeave(Object e) =>
+      'FAILED TO LEAVE: ${describeError(e)}';
   static const alreadyMember = 'ALREADY A MEMBER';
   static const maybeLater = 'MAYBE LATER';
   static String joinedBoard(String title) => 'JOINED ${title.toUpperCase()}';
-  static String failedToJoin(Object e) => 'FAILED TO JOIN: $e';
+  static String failedToJoin(Object e) => 'FAILED TO JOIN: ${describeError(e)}';
 
   // ── Profile ────────────────────────────────────────────────────
   static const failedToLoadBoards = 'FAILED TO LOAD BOARDS';
@@ -241,7 +277,7 @@ abstract class S {
       'Invite friends and colleagues to your boards. Coordinate via Telegram, Discord, or WhatsApp groups.';
   static const onboardingTitle3 = 'VERIFIED ENTRIES';
   static const onboardingBody3 =
-      'Admins approve submissions before they go live. Share proof in your community group to climb the ranks.';
+      'Every submission is reviewed by an admin or moderator before it goes live. Share proof in your community group to climb the ranks.';
   static const skip = 'SKIP';
   static const getStarted = 'GET STARTED';
   static const next = 'NEXT';
@@ -255,6 +291,8 @@ abstract class S {
   // ── Error view ─────────────────────────────────────────────────
   static const noNetwork = 'No network connection. Please check your internet.';
   static const genericError = 'Something went wrong. Please try again.';
+  static const rateLimited =
+      'Too many attempts. Please wait a moment and try again.';
   static const retry = 'RETRY';
   static const loadMoreFailed = 'Couldn\'t load more boards.';
 
@@ -318,8 +356,7 @@ abstract class S {
   /// poorly aloud; these expand to natural language.
   static String dAgoSpoken(int d) => d == 1 ? '1 day ago' : '$d days ago';
   static String hAgoSpoken(int h) => h == 1 ? '1 hour ago' : '$h hours ago';
-  static String mAgoSpoken(int m) =>
-      m == 1 ? '1 minute ago' : '$m minutes ago';
+  static String mAgoSpoken(int m) => m == 1 ? '1 minute ago' : '$m minutes ago';
   static const justNowSpoken = 'just now';
 
   // ── Settings ────────────────────────────────────────────────────

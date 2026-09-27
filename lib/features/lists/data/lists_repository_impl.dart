@@ -6,6 +6,7 @@ import '../../profile/domain/entities/user_profile.dart';
 import '../domain/entities/public_lists_page.dart';
 import '../domain/entities/ranked_list.dart';
 import '../domain/lists_repository.dart';
+import 'lists_json.dart';
 import 'lists_remote_data_source.dart';
 
 class ListsRepositoryImpl implements ListsRepository {
@@ -17,15 +18,16 @@ class ListsRepositoryImpl implements ListsRepository {
   Future<Either<ApiError, List<ListSummary>>> getLists() {
     return safeApiCall(() async {
       final data = await _dataSource.getLists();
-      return data.map((e) => _mapListSummary(e as Map<String, dynamic>)).toList();
+      return data
+          .map((e) => ListsJson.listSummary(e as Map<String, dynamic>))
+          .toList();
     });
   }
 
   @override
   Future<Either<ApiError, RankedList>> getListDetail(String listId) {
     return safeApiCall(() async {
-      final data = await _dataSource.getListDetail(listId);
-      return _mapRankedList(data);
+      return ListsJson.rankedList(await _dataSource.getListDetail(listId));
     });
   }
 
@@ -53,22 +55,29 @@ class ListsRepositoryImpl implements ListsRepository {
         'whatsappLink': ?whatsappLink,
         'discordLink': ?discordLink,
       });
-      return _mapRankedList(data);
+      return ListsJson.rankedList(data);
     });
   }
 
   @override
   Future<Either<ApiError, void>> deleteList(String listId) {
-    return safeApiCall(() async {
-      await _dataSource.deleteList(listId);
-    });
+    return safeApiCall(() => _dataSource.deleteList(listId));
+  }
+
+  @override
+  Future<Either<ApiError, void>> joinList(String listId) {
+    return safeApiCall(() => _dataSource.joinList(listId));
+  }
+
+  @override
+  Future<Either<ApiError, void>> leaveList(String listId) {
+    return safeApiCall(() => _dataSource.leaveList(listId));
   }
 
   @override
   Future<Either<ApiError, RankedList>> getInvitePreview(String token) {
     return safeApiCall(() async {
-      final data = await _dataSource.getInvitePreview(token);
-      return _mapRankedList(data);
+      return ListsJson.rankedList(await _dataSource.getInvitePreview(token));
     });
   }
 
@@ -91,7 +100,9 @@ class ListsRepositoryImpl implements ListsRepository {
   Future<Either<ApiError, List<ListMember>>> getMembers(String listId) {
     return safeApiCall(() async {
       final data = await _dataSource.getMembers(listId);
-      return data.map((e) => _mapMember(e as Map<String, dynamic>)).toList();
+      return data
+          .map((e) => ListsJson.listMember(e as Map<String, dynamic>))
+          .toList();
     });
   }
 
@@ -101,9 +112,9 @@ class ListsRepositoryImpl implements ListsRepository {
     required String userId,
     required MemberRole role,
   }) {
-    return safeApiCall(() async {
-      await _dataSource.updateMemberRole(listId, userId, role.name);
-    });
+    return safeApiCall(
+      () => _dataSource.updateMemberRole(listId, userId, role.name),
+    );
   }
 
   @override
@@ -111,9 +122,7 @@ class ListsRepositoryImpl implements ListsRepository {
     required String listId,
     required String userId,
   }) {
-    return safeApiCall(() async {
-      await _dataSource.removeMember(listId, userId);
-    });
+    return safeApiCall(() => _dataSource.removeMember(listId, userId));
   }
 
   @override
@@ -123,21 +132,24 @@ class ListsRepositoryImpl implements ListsRepository {
     String? description,
     bool? isPublic,
     bool? locked,
+    String? category,
     String? telegramLink,
     String? whatsappLink,
     String? discordLink,
   }) {
     return safeApiCall(() async {
+      // Absent key = unchanged; "" = clear (see ListsRepository.updateList).
       final data = await _dataSource.updateList(listId, {
         'title': ?title,
         'description': ?description,
         'isPublic': ?isPublic,
         'locked': ?locked,
+        'category': ?category,
         'telegramLink': ?telegramLink,
         'whatsappLink': ?whatsappLink,
         'discordLink': ?discordLink,
       });
-      return _mapRankedList(data);
+      return ListsJson.rankedList(data);
     });
   }
 
@@ -146,9 +158,20 @@ class ListsRepositoryImpl implements ListsRepository {
     required String listId,
     required String entryId,
   }) {
-    return safeApiCall(() async {
-      await _dataSource.deleteEntry(listId, entryId);
-    });
+    return safeApiCall(() => _dataSource.deleteEntry(listId, entryId));
+  }
+
+  @override
+  Future<Either<ApiError, void>> reorderEntries({
+    required String listId,
+    required List<String> orderedEntryIds,
+  }) {
+    return safeApiCall(
+      () => _dataSource.updateRanks(listId, [
+        for (var i = 0; i < orderedEntryIds.length; i++)
+          {'entryId': orderedEntryIds[i], 'rank': i + 1},
+      ]),
+    );
   }
 
   @override
@@ -175,87 +198,17 @@ class ListsRepositoryImpl implements ListsRepository {
       );
       return PublicListsPage(
         items: page.items
-            .map((e) => _mapListSummary(e as Map<String, dynamic>))
+            .map((e) => ListsJson.listSummary(e as Map<String, dynamic>))
             .toList(),
         nextCursor: page.nextCursor,
       );
     });
   }
 
-  RankedList _mapRankedList(Map<String, dynamic> json) {
-    return RankedList(
-      id: json['id'] as String,
-      title: json['title'] as String,
-      description: json['description'] as String?,
-      valueType: ValueType.values.byName(json['valueType'] as String),
-      rankOrder: RankOrder.values.byName(json['rankOrder'] as String),
-      isPublic: json['isPublic'] as bool,
-      locked: json['locked'] as bool? ?? false,
-      inviteToken: json['inviteToken'] as String?,
-      entries: (json['entries'] as List<dynamic>?)
-              ?.map((e) => _mapEntry(e as Map<String, dynamic>))
-              .toList() ??
-          [],
-      memberCount: json['memberCount'] as int,
-      currentUserRole: json['currentUserRole'] != null
-          ? MemberRole.values.byName(json['currentUserRole'] as String)
-          : null,
-    );
-  }
-
-  ListSummary _mapListSummary(Map<String, dynamic> json) {
-    return ListSummary(
-      id: json['id'] as String,
-      title: json['title'] as String,
-      valueType: ValueType.values.byName(json['valueType'] as String),
-      rankOrder: RankOrder.values.byName(json['rankOrder'] as String),
-      isPublic: json['isPublic'] as bool,
-      memberCount: json['memberCount'] as int,
-      ownRank: json['ownRank'] as int?,
-      currentUserRole: json['currentUserRole'] != null
-          ? MemberRole.values.byName(json['currentUserRole'] as String)
-          : null,
-    );
-  }
-
-  RankedEntry _mapEntry(Map<String, dynamic> json) {
-    return RankedEntry(
-      id: json['id'] as String,
-      userId: json['userId'] as String,
-      displayName: json['displayName'] as String,
-      rank: json['rank'] as int,
-      valueNumber: (json['valueNumber'] as num?)?.toDouble(),
-      valueDurationMs: json['valueDurationMs'] as int?,
-      valueText: json['valueText'] as String?,
-      manualRank: json['manualRank'] as int?,
-      note: json['note'] as String?,
-      submittedAt: DateTime.parse(json['submittedAt'] as String),
-    );
-  }
-
-  ListMember _mapMember(Map<String, dynamic> json) {
-    return ListMember(
-      userId: json['userId'] as String,
-      displayName: json['displayName'] as String,
-      role: MemberRole.values.byName(json['role'] as String),
-    );
-  }
-
   @override
   Future<Either<ApiError, UserProfile>> getUserProfile(String userId) {
     return safeApiCall(() async {
-      final data = await _dataSource.getUserProfile(userId);
-      final boardsJson = data['boards'] as List<dynamic>? ?? [];
-      return UserProfile(
-        userId: data['userId'] as String,
-        displayName: data['displayName'] as String,
-        memberSince: data['memberSince'] != null
-            ? DateTime.parse(data['memberSince'] as String)
-            : null,
-        boards: boardsJson
-            .map((e) => _mapListSummary(e as Map<String, dynamic>))
-            .toList(),
-      );
+      return ListsJson.userProfile(await _dataSource.getUserProfile(userId));
     });
   }
 }
